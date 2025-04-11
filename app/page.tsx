@@ -19,6 +19,10 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [page, setPage] = useState(0);
+  const pageSize = 20;
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
@@ -51,6 +55,45 @@ export default function Home() {
     fetchDashboardData();
   }, [user]);
 
+  // Fetch paginated transactions
+  const fetchTransactions = async (reset = false) => {
+    if (!user) return;
+    setLoadingTransactions(true);
+    const from = (reset ? 0 : page * pageSize);
+    const to = from + pageSize - 1;
+    const { data, error } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      if (reset) {
+        setTransactions(data);
+        setPage(1);
+      } else {
+        setTransactions(prev => [...prev, ...data]);
+        setPage(prev => prev + 1);
+      }
+      setHasMore(data.length === pageSize);
+    }
+    setLoadingTransactions(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === "transactions" && user) {
+      fetchTransactions(true);
+    }
+    // eslint-disable-next-line
+  }, [activeTab, user]);
+
+  const handleLoadMore = () => {
+    fetchTransactions();
+  };
+
   const handleAddTransaction = async (data: TransactionData) => {
     setLoading(true);
     setError(null);
@@ -62,7 +105,6 @@ export default function Home() {
     }
 
     const newTransaction = {
-      id: "", // Placeholder, will be replaced with the actual ID from Supabase
       amount: data.amount,
       category: data.category,
       note: data.note,
@@ -128,7 +170,20 @@ export default function Home() {
               />
             </div>
           ) : (
-            <TransactionsList transactions={transactions} />
+            <>
+              <TransactionsList transactions={transactions} />
+              {hasMore && (
+                <div className="flex justify-center mt-4">
+                  <button
+                    className="px-4 py-2 bg-black text-white rounded disabled:opacity-50"
+                    onClick={handleLoadMore}
+                    disabled={loadingTransactions}
+                  >
+                    {loadingTransactions ? "Loading..." : "Load More"}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </main>
 

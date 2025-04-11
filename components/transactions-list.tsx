@@ -6,31 +6,28 @@ import { formatIDR } from "@/utils/currency"
 import type { Transaction } from "@/models/transaction"
 import { getCategoryIcon } from "@/utils/category-icons"
 
-type SortField = "date" | "amount" | "category"
+type SortField = "date" | "amount"
 type SortDirection = "asc" | "desc"
 
 interface TransactionsListProps {
   transactions: Transaction[]
 }
 
-export function TransactionsList({ transactions: initialTransactions }: TransactionsListProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions)
+export function TransactionsList({ transactions }: TransactionsListProps) {
   const [sortField, setSortField] = useState<SortField>("date")
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const [searchTerm, setSearchTerm] = useState("")
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
-      // Toggle direction if same field
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
-      // Set new field and default to descending
       setSortField(field)
       setSortDirection("desc")
     }
   }
 
-  // Filter and sort transactions
+  // Filter and sort transactions (always use prop)
   const filteredAndSortedTransactions = [...transactions]
     .filter((transaction) => {
       if (!searchTerm) return true
@@ -47,8 +44,6 @@ export function TransactionsList({ transactions: initialTransactions }: Transact
           return multiplier * (new Date(a.date).getTime() - new Date(b.date).getTime())
         case "amount":
           return multiplier * (a.amount - b.amount)
-        case "category":
-          return multiplier * a.category.localeCompare(b.category)
         default:
           return 0
       }
@@ -97,15 +92,6 @@ export function TransactionsList({ transactions: initialTransactions }: Transact
         >
           Amount
           {sortField === "amount" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-        </button>
-        <button
-          onClick={() => handleSort("category")}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm ${
-            sortField === "category" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          Category
-          {sortField === "category" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
         </button>
       </div>
 
