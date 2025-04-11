@@ -10,3 +10,8 @@
   - Columns: id (uuid, PK), amount (integer), category (text), note (text), date (timestamptz), user_id (uuid, FK to auth.users)
   - Row Level Security (RLS) enabled: users can only access their own transactions.
   - Policy: `user_id = auth.uid()`
+
+- Integrated Supabase Auth UI for authentication:
+  - Installed: @supabase/supabase-js, @supabase/auth-ui-react, @supabase/auth-ui-shared
+  - Created `lib/supabaseClient.ts` to initialize the Supabase client.
+  - Created `app/auth/page.tsx` to provide a login/signup UI using Supabase Auth UI.
