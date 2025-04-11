@@ -15,3 +15,7 @@
   - Installed: @supabase/supabase-js, @supabase/auth-ui-react, @supabase/auth-ui-shared
   - Created `lib/supabaseClient.ts` to initialize the Supabase client.
   - Created `app/auth/page.tsx` to provide a login/signup UI using Supabase Auth UI.
+
+- Added authentication state management:
+  - Created `hooks/useUser.ts` to provide user/session context and listen for Supabase auth state changes.
+  - Integrated `UserProvider` in `app/layout.tsx` to make authentication state available throughout the app.

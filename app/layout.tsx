@@ -18,10 +18,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-gray-50`}>{children}</body>
+      <body className={`${inter.className} bg-gray-50`}>
+        {/* Provide user context to the entire app */}
+        <UserProvider>
+          {children}
+        </UserProvider>
+      </body>
     </html>
   )
 }
 
 
+import { UserProvider } from "@/hooks/useUser";
 import './globals.css'
