@@ -35,9 +35,9 @@ export default function Home() {
 
   return (
     <ProtectedLayout>
-      <div className="mx-auto max-w-md bg-white min-h-screen flex flex-col">
+      <div className="w-full min-h-screen flex flex-col bg-white">
         {/* Header */}
-        <header className="p-4 flex items-center justify-between">
+        <header className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">My Accounts</h1>
             <ChevronDown className="h-6 w-6" />
@@ -48,9 +48,9 @@ export default function Home() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 overflow-hidden">
+        <main className="flex-1 p-6 overflow-hidden">
           {activeTab === "dashboard" ? (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <SpendingCard
                 title="Spent Today"
                 amount={64300}
@@ -81,14 +81,14 @@ export default function Home() {
         </main>
 
         {/* Floating Action Button */}
-        <div className="fixed bottom-20 right-4 md:right-1/2 md:translate-x-[11rem]">
+        <div className="fixed bottom-24 right-6 z-30">
           <button className="bg-black text-white rounded-full p-4 shadow-lg" onClick={() => setIsModalOpen(true)}>
             <Plus className="h-6 w-6" />
           </button>
         </div>
 
         {/* Bottom Navigation */}
-        <nav className="border-t border-gray-200 p-4 flex justify-around items-center">
+        <nav className="fixed bottom-0 left-0 w-full border-t border-gray-200 p-4 flex justify-around items-center bg-white z-20">
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`flex flex-col items-center ${activeTab === "dashboard" ? "text-black" : "text-gray-400"}`}

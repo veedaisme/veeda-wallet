@@ -30,13 +30,13 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
     };
     getSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
     });
 
     return () => {
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 

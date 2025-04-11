@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,18 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (success && mode === "login") {
+      // Redirect after a short delay to allow the success message to show
+      const timeout = setTimeout(() => {
+        router.replace("/");
+      }, 800);
+      return () => clearTimeout(timeout);
+    }
+  }, [success, mode, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +51,8 @@ export default function AuthForm() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md p-8 shadow-lg">
-        <div className="mb-6 text-center">
-          <img src="/placeholder-logo.svg" alt="Logo" className="mx-auto h-12 w-12 mb-2" />
-          <h2 className="text-2xl font-bold">{mode === "login" ? "Sign In" : "Sign Up"}</h2>
-          <p className="text-gray-500">{mode === "login" ? "Welcome back! Please login to your account." : "Create a new account to get started."}</p>
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-left">{mode === "login" ? "Sign In" : "Sign Up"}</h2>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

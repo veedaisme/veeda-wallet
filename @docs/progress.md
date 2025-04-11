@@ -32,3 +32,8 @@
 - Improved login/signup page:
   - Replaced default Supabase Auth UI with a custom shadcn-styled `AuthForm` in `components/AuthForm.tsx`.
   - Updated `app/auth/page.tsx` to render the new AuthForm for a modern, branded authentication experience.
+
+- Refined login/signup page to match wallet guidelines:
+  - Removed logo and extra description for a minimal, focused form.
+  - Title is bold and left-aligned, matching dashboard style.
+  - Only essential elements (fields, button, toggle) are present for consistency.
