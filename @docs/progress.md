@@ -19,3 +19,12 @@
 - Added authentication state management:
   - Created `hooks/useUser.ts` to provide user/session context and listen for Supabase auth state changes.
   - Integrated `UserProvider` in `app/layout.tsx` to make authentication state available throughout the app.
+
+- Fixed TypeScript/JSX errors in the authentication state hook:
+  - Renamed `hooks/useUser.ts` to `hooks/useUser.tsx` to support JSX syntax.
+  - Corrected Supabase auth subscription cleanup logic to use the correct subscription object.
+  - The hook now compiles and works as intended.
+
+- Enforced authentication for main app page:
+  - Created `components/ProtectedLayout.tsx` to redirect unauthenticated users to `/auth`.
+  - Wrapped `app/page.tsx` with `ProtectedLayout` so only logged-in users can access the dashboard.
