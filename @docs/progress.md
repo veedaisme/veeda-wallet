@@ -37,3 +37,10 @@
   - Removed logo and extra description for a minimal, focused form.
   - Title is bold and left-aligned, matching dashboard style.
   - Only essential elements (fields, button, toggle) are present for consistency.
+
+## 2025-04-12
+
+- Fixed dashboard to use live Supabase data and handle bigint values.
+- Resolved NaN issue by extracting the first element from the Supabase RPC array.
+- Cleaned up and deduplicated app/page.tsx.
+- Prepared to generate and insert 2 months of mock transaction data for user 19408d1e-e317-4cc4-8dcc-8425b46d5bd2 to populate dashboard stats for yesterday, last week, and last month.

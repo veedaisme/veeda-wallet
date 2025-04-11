@@ -1,27 +1,55 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDown, Clock, CreditCard, Plus, User } from "lucide-react"
+import { useState, useEffect } from "react";
+import { ChevronDown, Clock, CreditCard, Plus, User } from "lucide-react";
 
-import { SpendingCard } from "@/components/spending-card"
-import { Modal } from "@/components/ui/modal"
-import { TransactionForm, type TransactionData } from "@/components/transaction-form"
-import { TransactionsList } from "@/components/transactions-list"
-import { sampleTransactions } from "@/models/transaction"
-import { supabase } from "@/lib/supabaseClient"
-import { useUser } from "@/hooks/useUser"
+import { SpendingCard } from "@/components/spending-card";
+import { Modal } from "@/components/ui/modal";
+import { TransactionForm, type TransactionData } from "@/components/transaction-form";
+import { Transaction } from "@/models/transaction";
+import { TransactionsList } from "@/components/transactions-list";
+import { supabase } from "@/lib/supabaseClient";
+import { useUser } from "@/hooks/useUser";
 
-type TabType = "dashboard" | "transactions"
+type TabType = "dashboard" | "transactions";
 
 import ProtectedLayout from "@/components/ProtectedLayout";
 
 export default function Home() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard")
-  const [transactions, setTransactions] = useState(sampleTransactions)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
+  const [dashboardData, setDashboardData] = useState({
+    spent_today: 0,
+    spent_yesterday: 0,
+    spent_this_week: 0,
+    spent_last_week: 0,
+    spent_this_month: 0,
+    spent_last_month: 0,
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const { data, error } = await supabase.rpc('dashboard_summary');
+      if (error) {
+        console.error("Error fetching dashboard data:", error);
+      } else {
+        setDashboardData((data && data[0]) ? data[0] : {
+          spent_today: 0,
+          spent_yesterday: 0,
+          spent_this_week: 0,
+          spent_last_week: 0,
+          spent_this_month: 0,
+          spent_last_month: 0,
+        });
+      }
+    };
+
+    fetchDashboardData();
+  }, [user]);
 
   const handleAddTransaction = async (data: TransactionData) => {
     setLoading(true);
@@ -34,6 +62,7 @@ export default function Home() {
     }
 
     const newTransaction = {
+      id: "", // Placeholder, will be replaced with the actual ID from Supabase
       amount: data.amount,
       category: data.category,
       note: data.note,
@@ -56,7 +85,7 @@ export default function Home() {
     setTransactions([inserted, ...transactions]);
     setIsModalOpen(false);
     setLoading(false);
-  }
+  };
 
   return (
     <ProtectedLayout>
@@ -78,26 +107,24 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <SpendingCard
                 title="Spent Today"
-                amount={64300}
+                amount={Number(dashboardData.spent_today)}
                 change={-11}
                 previousLabel="Yesterday"
-                previousAmount={72500}
+                previousAmount={Number(dashboardData.spent_yesterday)}
               />
-
               <SpendingCard
                 title="Spent This Week"
-                amount={410600}
+                amount={Number(dashboardData.spent_this_week)}
                 change={-18}
                 previousLabel="Last Week"
-                previousAmount={498000}
+                previousAmount={Number(dashboardData.spent_last_week)}
               />
-
               <SpendingCard
                 title="Spent This Month"
-                amount={1025900}
+                amount={Number(dashboardData.spent_this_month)}
                 change={-41}
                 previousLabel="Last Month"
-                previousAmount={2045000}
+                previousAmount={Number(dashboardData.spent_last_month)}
               />
             </div>
           ) : (
@@ -137,5 +164,5 @@ export default function Home() {
         </Modal>
       </div>
     </ProtectedLayout>
-  )
+  );
 }
