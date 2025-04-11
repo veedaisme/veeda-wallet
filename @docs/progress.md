@@ -28,3 +28,7 @@
 - Enforced authentication for main app page:
   - Created `components/ProtectedLayout.tsx` to redirect unauthenticated users to `/auth`.
   - Wrapped `app/page.tsx` with `ProtectedLayout` so only logged-in users can access the dashboard.
+
+- Improved login/signup page:
+  - Replaced default Supabase Auth UI with a custom shadcn-styled `AuthForm` in `components/AuthForm.tsx`.
+  - Updated `app/auth/page.tsx` to render the new AuthForm for a modern, branded authentication experience.
