@@ -8,6 +8,8 @@ import { Modal } from "@/components/ui/modal"
 import { TransactionForm, type TransactionData } from "@/components/transaction-form"
 import { TransactionsList } from "@/components/transactions-list"
 import { sampleTransactions } from "@/models/transaction"
+import { supabase } from "@/lib/supabaseClient"
+import { useUser } from "@/hooks/useUser"
 
 type TabType = "dashboard" | "transactions"
 
@@ -17,20 +19,43 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>("dashboard")
   const [transactions, setTransactions] = useState(sampleTransactions)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useUser();
 
-  const handleAddTransaction = (data: TransactionData) => {
-    // Create a new transaction with the form data
+  const handleAddTransaction = async (data: TransactionData) => {
+    setLoading(true);
+    setError(null);
+
+    if (!user) {
+      setError("You must be logged in to add a transaction.");
+      setLoading(false);
+      return;
+    }
+
     const newTransaction = {
-      id: `t${transactions.length + 1}`,
       amount: data.amount,
       category: data.category,
       note: data.note,
       date: new Date().toISOString(),
+      user_id: user.id,
+    };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("transactions")
+      .insert([newTransaction])
+      .select()
+      .single();
+
+    if (insertError) {
+      setError(insertError.message);
+      setLoading(false);
+      return;
     }
 
-    // Add the new transaction to the list
-    setTransactions([newTransaction, ...transactions])
-    setIsModalOpen(false)
+    setTransactions([inserted, ...transactions]);
+    setIsModalOpen(false);
+    setLoading(false);
   }
 
   return (
@@ -107,7 +132,8 @@ export default function Home() {
 
         {/* Transaction Modal */}
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Transaction">
-          <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsModalOpen(false)} />
+          <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsModalOpen(false)} loading={loading} />
+          {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         </Modal>
       </div>
     </ProtectedLayout>

@@ -8,6 +8,7 @@ import { formatIDR, parseIDR } from "@/utils/currency"
 interface TransactionFormProps {
   onSubmit: (data: TransactionData) => void
   onCancel: () => void
+  loading?: boolean
 }
 
 export interface TransactionData {
@@ -29,7 +30,7 @@ const CATEGORIES = [
   "Other",
 ]
 
-export function TransactionForm({ onSubmit, onCancel }: TransactionFormProps) {
+export function TransactionForm({ onSubmit, onCancel, loading = false }: TransactionFormProps) {
   const [amount, setAmount] = useState("")
   const [note, setNote] = useState("")
   const [category, setCategory] = useState("")
@@ -144,8 +145,12 @@ export function TransactionForm({ onSubmit, onCancel }: TransactionFormProps) {
         >
           Cancel
         </button>
-        <button type="submit" className="flex-1 py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800">
-          Add Transaction
+        <button
+          type="submit"
+          className="flex-1 py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-60"
+          disabled={loading}
+        >
+          {loading ? "Adding..." : "Add Transaction"}
         </button>
       </div>
     </form>
