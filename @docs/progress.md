@@ -54,3 +54,14 @@
   - Updated the dashboard header in `app/page.tsx` to include a profile icon that opens a dropdown menu.
   - Implemented a "Logout" button in the dropdown, which calls `supabase.auth.signOut()` and redirects the user to `/auth`.
   - Dropdown menu closes automatically after logout.
+
+### Dashboard Card Chart Comparison Feature
+
+- The "Spent This Week" and "Spent This Month" cards on the dashboard are now clickable.
+- Clicking a card opens a modal with a two-line chart:
+  - "This Week": Shows a line chart comparing daily spending for the current week and previous week.
+  - "This Month": Shows a line chart comparing weekly spending for the current month and previous month.
+- All chart labels and legends use English ("Current Week", "Previous Week", "Current Month", "Previous Month", "Week 1", etc.).
+- Data is fetched live from Supabase and aggregated as needed.
+- UI is consistent with shadcn and uses the existing Modal and ChartContainer (Recharts) components.
+- All code changes are in `app/page.tsx` and `components/spending-card.tsx`.

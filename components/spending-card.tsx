@@ -8,14 +8,20 @@ interface SpendingCardProps {
   change: number
   previousLabel: string
   previousAmount: number
+  onClick?: () => void
 }
 
-export function SpendingCard({ title, amount, change, previousLabel, previousAmount }: SpendingCardProps) {
+export function SpendingCard({ title, amount, change, previousLabel, previousAmount, onClick }: SpendingCardProps) {
   const isPositive = change > 0
   const absChange = Math.abs(change)
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+    <div
+      className={`bg-white rounded-xl p-4 shadow-sm border border-gray-100 ${onClick ? "cursor-pointer hover:bg-gray-50 transition" : ""}`}
+      onClick={onClick}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? "button" : undefined}
+    >
       <div className="flex justify-between items-center mb-2">
         <h2 className="text-gray-600 font-medium">{title}</h2>
         <ChevronRight className="h-5 w-5 text-gray-400" />
