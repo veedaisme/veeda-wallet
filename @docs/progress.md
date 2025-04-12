@@ -65,3 +65,13 @@
 - Data is fetched live from Supabase and aggregated as needed.
 - UI is consistent with shadcn and uses the existing Modal and ChartContainer (Recharts) components.
 - All code changes are in `app/page.tsx` and `components/spending-card.tsx`.
+
+---
+
+## 2025-04-12
+
+- Fixed dashboard card percentage comparison for new users (0 transactions):
+  - Updated `components/spending-card.tsx` to only render the percentage badge if the `change` prop is a valid number.
+  - Updated `app/page.tsx` to calculate the percentage change dynamically using a `getChange` helper. If the previous period's amount is 0, the `change` prop is set to `undefined`, so no badge is shown.
+  - This prevents showing a misleading or placeholder percentage for new users with no transaction history.
+  - Affected files: `components/spending-card.tsx`, `app/page.tsx`

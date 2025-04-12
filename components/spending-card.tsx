@@ -5,15 +5,15 @@ import { formatIDR } from "@/utils/currency"
 interface SpendingCardProps {
   title: string
   amount: number
-  change: number
+  change?: number
   previousLabel: string
   previousAmount: number
   onClick?: () => void
 }
 
 export function SpendingCard({ title, amount, change, previousLabel, previousAmount, onClick }: SpendingCardProps) {
-  const isPositive = change > 0
-  const absChange = Math.abs(change)
+  const isPositive = typeof change === "number" && change > 0
+  const absChange = typeof change === "number" ? Math.abs(change) : 0
 
   return (
     <div
@@ -29,10 +29,12 @@ export function SpendingCard({ title, amount, change, previousLabel, previousAmo
 
       <div className="flex items-center gap-2 mb-1">
         <span className="text-3xl font-bold">{formatIDR(amount)}</span>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-1">
-          {isPositive ? <ArrowUp className="h-4 w-4 text-red-500" /> : <ArrowDown className="h-4 w-4 text-green-500" />}
-          <span className={`text-sm ${isPositive ? "text-red-500" : "text-green-500"}`}>{absChange}%</span>
-        </div>
+        {typeof change === "number" && (
+          <div className="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-1">
+            {isPositive ? <ArrowUp className="h-4 w-4 text-red-500" /> : <ArrowDown className="h-4 w-4 text-green-500" />}
+            <span className={`text-sm ${isPositive ? "text-red-500" : "text-green-500"}`}>{absChange}%</span>
+          </div>
+        )}
       </div>
 
       <p className="text-gray-500 text-sm">

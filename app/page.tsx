@@ -22,6 +22,11 @@ import { ChartContainer } from "@/components/ui/chart";
 import * as Recharts from "recharts";
 import { formatIDR } from "@/utils/currency";
 
+function getChange(current: number, previous: number): number | undefined {
+  if (previous === 0) return undefined;
+  return ((current - previous) / previous) * 100;
+}
+
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
@@ -240,14 +245,14 @@ export default function Home() {
                 <SpendingCard
                   title="Spent Today"
                   amount={Number(dashboardData.spent_today)}
-                  change={-11}
+                  change={getChange(Number(dashboardData.spent_today), Number(dashboardData.spent_yesterday))}
                   previousLabel="Yesterday"
                   previousAmount={Number(dashboardData.spent_yesterday)}
                 />
                 <SpendingCard
                   title="Spent This Week"
                   amount={Number(dashboardData.spent_this_week)}
-                  change={-18}
+                  change={getChange(Number(dashboardData.spent_this_week), Number(dashboardData.spent_last_week))}
                   previousLabel="Last Week"
                   previousAmount={Number(dashboardData.spent_last_week)}
                   onClick={() => setChartModal({ open: true, type: "week" })}
@@ -255,7 +260,7 @@ export default function Home() {
                 <SpendingCard
                   title="Spent This Month"
                   amount={Number(dashboardData.spent_this_month)}
-                  change={-41}
+                  change={getChange(Number(dashboardData.spent_this_month), Number(dashboardData.spent_last_month))}
                   previousLabel="Last Month"
                   previousAmount={Number(dashboardData.spent_last_month)}
                   onClick={() => setChartModal({ open: true, type: "month" })}
