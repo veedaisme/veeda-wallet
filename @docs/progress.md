@@ -45,6 +45,11 @@
 - Cleaned up and deduplicated app/page.tsx.
 - Prepared to generate and insert 2 months of mock transaction data for user 19408d1e-e317-4cc4-8dcc-8425b46d5bd2 to populate dashboard stats for yesterday, last week, and last month.
 
+- Eliminated redundant dashboard_summary queries:
+  - Refactored the dashboard data fetching logic in `app/page.tsx` to only call the Supabase `dashboard_summary` RPC when the dashboard tab is active and the user is loaded.
+  - Updated the useEffect dependencies to `[activeTab, user]` and added a guard for `activeTab === "dashboard"`.
+  - This prevents multiple unnecessary network requests and ensures only a single query is made per dashboard view.
+
 - Added logout button under profile:
   - Updated the dashboard header in `app/page.tsx` to include a profile icon that opens a dropdown menu.
   - Implemented a "Logout" button in the dropdown, which calls `supabase.auth.signOut()` and redirects the user to `/auth`.

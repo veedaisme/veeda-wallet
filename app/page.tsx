@@ -64,8 +64,10 @@ export default function Home() {
       }
     };
 
-    fetchDashboardData();
-  }, [user]);
+    if (activeTab === "dashboard" && user) {
+      fetchDashboardData();
+    }
+  }, [activeTab, user]);
 
   // Fetch paginated transactions with sorting and searching
   const fetchTransactions = async (reset = false) => {
