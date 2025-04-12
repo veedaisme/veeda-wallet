@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronDown, Clock, CreditCard, Plus, User, ChevronUp } from "lucide-react";
+import { ChevronDown, Clock, CreditCard, Plus, User, ChevronUp, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { SpendingCard } from "@/components/spending-card";
 import { Modal } from "@/components/ui/modal";
@@ -28,6 +29,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     spent_today: 0,
     spent_yesterday: 0,
@@ -165,18 +167,43 @@ export default function Home() {
     setLoading(false);
   };
 
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setProfileMenuOpen(false);
+    router.replace("/auth");
+  };
+
   return (
     <ProtectedLayout>
       <div className="w-full min-h-screen flex flex-col bg-white">
         {/* Header */}
-        <header className="p-6 flex items-center justify-between">
+        <header className="p-6 flex items-center justify-between relative">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">My Accounts</h1>
             <ChevronDown className="h-6 w-6" />
           </div>
-          <button className="rounded-full bg-gray-200 p-2">
-            <User className="h-5 w-5 text-gray-500" />
-          </button>
+          <div className="relative">
+            <button
+              className="rounded-full bg-gray-200 p-2"
+              onClick={() => setProfileMenuOpen((open) => !open)}
+              aria-label="Open profile menu"
+            >
+              <User className="h-5 w-5 text-gray-500" />
+            </button>
+            {profileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <button
+                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </header>
 
         {/* Main Content */}

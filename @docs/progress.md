@@ -44,3 +44,8 @@
 - Resolved NaN issue by extracting the first element from the Supabase RPC array.
 - Cleaned up and deduplicated app/page.tsx.
 - Prepared to generate and insert 2 months of mock transaction data for user 19408d1e-e317-4cc4-8dcc-8425b46d5bd2 to populate dashboard stats for yesterday, last week, and last month.
+
+- Added logout button under profile:
+  - Updated the dashboard header in `app/page.tsx` to include a profile icon that opens a dropdown menu.
+  - Implemented a "Logout" button in the dropdown, which calls `supabase.auth.signOut()` and redirects the user to `/auth`.
+  - Dropdown menu closes automatically after logout.
