@@ -81,3 +81,8 @@
   - Whole numbers show as `5%`, one decimal as `5.5%`, and two decimals as `5.25%`.
   - No unnecessary comma/decimal is shown for whole numbers.
   - Affected file: `components/spending-card.tsx`
+
+- Updated percentage badge color logic in dashboard cards:
+  - The percentage badge is now red if the current period's spending is higher than the previous period, and green otherwise.
+  - This provides a more intuitive visual cue for overspending.
+  - Affected file: `components/spending-card.tsx`

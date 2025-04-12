@@ -12,7 +12,8 @@ interface SpendingCardProps {
 }
 
 export function SpendingCard({ title, amount, change, previousLabel, previousAmount, onClick }: SpendingCardProps) {
-  const isPositive = typeof change === "number" && change > 0
+  // Color is red if current amount > previous amount, green otherwise
+  const isOverspent = amount > previousAmount
   const absChange = typeof change === "number" ? Math.abs(change) : 0
 
   return (
@@ -31,8 +32,8 @@ export function SpendingCard({ title, amount, change, previousLabel, previousAmo
         <span className="text-3xl font-bold">{formatIDR(amount)}</span>
         {typeof change === "number" && (
           <div className="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-1">
-            {isPositive ? <ArrowUp className="h-4 w-4 text-red-500" /> : <ArrowDown className="h-4 w-4 text-green-500" />}
-            <span className={`text-sm ${isPositive ? "text-red-500" : "text-green-500"}`}>
+            {isOverspent ? <ArrowUp className="h-4 w-4 text-red-500" /> : <ArrowDown className="h-4 w-4 text-green-500" />}
+            <span className={`text-sm ${isOverspent ? "text-red-500" : "text-green-500"}`}>
               {absChange % 1 === 0 ? absChange : absChange.toFixed(2).replace(/\.?0+$/, "")}%
             </span>
           </div>
