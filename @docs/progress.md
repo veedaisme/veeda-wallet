@@ -74,4 +74,10 @@
   - Updated `components/spending-card.tsx` to only render the percentage badge if the `change` prop is a valid number.
   - Updated `app/page.tsx` to calculate the percentage change dynamically using a `getChange` helper. If the previous period's amount is 0, the `change` prop is set to `undefined`, so no badge is shown.
   - This prevents showing a misleading or placeholder percentage for new users with no transaction history.
-  - Affected files: `components/spending-card.tsx`, `app/page.tsx`
+  - Affected files: `components-spending-card.tsx`, `app/page.tsx`
+
+- Improved percentage badge formatting in dashboard cards:
+  - Updated `components/spending-card.tsx` so the percentage badge now displays up to two decimals only when needed.
+  - Whole numbers show as `5%`, one decimal as `5.5%`, and two decimals as `5.25%`.
+  - No unnecessary comma/decimal is shown for whole numbers.
+  - Affected file: `components/spending-card.tsx`

@@ -32,7 +32,9 @@ export function SpendingCard({ title, amount, change, previousLabel, previousAmo
         {typeof change === "number" && (
           <div className="flex items-center gap-1 bg-gray-100 rounded-full px-2 py-1">
             {isPositive ? <ArrowUp className="h-4 w-4 text-red-500" /> : <ArrowDown className="h-4 w-4 text-green-500" />}
-            <span className={`text-sm ${isPositive ? "text-red-500" : "text-green-500"}`}>{absChange}%</span>
+            <span className={`text-sm ${isPositive ? "text-red-500" : "text-green-500"}`}>
+              {absChange % 1 === 0 ? absChange : absChange.toFixed(2).replace(/\.?0+$/, "")}%
+            </span>
           </div>
         )}
       </div>
