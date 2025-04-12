@@ -39,6 +39,9 @@ export default function Home() {
     spent_last_month: 0,
   });
 
+  // Ref to prevent redundant dashboard_summary queries
+  const dashboardFetchedRef = useRef(false);
+
   // Sorting and searching state
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -62,12 +65,20 @@ export default function Home() {
           spent_last_month: 0,
         });
       }
+      dashboardFetchedRef.current = true;
     };
 
-    if (activeTab === "dashboard" && user) {
+    if (activeTab === "dashboard" && user && !dashboardFetchedRef.current) {
       fetchDashboardData();
     }
   }, [activeTab, user]);
+
+  // Reset the dashboardFetchedRef when leaving the dashboard tab
+  useEffect(() => {
+    if (activeTab !== "dashboard") {
+      dashboardFetchedRef.current = false;
+    }
+  }, [activeTab]);
 
   // Fetch paginated transactions with sorting and searching
   const fetchTransactions = async (reset = false) => {
