@@ -1,54 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDown, ChevronUp, Search } from "lucide-react"
+import { getCategoryIcon } from "@/utils/category-icons"
 import { formatIDR } from "@/utils/currency"
 import type { Transaction } from "@/models/transaction"
-import { getCategoryIcon } from "@/utils/category-icons"
-
-type SortField = "date" | "amount"
-type SortDirection = "asc" | "desc"
 
 interface TransactionsListProps {
   transactions: Transaction[]
+  lastTransactionRef?: (node: HTMLLIElement | null) => void
 }
 
-export function TransactionsList({ transactions }: TransactionsListProps) {
-  const [sortField, setSortField] = useState<SortField>("date")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
-  const [searchTerm, setSearchTerm] = useState("")
-
-  const handleSort = (field: SortField) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
-    } else {
-      setSortField(field)
-      setSortDirection("desc")
-    }
-  }
-
-  // Filter and sort transactions (always use prop)
-  const filteredAndSortedTransactions = [...transactions]
-    .filter((transaction) => {
-      if (!searchTerm) return true
-      const searchLower = searchTerm.toLowerCase()
-      return (
-        transaction.note.toLowerCase().includes(searchLower) || transaction.category.toLowerCase().includes(searchLower)
-      )
-    })
-    .sort((a, b) => {
-      const multiplier = sortDirection === "asc" ? 1 : -1
-
-      switch (sortField) {
-        case "date":
-          return multiplier * (new Date(a.date).getTime() - new Date(b.date).getTime())
-        case "amount":
-          return multiplier * (a.amount - b.amount)
-        default:
-          return 0
-      }
-    })
-
+export function TransactionsList({ transactions, lastTransactionRef }: TransactionsListProps) {
   // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -61,51 +22,21 @@ export function TransactionsList({ transactions }: TransactionsListProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Search bar */}
-      <div className="mb-4 relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <input
-          type="text"
-          placeholder="Search transactions..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-        />
-      </div>
-
-      {/* Sort controls */}
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => handleSort("date")}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm ${
-            sortField === "date" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          Date
-          {sortField === "date" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-        </button>
-        <button
-          onClick={() => handleSort("amount")}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm ${
-            sortField === "amount" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          Amount
-          {sortField === "amount" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-        </button>
-      </div>
-
       {/* Transactions list */}
       <div className="flex-1 overflow-y-auto">
-        {filteredAndSortedTransactions.length === 0 ? (
+        {transactions.length === 0 ? (
           <div className="text-center py-8 text-gray-500">No transactions found</div>
         ) : (
           <ul className="space-y-3">
-            {filteredAndSortedTransactions.map((transaction) => {
+            {transactions.map((transaction, idx) => {
               const CategoryIcon = getCategoryIcon(transaction.category)
-
+              const isLast = idx === transactions.length - 1
               return (
-                <li key={transaction.id} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <li
+                  key={transaction.id}
+                  className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm"
+                  ref={isLast && lastTransactionRef ? lastTransactionRef : undefined}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className="bg-gray-100 p-2 rounded-full">

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react";
-import { ChevronDown, Clock, CreditCard, Plus, User } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronDown, Clock, CreditCard, Plus, User, ChevronUp } from "lucide-react";
 
 import { SpendingCard } from "@/components/spending-card";
 import { Modal } from "@/components/ui/modal";
@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 
 type TabType = "dashboard" | "transactions";
+type SortField = "date" | "amount";
+type SortDirection = "asc" | "desc";
 
 import ProtectedLayout from "@/components/ProtectedLayout";
 
@@ -35,6 +37,14 @@ export default function Home() {
     spent_last_month: 0,
   });
 
+  // Sorting and searching state
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Infinite scroll ref
+  const observer = useRef<IntersectionObserver | null>(null);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       const { data, error } = await supabase.rpc('dashboard_summary');
@@ -55,43 +65,69 @@ export default function Home() {
     fetchDashboardData();
   }, [user]);
 
-  // Fetch paginated transactions
+  // Fetch paginated transactions with sorting and searching
   const fetchTransactions = async (reset = false) => {
     if (!user) return;
     setLoadingTransactions(true);
     const from = (reset ? 0 : page * pageSize);
     const to = from + pageSize - 1;
-    const { data, error } = await supabase
+    let query = supabase
       .from("transactions")
       .select("*")
       .eq("user_id", user.id)
-      .order("date", { ascending: false })
-      .range(from, to);
+      .order(sortField, { ascending: sortDirection === "asc" });
+
+    if (searchTerm) {
+      query = query.ilike("note", `%${searchTerm}%`);
+    }
+
+    const { data, error } = await query.range(from, to);
 
     if (error) {
       setError(error.message);
     } else {
       if (reset) {
         setTransactions(data);
-        setPage(1);
+        setPage(0);
       } else {
         setTransactions(prev => [...prev, ...data]);
-        setPage(prev => prev + 1);
       }
       setHasMore(data.length === pageSize);
+      if (!reset) setPage(prev => prev + 1);
     }
     setLoadingTransactions(false);
   };
 
+  // Reset and fetch when sort/search changes or tab/user changes
   useEffect(() => {
     if (activeTab === "transactions" && user) {
       fetchTransactions(true);
     }
     // eslint-disable-next-line
-  }, [activeTab, user]);
+  }, [activeTab, user, sortField, sortDirection, searchTerm]);
 
-  const handleLoadMore = () => {
-    fetchTransactions();
+  // Infinite scroll: observe last transaction
+  const lastTransactionRef = useCallback(
+    (node: HTMLLIElement | null) => {
+      if (loadingTransactions) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new window.IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchTransactions();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loadingTransactions, hasMore, sortField, sortDirection, searchTerm, user, page]
+  );
+
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
   };
 
   const handleAddTransaction = async (data: TransactionData) => {
@@ -171,16 +207,40 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <TransactionsList transactions={transactions} />
-              {hasMore && (
-                <div className="flex justify-center mt-4">
+              {/* Search and sort controls */}
+              <div className="mb-4 flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
+                <input
+                  type="text"
+                  placeholder="Search transactions..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full md:w-64 pl-3 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                />
+                <div className="flex gap-2">
                   <button
-                    className="px-4 py-2 bg-black text-white rounded disabled:opacity-50"
-                    onClick={handleLoadMore}
-                    disabled={loadingTransactions}
+                    onClick={() => handleSort("date")}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm ${
+                      sortField === "date" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
+                    }`}
                   >
-                    {loadingTransactions ? "Loading..." : "Load More"}
+                    Date
+                    {sortField === "date" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                   </button>
+                  <button
+                    onClick={() => handleSort("amount")}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm ${
+                      sortField === "amount" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    Amount
+                    {sortField === "amount" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                  </button>
+                </div>
+              </div>
+              <TransactionsList transactions={transactions} lastTransactionRef={lastTransactionRef} />
+              {loadingTransactions && (
+                <div className="flex justify-center mt-4">
+                  <span className="text-gray-500">Loading...</span>
                 </div>
               )}
             </>
