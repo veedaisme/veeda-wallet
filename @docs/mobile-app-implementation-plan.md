@@ -93,6 +93,11 @@
     - Add profile menu (modal or drawer).
 
 ---
+**Phase 4 completed on 2025-04-14**
+- Implemented app shell and navigation using go_router.
+- Created placeholder screens for Dashboard, Transactions, and Profile.
+- Integrated bottom navigation bar and profile menu placeholder.
+- Updated main.dart to use the new app shell as the root widget.
 
 ## Phase 5: Feature Implementation
 
