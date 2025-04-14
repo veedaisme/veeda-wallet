@@ -5,6 +5,7 @@ import '../storage/local_auth_repository.dart';
 import '../storage/local_transaction_repository.dart';
 import '../supabase/supabase_auth_repository.dart';
 import '../supabase/supabase_transaction_repository.dart';
+import '../storage/local_auth_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -16,4 +17,7 @@ void setupServiceLocator() {
   // Register Supabase repositories (stubbed for now)
   getIt.registerLazySingleton<SupabaseAuthRepository>(() => SupabaseAuthRepository());
   getIt.registerLazySingleton<SupabaseTransactionRepository>(() => SupabaseTransactionRepository());
+
+  // Register LocalAuthService for device authentication
+  getIt.registerLazySingleton<LocalAuthService>(() => LocalAuthService());
 }

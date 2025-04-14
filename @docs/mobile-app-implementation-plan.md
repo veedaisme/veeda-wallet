@@ -37,7 +37,7 @@
 
 ---
 
-## Phase 2: Core Architecture & State Management
+## Phase 2: Core Architecture & State Management ✅ DONE
 
 4. **Set Up Dependency Injection**
    - Implement DI using Riverpod’s provider system (or `get_it` if preferred).
@@ -58,26 +58,28 @@
      - Dashboard summaries
      - UI state (modals, navigation, etc.)
 
+**Phase 2 completed on 2025-04-14**
 ---
 
-## Phase 3: Authentication & Guest Mode
+## Phase 3: Authentication & Guest Mode (Local-Only, Remote Auth Deferred) ✅ DONE
 
-8. **Implement Local Authentication**
-   - Use `flutter_secure_storage` for storing credentials/session flags.
-   - On app start, check for valid credentials and expose auth state via provider.
+> **Note:** Remote authentication (login, logout, Supabase integration, and guest-to-user migration) is deferred to a later phase. The current focus is on robust local authentication and device security.
 
-9. **Guest Mode Logic**
-   - Allow app usage without login for first 10 transactions.
-   - Track guest transaction count in Isar.
-   - After 10 transactions, prompt user to sign up or log in.
+8. **Implement Secure Local Authentication**
+   - Use `local_auth` for biometric/device-level authentication (Face ID, Touch ID, fingerprint, device PIN).
+   - Use `flutter_secure_storage` for storing credentials/session flags and encryption keys.
+   - On app start, require successful local authentication before accessing any user data.
+   - If authentication fails or is canceled, keep the app locked and show a secure lock screen.
+   - Allow re-authentication on demand (e.g., after timeout, backgrounding, or sensitive actions).
+   - Follow best practices for secure storage and privacy (see [Phase 3 Local Auth Plan](phase-3-local-auth-plan.md)).
 
-10. **Auth Screens & Flow**
-    - Build login/signup screens in `features/auth/presentation/`.
-    - Implement router guards to protect main app routes.
+9. **Guest Mode Logic (Deferred)**
+   - Guest mode and transaction count tracking will be implemented after local authentication is complete.
 
-11. **Logout Functionality**
-    - Clear credentials and session state on logout.
+10. **Auth Screens & Flow (Deferred)**
+    - Login/signup screens and router guards for remote authentication will be implemented in a future phase.
 
+**Phase 3 completed on 2025-04-14**
 ---
 
 ## Phase 4: Main App Shell & Navigation

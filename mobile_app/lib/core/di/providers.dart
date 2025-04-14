@@ -4,9 +4,14 @@ import 'package:get_it/get_it.dart';
 
 import '../auth_repository.dart';
 import '../transaction_repository.dart';
+import '../storage/local_auth_service.dart';
 
 // Access repositories via get_it
 final getIt = GetIt.instance;
+
+final localAuthServiceProvider = Provider<LocalAuthService>((ref) {
+  return getIt<LocalAuthService>();
+});
 
 // Auth state provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
