@@ -198,11 +198,15 @@ export default function Home() {
   const handleEditTransaction = async (data: TransactionData) => {
     if (!user || !data.id) return;
     
+    // Set the time to noon to avoid timezone issues
+    const dateWithoutTime = new Date(data.date);
+    dateWithoutTime.setHours(12, 0, 0, 0);
+    
     const updatedTransaction = {
       amount: data.amount,
       category: data.category,
       note: data.note,
-      date: data.date.toISOString(),
+      date: dateWithoutTime.toISOString(),
     };
     
     const { data: updated, error: updateError } = await supabase
@@ -216,10 +220,29 @@ export default function Home() {
       throw new Error(updateError.message);
     }
     
-    // Update the transaction in the local state
-    setTransactions(prevTransactions => 
-      prevTransactions.map(t => t.id === updated.id ? updated : t)
-    );
+    // Reset the dashboard data flag to force a refresh when switching to dashboard
+    dashboardFetchedRef.current = false;
+    
+    // If we're on the dashboard tab, refresh the dashboard data immediately
+    if (activeTab === "dashboard") {
+      const { data, error } = await supabase.rpc('dashboard_summary');
+      if (error) {
+        console.error("Error fetching dashboard data:", error);
+      } else {
+        setDashboardData((data && data[0]) ? data[0] : {
+          spent_today: 0,
+          spent_yesterday: 0,
+          spent_this_week: 0,
+          spent_last_week: 0,
+          spent_this_month: 0,
+          spent_last_month: 0,
+        });
+      }
+    }
+    
+    // Refresh the transaction list to ensure correct sorting after date changes
+    setPage(0); // Reset to first page
+    fetchTransactions(true); // Refresh the transaction list
     
     return;
   };
