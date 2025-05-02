@@ -170,11 +170,15 @@ export default function Home() {
       return;
     }
 
+    // Set the time to noon to avoid timezone issues
+    const dateWithoutTime = new Date(data.date);
+    dateWithoutTime.setHours(12, 0, 0, 0);
+
     const newTransaction = {
       amount: data.amount,
       category: data.category,
       note: data.note,
-      date: data.date.toISOString(),
+      date: dateWithoutTime.toISOString(),
       user_id: user.id,
     };
 
