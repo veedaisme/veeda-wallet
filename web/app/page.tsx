@@ -11,6 +11,7 @@ import { Transaction } from "@/models/transaction";
 import { TransactionsList } from "@/components/transactions-list";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
+import { EditTransactionModal } from "@/components/edit-transaction-modal";
 
 type TabType = "dashboard" | "transactions";
 type SortField = "date" | "amount";
@@ -39,6 +40,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  
+  // Edit transaction state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  
   const [dashboardData, setDashboardData] = useState({
     spent_today: 0,
     spent_yesterday: 0,
@@ -130,23 +136,20 @@ export default function Home() {
     if (activeTab === "transactions" && user) {
       fetchTransactions(true);
     }
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, user, sortField, sortDirection, searchTerm]);
 
-  // Infinite scroll: observe last transaction
-  const lastTransactionRef = useCallback(
-    (node: HTMLLIElement | null) => {
-      if (loadingTransactions) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new window.IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && hasMore) {
-          fetchTransactions();
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [loadingTransactions, hasMore, sortField, sortDirection, searchTerm, user, page]
-  );
+  // Infinite scroll observer
+  const lastTransactionRef = useCallback((node: HTMLLIElement | null) => {
+    if (loadingTransactions) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage((prevPage) => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loadingTransactions, hasMore]);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -171,7 +174,7 @@ export default function Home() {
       amount: data.amount,
       category: data.category,
       note: data.note,
-      date: new Date().toISOString(),
+      date: data.date.toISOString(),
       user_id: user.id,
     };
 
@@ -190,6 +193,40 @@ export default function Home() {
     setTransactions([inserted, ...transactions]);
     setIsModalOpen(false);
     setLoading(false);
+  };
+  
+  const handleEditTransaction = async (data: TransactionData) => {
+    if (!user || !data.id) return;
+    
+    const updatedTransaction = {
+      amount: data.amount,
+      category: data.category,
+      note: data.note,
+      date: data.date.toISOString(),
+    };
+    
+    const { data: updated, error: updateError } = await supabase
+      .from("transactions")
+      .update(updatedTransaction)
+      .eq('id', data.id)
+      .select()
+      .single();
+      
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+    
+    // Update the transaction in the local state
+    setTransactions(prevTransactions => 
+      prevTransactions.map(t => t.id === updated.id ? updated : t)
+    );
+    
+    return;
+  };
+  
+  const openEditModal = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setEditModalOpen(true);
   };
 
   const router = useRouter();
@@ -299,7 +336,11 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-              <TransactionsList transactions={transactions} lastTransactionRef={lastTransactionRef} />
+              <TransactionsList 
+                transactions={transactions} 
+                lastTransactionRef={lastTransactionRef} 
+                onEditTransaction={openEditModal}
+              />
               {loadingTransactions && (
                 <div className="flex justify-center mt-4">
                   <span className="text-gray-500">Loading...</span>
@@ -334,18 +375,26 @@ export default function Home() {
           </button>
         </nav>
 
-        {/* Transaction Modal */}
+        {/* Add Transaction Modal */}
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Transaction">
           <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsModalOpen(false)} loading={loading} />
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         </Modal>
+        
+        {/* Edit Transaction Modal */}
+        <EditTransactionModal
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          transaction={selectedTransaction}
+          onUpdateTransaction={handleEditTransaction}
+        />
       </div>
     </ProtectedLayout>
   );
 }
 
 // ChartModalDashboard component
-import { format, startOfWeek, addDays, startOfMonth, addWeeks, endOfWeek, endOfMonth, subWeeks, subMonths, isSameMonth, isSameWeek } from "date-fns";
+import { format, startOfWeek, addDays, startOfMonth, addWeeks, endOfWeek, endOfMonth, subMonths, isSameMonth } from "date-fns";
 
 type ChartModalDashboardProps = {
   open: boolean;
@@ -372,8 +421,8 @@ function getMonthWeeks(start: Date, end: Date) {
 
 function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboardProps) {
   const [loading, setLoading] = useState(false);
-  const [chartData, setChartData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<Array<Record<string, unknown>>>([]);
 
   useEffect(() => {
     if (!open || !type || !userId) return;
@@ -407,8 +456,8 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
         // Aggregate by day for both weeks
         const days = getWeekDays(startCurrent);
         const prevDays = getWeekDays(startPrev);
-        const currentWeek: { [key: string]: number } = {};
-        const previousWeek: { [key: string]: number } = {};
+        const currentWeek: Record<string, number> = {};
+        const previousWeek: Record<string, number> = {};
         days.forEach(day => (currentWeek[day] = 0));
         prevDays.forEach(day => (previousWeek[day] = 0));
 
@@ -425,10 +474,10 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
 
         // Compose chart data
         setChartData(
-          days.map((day, i) => ({
-            day,
-            "Current Week": currentWeek[day],
-            "Previous Week": previousWeek[day],
+          days.map(day => ({
+            name: day,
+            current: currentWeek[day] || 0,
+            previous: previousWeek[day] || 0,
           }))
         );
       } else if (type === "month") {
@@ -459,21 +508,21 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
         const prevWeeks = getMonthWeeks(startPrev, endPrev);
 
         // Aggregate by week for both months
-        const currentMonth: { [key: string]: number } = {};
-        const previousMonth: { [key: string]: number } = {};
+        const currentMonth: Record<string, number> = {};
+        const previousMonth: Record<string, number> = {};
         currentWeeks.forEach(w => (currentMonth[w.label] = 0));
         prevWeeks.forEach(w => (previousMonth[w.label] = 0));
 
         (data as Transaction[]).forEach(tx => {
           const d = new Date(tx.date);
           // Current month
-          currentWeeks.forEach((w, idx) => {
+          currentWeeks.forEach(w => {
             if (d >= w.start && d <= w.end && isSameMonth(d, startCurrent)) {
               currentMonth[w.label] += tx.amount;
             }
           });
           // Previous month
-          prevWeeks.forEach((w, idx) => {
+          prevWeeks.forEach(w => {
             if (d >= w.start && d <= w.end && isSameMonth(d, startPrev)) {
               previousMonth[w.label] += tx.amount;
             }
@@ -484,9 +533,9 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
         const allLabels = Array.from(new Set([...currentWeeks.map(w => w.label), ...prevWeeks.map(w => w.label)]));
         setChartData(
           allLabels.map(label => ({
-            week: label,
-            "Current Month": currentMonth[label] || 0,
-            "Previous Month": previousMonth[label] || 0,
+            name: label,
+            current: currentMonth[label] || 0,
+            previous: previousMonth[label] || 0,
           }))
         );
       }
@@ -502,54 +551,66 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
       onClose={onClose}
       title={
         type === "week"
-          ? "Spending Comparison: This Week vs Last Week"
+          ? "Weekly Spending Comparison"
           : type === "month"
-          ? "Spending Comparison: This Month vs Last Month"
-          : ""
+          ? "Monthly Spending Comparison"
+          : "Spending Comparison"
       }
     >
       {loading ? (
-        <div className="min-h-[250px] flex items-center justify-center text-gray-400">Loading chart...</div>
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="text-center py-8">Loading...</div>
+        </div>
       ) : error ? (
         <div className="text-red-500">{error}</div>
       ) : type === "week" && chartData.length ? (
-        <ChartContainer
-          config={{
-            "Current Week": { label: "Current Week", color: "#6366f1" },
-            "Previous Week": { label: "Previous Week", color: "#a3a3a3" },
-          }}
-          className="w-full h-64"
-        >
-          <Recharts.LineChart data={chartData}>
-            <Recharts.XAxis dataKey="day" />
-            <Recharts.YAxis tickFormatter={(value) => formatIDR(value)} />
-            <Recharts.Tooltip
-              formatter={(value: number) => formatIDR(value)}
-            />
-            <Recharts.Legend />
-            <Recharts.Line type="monotone" dataKey="Current Week" stroke="#6366f1" strokeWidth={2} dot />
-            <Recharts.Line type="monotone" dataKey="Previous Week" stroke="#a3a3a3" strokeWidth={2} dot />
-          </Recharts.LineChart>
-        </ChartContainer>
+        <div className="w-full h-64">
+          <ChartContainer config={{
+            current: { label: "Current", color: "#000000" },
+            previous: { label: "Previous", color: "#cccccc" }
+          }}>
+            <Recharts.ResponsiveContainer width="100%" height="100%">
+              <Recharts.BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <Recharts.CartesianGrid strokeDasharray="3 3" />
+                <Recharts.XAxis dataKey="name" />
+                <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
+                <Recharts.Tooltip
+                  formatter={(value: number) => [formatIDR(value), 'Spent']}
+                  labelFormatter={(index: number) => {
+                    return `${chartData[index].name}`;
+                  }}
+                />
+                <Recharts.Legend />
+                <Recharts.Bar dataKey="current" name="Current" fill="#000000" />
+                <Recharts.Bar dataKey="previous" name="Previous" fill="#cccccc" />
+              </Recharts.BarChart>
+            </Recharts.ResponsiveContainer>
+          </ChartContainer>
+        </div>
       ) : type === "month" && chartData.length ? (
-        <ChartContainer
-          config={{
-            "Current Month": { label: "Current Month", color: "#6366f1" },
-            "Previous Month": { label: "Previous Month", color: "#a3a3a3" },
-          }}
-          className="w-full h-64"
-        >
-          <Recharts.LineChart data={chartData}>
-            <Recharts.XAxis dataKey="week" />
-            <Recharts.YAxis tickFormatter={(value) => formatIDR(value)} />
-            <Recharts.Tooltip
-              formatter={(value: number) => formatIDR(value)}
-            />
-            <Recharts.Legend />
-            <Recharts.Line type="monotone" dataKey="Current Month" stroke="#6366f1" strokeWidth={2} dot />
-            <Recharts.Line type="monotone" dataKey="Previous Month" stroke="#a3a3a3" strokeWidth={2} dot />
-          </Recharts.LineChart>
-        </ChartContainer>
+        <div className="w-full h-64">
+          <ChartContainer config={{
+            current: { label: "Current", color: "#000000" },
+            previous: { label: "Previous", color: "#cccccc" }
+          }}>
+            <Recharts.ResponsiveContainer width="100%" height="100%">
+              <Recharts.BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <Recharts.CartesianGrid strokeDasharray="3 3" />
+                <Recharts.XAxis dataKey="name" />
+                <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
+                <Recharts.Tooltip
+                  formatter={(value: number) => [formatIDR(value), 'Weekly Total']}
+                  labelFormatter={(index: number) => {
+                    return `${chartData[index].name}`;
+                  }}
+                />
+                <Recharts.Legend />
+                <Recharts.Bar dataKey="current" name="Current" fill="#000000" />
+                <Recharts.Bar dataKey="previous" name="Previous" fill="#cccccc" />
+              </Recharts.BarChart>
+            </Recharts.ResponsiveContainer>
+          </ChartContainer>
+        </div>
       ) : (
         <div className="text-gray-400">No data available</div>
       )}

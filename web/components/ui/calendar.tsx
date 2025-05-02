@@ -9,14 +9,18 @@ import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DayPickerPrimitive = DayPicker as any;
+
 function Calendar({
   className,
   classNames,
-  showOutsideDays = true,
-  ...props
+  showOutsideDays = true, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ...props 
 }: CalendarProps) {
   return (
-    <DayPicker
+    <DayPickerPrimitive
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{

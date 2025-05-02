@@ -4,17 +4,26 @@ import type React from "react"
 
 import { useState } from "react"
 import { formatIDR, parseIDR } from "@/utils/currency"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
 interface TransactionFormProps {
   onSubmit: (data: TransactionData) => void
   onCancel: () => void
   loading?: boolean
+  initialData?: TransactionData
 }
 
 export interface TransactionData {
   amount: number
   note: string
   category: string
+  date: Date
+  id?: string
 }
 
 const CATEGORIES = [
@@ -30,10 +39,11 @@ const CATEGORIES = [
   "Other",
 ]
 
-export function TransactionForm({ onSubmit, onCancel, loading = false }: TransactionFormProps) {
-  const [amount, setAmount] = useState("")
-  const [note, setNote] = useState("")
-  const [category, setCategory] = useState("")
+export function TransactionForm({ onSubmit, onCancel, loading = false, initialData }: TransactionFormProps) {
+  const [amount, setAmount] = useState(initialData ? formatIDR(initialData.amount).replace("Rp", "").trim() : "")
+  const [note, setNote] = useState(initialData?.note || "")
+  const [category, setCategory] = useState(initialData?.category || "")
+  const [date, setDate] = useState<Date | undefined>(initialData?.date || new Date())
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validateForm = () => {
@@ -46,6 +56,10 @@ export function TransactionForm({ onSubmit, onCancel, loading = false }: Transac
     if (!category) {
       newErrors.category = "Please select a category"
     }
+    
+    if (!date) {
+      newErrors.date = "Please select a date"
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -54,11 +68,13 @@ export function TransactionForm({ onSubmit, onCancel, loading = false }: Transac
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (validateForm()) {
+    if (validateForm() && date) {
       onSubmit({
         amount: parseIDR(amount),
         note,
         category,
+        date,
+        ...(initialData?.id ? { id: initialData.id } : {})
       })
     }
   }
@@ -137,6 +153,36 @@ export function TransactionForm({ onSubmit, onCancel, loading = false }: Transac
         {errors.category && <p className="mt-1 text-sm text-red-500">{errors.category}</p>}
       </div>
 
+      <div>
+        <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+          Date
+        </label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !date && "text-muted-foreground",
+                errors.date ? "border-red-500" : ""
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+        {errors.date && <p className="mt-1 text-sm text-red-500">{errors.date}</p>}
+      </div>
+
       <div className="flex gap-3 pt-2">
         <button
           type="button"
@@ -150,7 +196,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false }: Transac
           className="flex-1 py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-60"
           disabled={loading}
         >
-          {loading ? "Adding..." : "Add Transaction"}
+          {loading ? (initialData ? "Updating..." : "Adding...") : (initialData ? "Update Transaction" : "Add Transaction")}
         </button>
       </div>
     </form>

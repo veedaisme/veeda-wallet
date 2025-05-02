@@ -3,13 +3,15 @@
 import { getCategoryIcon } from "@/utils/category-icons"
 import { formatIDR } from "@/utils/currency"
 import type { Transaction } from "@/models/transaction"
+import { Pencil } from "lucide-react"
 
 interface TransactionsListProps {
   transactions: Transaction[]
   lastTransactionRef?: (node: HTMLLIElement | null) => void
+  onEditTransaction?: (transaction: Transaction) => void
 }
 
-export function TransactionsList({ transactions, lastTransactionRef }: TransactionsListProps) {
+export function TransactionsList({ transactions, lastTransactionRef, onEditTransaction }: TransactionsListProps) {
   // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -47,9 +49,20 @@ export function TransactionsList({ transactions, lastTransactionRef }: Transacti
                         <p className="text-sm text-gray-500">{transaction.category}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{formatIDR(transaction.amount)}</p>
-                      <p className="text-xs text-gray-500">{formatDate(transaction.date)}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className="font-semibold">{formatIDR(transaction.amount)}</p>
+                        <p className="text-xs text-gray-500">{formatDate(transaction.date)}</p>
+                      </div>
+                      {onEditTransaction && (
+                        <button
+                          onClick={() => onEditTransaction(transaction)}
+                          className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
+                          aria-label="Edit transaction"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </li>
