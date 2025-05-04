@@ -270,8 +270,7 @@ export default function Home() {
         {/* Header */}
         <header className="p-6 flex items-center justify-between relative">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">My Accounts</h1>
-            <ChevronDown className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Transactions</h1>
           </div>
           <div className="relative">
             <button

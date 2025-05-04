@@ -3,7 +3,6 @@
 import { getCategoryIcon } from "@/utils/category-icons"
 import { formatIDR } from "@/utils/currency"
 import type { Transaction } from "@/models/transaction"
-import { Pencil } from "lucide-react"
 
 interface TransactionsListProps {
   transactions: Transaction[]
@@ -36,9 +35,18 @@ export function TransactionsList({ transactions, lastTransactionRef, onEditTrans
               return (
                 <li
                   key={transaction.id}
-                  className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm"
+                  className={`bg-white rounded-xl p-3 border border-gray-100 shadow-sm relative ${onEditTransaction ? 'hover:bg-gray-50 cursor-pointer transition-colors group' : ''}`}
                   ref={isLast && lastTransactionRef ? lastTransactionRef : undefined}
+                  onClick={onEditTransaction ? () => onEditTransaction(transaction) : undefined}
+                  aria-label={onEditTransaction ? `Edit transaction: ${transaction.note}` : undefined}
                 >
+                  {onEditTransaction && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <div className="bg-black/75 text-white px-3 py-1 rounded-md text-sm font-medium">
+                        Click to edit
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className="bg-gray-100 p-2 rounded-full">
@@ -49,20 +57,9 @@ export function TransactionsList({ transactions, lastTransactionRef, onEditTrans
                         <p className="text-sm text-gray-500">{transaction.category}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-right">
-                        <p className="font-semibold">{formatIDR(transaction.amount)}</p>
-                        <p className="text-xs text-gray-500">{formatDate(transaction.date)}</p>
-                      </div>
-                      {onEditTransaction && (
-                        <button
-                          onClick={() => onEditTransaction(transaction)}
-                          className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-100 transition-colors"
-                          aria-label="Edit transaction"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                      )}
+                    <div className="text-right">
+                      <p className="font-semibold">{formatIDR(transaction.amount)}</p>
+                      <p className="text-xs text-gray-500">{formatDate(transaction.date)}</p>
                     </div>
                   </div>
                 </li>
