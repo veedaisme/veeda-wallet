@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { UserProvider } from '@/hooks/useUser';
 
+export const dynamic = 'force-dynamic';
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
