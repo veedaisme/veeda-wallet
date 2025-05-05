@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronDown, Clock, CreditCard, Plus, User, ChevronUp, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from 'next/link';
+
 import { useTranslations } from 'next-intl';
 import { LanguagePillToggle } from '@/components/ui/language-pill-toggle';
 
@@ -33,7 +33,6 @@ function getChange(current: number, previous: number): number | undefined {
 
 export default function Home() {
   const tApp = useTranslations('app');
-  const tLang = useTranslations('language');
   const tDash = useTranslations('dashboard');
   const tTrans = useTranslations('transactions');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -220,7 +219,7 @@ export default function Home() {
       date: dateWithoutTime.toISOString(),
     };
     
-    const { data: updated, error: updateError } = await supabase
+    const { error: updateError } = await supabase
       .from("transactions")
       .update(updatedTransaction)
       .eq('id', data.id)
@@ -585,7 +584,7 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
     };
 
     fetchData();
-  }, [open, type, userId]);
+  }, [open, type, userId, dateFnsLocale]);
 
   return (
     <Modal
