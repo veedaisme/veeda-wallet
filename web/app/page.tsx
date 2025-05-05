@@ -612,18 +612,18 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
             previous: { label: tDashChart('previous'), color: "#cccccc" }
           }}>
             <Recharts.ResponsiveContainer width="100%" height="100%">
-              <Recharts.BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <Recharts.CartesianGrid strokeDasharray="3 3" />
-                <Recharts.XAxis dataKey="name" />
-                <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
-                <Recharts.Tooltip
-                  formatter={(value: number) => [formatIDR(value), tDashChart('spent')]}
-                  labelFormatter={(label: string) => label}
-                />
-                <Recharts.Legend />
-                <Recharts.Bar dataKey="current" name={tDashChart('current')} fill="#000000" />
-                <Recharts.Bar dataKey="previous" name={tDashChart('previous')} fill="#cccccc" />
-              </Recharts.BarChart>
+              <Recharts.LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+  <Recharts.CartesianGrid strokeDasharray="3 3" />
+  <Recharts.XAxis dataKey="name" />
+  <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
+  <Recharts.Tooltip
+    formatter={(value: number) => [formatIDR(value), tDashChart('spent')]}
+    labelFormatter={(label: string) => label}
+  />
+  <Recharts.Legend />
+  <Recharts.Line type="monotone" dataKey="current" name={tDashChart('current')} stroke="#e05d38" strokeWidth={3} dot={{ r: 5, stroke: '#e05d38', strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7, fill: '#e05d38', stroke: '#fff', strokeWidth: 2 }} />
+  <Recharts.Line type="monotone" dataKey="previous" name={tDashChart('previous')} stroke="#cccccc" strokeWidth={2} dot={{ r: 4, stroke: '#cccccc', strokeWidth: 1, fill: '#fff' }} activeDot={{ r: 6, fill: '#cccccc', stroke: '#fff', strokeWidth: 2 }} />
+</Recharts.LineChart>
             </Recharts.ResponsiveContainer>
           </ChartContainer>
         </div>
@@ -634,18 +634,18 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
             previous: { label: tDashChart('previous'), color: "#cccccc" }
           }}>
             <Recharts.ResponsiveContainer width="100%" height="100%">
-              <Recharts.BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <Recharts.CartesianGrid strokeDasharray="3 3" />
-                <Recharts.XAxis dataKey="name" />
-                <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
-                <Recharts.Tooltip
-                  formatter={(value: number) => [formatIDR(value), tDashChart('weeklyTotal')]}
-                  labelFormatter={(label: string) => label}
-                />
-                <Recharts.Legend />
-                <Recharts.Bar dataKey="current" name={tDashChart('current')} fill="#000000" />
-                <Recharts.Bar dataKey="previous" name={tDashChart('previous')} fill="#cccccc" />
-              </Recharts.BarChart>
+              <Recharts.LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+  <Recharts.CartesianGrid strokeDasharray="3 3" />
+  <Recharts.XAxis dataKey="name" />
+  <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
+  <Recharts.Tooltip
+    formatter={(value: number) => [formatIDR(value), tDashChart('weeklyTotal')]}
+    labelFormatter={(label: string) => label}
+  />
+  <Recharts.Legend />
+  <Recharts.Line type="monotone" dataKey="current" name={tDashChart('current')} stroke="#e05d38" strokeWidth={3} dot={{ r: 5, stroke: '#e05d38', strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7, fill: '#e05d38', stroke: '#fff', strokeWidth: 2 }} />
+  <Recharts.Line type="monotone" dataKey="previous" name={tDashChart('previous')} stroke="#cccccc" strokeWidth={2} dot={{ r: 4, stroke: '#cccccc', strokeWidth: 1, fill: '#fff' }} activeDot={{ r: 6, fill: '#cccccc', stroke: '#fff', strokeWidth: 2 }} />
+</Recharts.LineChart>
             </Recharts.ResponsiveContainer>
           </ChartContainer>
         </div>
