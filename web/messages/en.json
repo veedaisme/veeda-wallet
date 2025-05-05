@@ -1,0 +1,42 @@
+{
+  "app": { "title": "Transactions", "logout": "Logout" },
+  "dashboard": { "title": "Dashboard", "today": "Today", "yesterday": "Yesterday", "thisWeek": "This Week", "lastWeek": "Last Week", "thisMonth": "This Month", "lastMonth": "Last Month" },
+  "transactions": { 
+    "add": "Add Transaction", 
+    "edit": "Edit Transaction", 
+    "amount": "Amount", 
+    "note": "Note", 
+    "category": "Category", 
+    "selectCategory": "Select a category", 
+    "date": "Date", 
+    "filter": "Filter", 
+    "search": "Search transactions...", 
+    "noTransactions": "No transactions found", 
+    "editTooltip": "Click to edit", 
+    "loading": "Loading...", 
+    "cancel": "Cancel", 
+    "adding": "Adding...", 
+    "updating": "Updating...", 
+    "update": "Update Transaction", 
+    "placeholderNote": "Coffee, lunch, etc.", 
+    "pickDate": "Pick a date",
+    "error": "Error",
+    "failedUpdate": "Failed to update transaction"
+  },
+  "categories": { 
+    "food": "Food", 
+    "transportation": "Transportation", 
+    "entertainment": "Entertainment", 
+    "housing": "Housing", 
+    "utilities": "Utilities", 
+    "shopping": "Shopping", 
+    "health": "Health", 
+    "education": "Education", 
+    "travel": "Travel", 
+    "other": "Other" 
+  },
+  "language": { 
+    "en": "English", 
+    "id": "Bahasa Indonesia" 
+  }
+}

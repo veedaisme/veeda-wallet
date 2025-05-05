@@ -2,6 +2,7 @@
 
 import { getCategoryIcon } from "@/utils/category-icons"
 import { formatIDR } from "@/utils/currency"
+import { useTranslations } from 'next-intl';
 import type { Transaction } from "@/models/transaction"
 
 interface TransactionsListProps {
@@ -21,12 +22,15 @@ export function TransactionsList({ transactions, lastTransactionRef, onEditTrans
     }).format(date)
   }
 
+  const tTrans = useTranslations('transactions');
+  const tCat = useTranslations('categories');
+
   return (
     <div className="flex flex-col h-full">
       {/* Transactions list */}
       <div className="flex-1 overflow-y-auto">
         {transactions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No transactions found</div>
+          <div className="text-center py-8 text-gray-500">{tTrans('noTransactions')}</div>
         ) : (
           <ul className="space-y-3">
             {transactions.map((transaction, idx) => {
@@ -42,9 +46,7 @@ export function TransactionsList({ transactions, lastTransactionRef, onEditTrans
                 >
                   {onEditTransaction && (
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <div className="bg-black/75 text-white px-3 py-1 rounded-md text-sm font-medium">
-                        Click to edit
-                      </div>
+                      <div className="bg-black/75 text-white px-3 py-1 rounded-md text-sm font-medium">{tTrans('editTooltip')}</div>
                     </div>
                   )}
                   <div className="flex items-center justify-between mb-2">
@@ -54,7 +56,7 @@ export function TransactionsList({ transactions, lastTransactionRef, onEditTrans
                       </div>
                       <div>
                         <h3 className="font-medium">{transaction.note}</h3>
-                        <p className="text-sm text-gray-500">{transaction.category}</p>
+                        <p className="text-sm text-gray-500">{tCat(transaction.category.toLowerCase())}</p>
                       </div>
                     </div>
                     <div className="text-right">

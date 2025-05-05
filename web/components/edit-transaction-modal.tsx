@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from 'next-intl';
 import { Modal } from "@/components/ui/modal"
 import { TransactionForm, type TransactionData } from "@/components/transaction-form"
 import type { Transaction } from "@/models/transaction"
@@ -18,6 +19,7 @@ export function EditTransactionModal({
   transaction,
   onUpdateTransaction,
 }: EditTransactionModalProps) {
+  const tTrans = useTranslations('transactions');
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,7 +33,7 @@ export function EditTransactionModal({
       await onUpdateTransaction(data)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update transaction")
+      setError(err instanceof Error ? err.message : tTrans('failedUpdate'))
     } finally {
       setLoading(false)
     }
@@ -47,7 +49,7 @@ export function EditTransactionModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Transaction">
+    <Modal isOpen={isOpen} onClose={onClose} title={tTrans('edit')}>
       <TransactionForm 
         onSubmit={handleUpdateTransaction} 
         onCancel={onClose} 

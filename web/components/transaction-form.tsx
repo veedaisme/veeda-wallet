@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { useTranslations } from 'next-intl';
 
 interface TransactionFormProps {
   onSubmit: (data: TransactionData) => void
@@ -39,7 +40,13 @@ const CATEGORIES = [
   "Other",
 ]
 
+import { useLocale } from 'next-intl';
+import { id as idLocale } from 'date-fns/locale';
+
 export function TransactionForm({ onSubmit, onCancel, loading = false, initialData }: TransactionFormProps) {
+  const tTrans = useTranslations('transactions');
+  const tCat = useTranslations('categories');
+  const locale = useLocale();
   const [amount, setAmount] = useState(initialData ? formatIDR(initialData.amount).replace("Rp", "").trim() : "")
   const [note, setNote] = useState(initialData?.note || "")
   const [category, setCategory] = useState(initialData?.category || "")
@@ -50,15 +57,15 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
     const newErrors: Record<string, string> = {}
 
     if (!amount || isNaN(Number(amount.replace(/[^\d]/g, ""))) || Number(amount.replace(/[^\d]/g, "")) <= 0) {
-      newErrors.amount = "Please enter a valid amount"
+      newErrors.amount = tTrans('errorInvalidAmount')
     }
 
     if (!category) {
-      newErrors.category = "Please select a category"
+      newErrors.category = tTrans('errorSelectCategory')
     }
     
     if (!date) {
-      newErrors.date = "Please select a date"
+      newErrors.date = tTrans('errorSelectDate')
     }
 
     setErrors(newErrors)
@@ -97,7 +104,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
-          Amount (Rp)
+          {tTrans('amount')} (Rp)
         </label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">Rp</span>
@@ -117,12 +124,12 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
 
       <div>
         <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-1">
-          Note
+          {tTrans('note')}
         </label>
         <input
           id="note"
           type="text"
-          placeholder="Coffee, lunch, etc."
+          placeholder={tTrans('placeholderNote')}
           value={note}
           onChange={(e) => setNote(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
@@ -131,7 +138,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
 
       <div>
         <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-          Category
+          {tTrans('category')}
         </label>
         <select
           id="category"
@@ -142,11 +149,11 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
           }`}
         >
           <option value="" disabled>
-            Select a category
+            {tTrans('selectCategory')}
           </option>
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
-              {cat}
+              {tCat(cat.toLowerCase())}
             </option>
           ))}
         </select>
@@ -155,7 +162,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
 
       <div>
         <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-          Date
+          {tTrans('date')}
         </label>
         <Popover>
           <PopoverTrigger asChild>
@@ -168,7 +175,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
+              {date ? format(date, 'PPP', { locale: locale === 'id' ? idLocale : undefined }) : <span>{tTrans('pickDate')}</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
@@ -177,6 +184,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
               selected={date}
               onSelect={setDate}
               initialFocus
+              locale={locale === 'id' ? idLocale : undefined}
             />
           </PopoverContent>
         </Popover>
@@ -189,14 +197,14 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
           onClick={onCancel}
           className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
         >
-          Cancel
+          {tTrans('cancel')}
         </button>
         <button
           type="submit"
           className="flex-1 py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-60"
           disabled={loading}
         >
-          {loading ? (initialData ? "Updating..." : "Adding...") : (initialData ? "Update Transaction" : "Add Transaction")}
+          {loading ? (initialData ? tTrans('updating') : tTrans('adding')) : (initialData ? tTrans('update') : tTrans('add'))}
         </button>
       </div>
     </form>

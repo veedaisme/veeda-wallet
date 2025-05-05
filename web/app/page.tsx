@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronDown, Clock, CreditCard, Plus, User, ChevronUp, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 import { SpendingCard } from "@/components/spending-card";
 import { Modal } from "@/components/ui/modal";
@@ -29,6 +31,10 @@ function getChange(current: number, previous: number): number | undefined {
 }
 
 export default function Home() {
+  const tApp = useTranslations('app');
+  const tLang = useTranslations('language');
+  const tDash = useTranslations('dashboard');
+  const tTrans = useTranslations('transactions');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -270,7 +276,11 @@ export default function Home() {
         {/* Header */}
         <header className="p-6 flex items-center justify-between relative">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Transactions</h1>
+            <h1 className="text-2xl font-bold">{tApp('title')}</h1>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/en">{tLang('en')}</Link>
+            <Link href="/id">{tLang('id')}</Link>
           </div>
           <div className="relative">
             <button
@@ -287,7 +297,7 @@ export default function Home() {
                   onClick={handleLogout}
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+                  {tApp('logout')}
                 </button>
               </div>
             )}
@@ -306,25 +316,25 @@ export default function Home() {
               />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <SpendingCard
-                  title="Spent Today"
+                  title={tDash('today')}
                   amount={Number(dashboardData.spent_today)}
                   change={getChange(Number(dashboardData.spent_today), Number(dashboardData.spent_yesterday))}
-                  previousLabel="Yesterday"
+                  previousLabel={tDash('yesterday')}
                   previousAmount={Number(dashboardData.spent_yesterday)}
                 />
                 <SpendingCard
-                  title="Spent This Week"
+                  title={tDash('thisWeek')}
                   amount={Number(dashboardData.spent_this_week)}
                   change={getChange(Number(dashboardData.spent_this_week), Number(dashboardData.spent_last_week))}
-                  previousLabel="Last Week"
+                  previousLabel={tDash('lastWeek')}
                   previousAmount={Number(dashboardData.spent_last_week)}
                   onClick={() => setChartModal({ open: true, type: "week" })}
                 />
                 <SpendingCard
-                  title="Spent This Month"
+                  title={tDash('thisMonth')}
                   amount={Number(dashboardData.spent_this_month)}
                   change={getChange(Number(dashboardData.spent_this_month), Number(dashboardData.spent_last_month))}
-                  previousLabel="Last Month"
+                  previousLabel={tDash('lastMonth')}
                   previousAmount={Number(dashboardData.spent_last_month)}
                   onClick={() => setChartModal({ open: true, type: "month" })}
                 />
@@ -336,7 +346,7 @@ export default function Home() {
               <div className="mb-4 flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
                 <input
                   type="text"
-                  placeholder="Search transactions..."
+                  placeholder={tTrans('search')}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="w-full md:w-64 pl-3 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
@@ -348,7 +358,7 @@ export default function Home() {
                       sortField === "date" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    Date
+                    {tTrans('date')}
                     {sortField === "date" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                   </button>
                   <button
@@ -357,7 +367,7 @@ export default function Home() {
                       sortField === "amount" ? "bg-black text-white" : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    Amount
+                    {tTrans('amount')}
                     {sortField === "amount" && (sortDirection === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
                   </button>
                 </div>
@@ -390,19 +400,19 @@ export default function Home() {
             className={`flex flex-col items-center ${activeTab === "dashboard" ? "text-black" : "text-gray-400"}`}
           >
             <CreditCard className="h-6 w-6" />
-            <span className="text-xs mt-1">Dashboard</span>
+            <span className="text-xs mt-1">{tDash('title')}</span>
           </button>
           <button
             onClick={() => setActiveTab("transactions")}
             className={`flex flex-col items-center ${activeTab === "transactions" ? "text-black" : "text-gray-400"}`}
           >
             <Clock className="h-6 w-6" />
-            <span className="text-xs mt-1">Transactions</span>
+            <span className="text-xs mt-1">{tApp('title')}</span>
           </button>
         </nav>
 
         {/* Add Transaction Modal */}
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add Transaction">
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={tTrans('add')}>
           <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsModalOpen(false)} loading={loading} />
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         </Modal>

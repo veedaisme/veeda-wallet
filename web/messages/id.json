@@ -1,0 +1,26 @@
+{
+  "app": { "title": "Transaksi", "logout": "Keluar" },
+  "dashboard": { "title": "Dasbor", "today": "Hari Ini", "yesterday": "Kemarin", "thisWeek": "Minggu Ini", "lastWeek": "Minggu Lalu", "thisMonth": "Bulan Ini", "lastMonth": "Bulan Lalu" },
+  "transactions": {
+    "add": "Tambah Transaksi",
+    "edit": "Edit Transaksi",
+    "amount": "Jumlah",
+    "note": "Catatan",
+    "category": "Kategori",
+    "selectCategory": "Pilih kategori",
+    "date": "Tanggal",
+    "filter": "Filter",
+    "search": "Cari transaksi...",
+    "noTransactions": "Tidak ada transaksi",
+    "editTooltip": "Klik untuk edit",
+    "loading": "Memuat...",
+    "cancel": "Batal",
+    "adding": "Menambah...",
+    "updating": "Memperbarui...",
+    "update": "Perbarui Transaksi",
+    "placeholderNote": "Kopi, makan siang, dll.",
+    "pickDate": "Pilih tanggal"
+  },
+  "categories": { "food": "Makanan", "transportation": "Transportasi", "entertainment": "Hiburan", "housing": "Perumahan", "utilities": "Utilitas", "shopping": "Belanja", "health": "Kesehatan", "education": "Pendidikan", "travel": "Perjalanan", "other": "Lainnya" },
+  "language": { "en": "English", "id": "Bahasa Indonesia" }
+}
