@@ -48,5 +48,17 @@
     "travel": "Perjalanan", 
     "other": "Lainnya" 
   },
-  "language": { "en": "English", "id": "Bahasa Indonesia" }
+  "language": { "en": "English", "id": "Bahasa Indonesia" },
+  "auth": {
+    "signInTitle": "Masuk",
+    "signUpTitle": "Daftar",
+    "email": "Email",
+    "password": "Kata Sandi",
+    "loginSuccess": "Login berhasil! Mengalihkan...",
+    "signupSuccess": "Pendaftaran berhasil! Periksa email Anda.",
+    "signingIn": "Masuk...",
+    "signingUp": "Mendaftar...",
+    "dontHaveAccount": "Belum punya akun? Daftar",
+    "alreadyHaveAccount": "Sudah punya akun? Masuk"
+  }
 }

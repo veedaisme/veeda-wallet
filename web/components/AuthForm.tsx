@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
 
 type Mode = "login" | "signup";
 
 export default function AuthForm() {
+  const tAuth = useTranslations('auth');
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,11 +41,11 @@ export default function AuthForm() {
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
-      else setSuccess("Login successful! Redirecting...");
+      else setSuccess(tAuth('loginSuccess'));
     } else {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) setError(error.message);
-      else setSuccess("Signup successful! Check your email to confirm.");
+      else setSuccess(tAuth('signupSuccess'));
     }
     setLoading(false);
   };
@@ -52,11 +54,11 @@ export default function AuthForm() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md p-8 shadow-lg">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-left">{mode === "login" ? "Sign In" : "Sign Up"}</h2>
+          <h2 className="text-2xl font-bold text-left">{mode === "login" ? tAuth('signInTitle') : tAuth('signUpTitle')}</h2>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{tAuth('email')}</Label>
             <Input
               id="email"
               type="email"
@@ -68,7 +70,7 @@ export default function AuthForm() {
             />
           </div>
           <div>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{tAuth('password')}</Label>
             <Input
               id="password"
               type="password"
@@ -82,7 +84,7 @@ export default function AuthForm() {
           {error && <Alert variant="destructive">{error}</Alert>}
           {success && <Alert variant="default">{success}</Alert>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (mode === "login" ? "Signing in..." : "Signing up...") : (mode === "login" ? "Sign In" : "Sign Up")}
+            {loading ? (mode === "login" ? tAuth('signingIn') : tAuth('signingUp')) : (mode === "login" ? tAuth('signInTitle') : tAuth('signUpTitle'))}
           </Button>
         </form>
         <div className="mt-6 text-center">
@@ -93,8 +95,8 @@ export default function AuthForm() {
             disabled={loading}
           >
             {mode === "login"
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
+              ? tAuth('dontHaveAccount')
+              : tAuth('alreadyHaveAccount')}
           </button>
         </div>
       </Card>

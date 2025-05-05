@@ -53,5 +53,17 @@
   "language": { 
     "en": "English", 
     "id": "Bahasa Indonesia" 
+  },
+  "auth": {
+    "signInTitle": "Sign In",
+    "signUpTitle": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "loginSuccess": "Login successful! Redirecting...",
+    "signupSuccess": "Signup successful! Check your email to confirm.",
+    "signingIn": "Signing in...",
+    "signingUp": "Signing up...",
+    "dontHaveAccount": "Don't have an account? Sign up",
+    "alreadyHaveAccount": "Already have an account? Sign in"
   }
 }
