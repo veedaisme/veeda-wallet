@@ -5,6 +5,7 @@ import { ChevronDown, Clock, CreditCard, Plus, User, ChevronUp, LogOut } from "l
 import { useRouter } from "next/navigation";
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { LanguagePillToggle } from '@/components/ui/language-pill-toggle';
 
 import { SpendingCard } from "@/components/spending-card";
 import { Modal } from "@/components/ui/modal";
@@ -278,29 +279,28 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold">{tApp('title')}</h1>
           </div>
-          <div className="flex gap-2">
-            <Link href="/en">{tLang('en')}</Link>
-            <Link href="/id">{tLang('id')}</Link>
-          </div>
-          <div className="relative">
-            <button
-              className="rounded-full bg-gray-200 p-2"
-              onClick={() => setProfileMenuOpen((open) => !open)}
-              aria-label="Open profile menu"
-            >
-              <User className="h-5 w-5 text-gray-500" />
-            </button>
-            {profileMenuOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <button
-                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {tApp('logout')}
-                </button>
-              </div>
-            )}
+          <div className="flex flex-row items-center gap-4">
+            <LanguagePillToggle />
+            <div className="relative">
+              <button
+                className="rounded-full bg-gray-200 p-2"
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                aria-label="Open profile menu"
+              >
+                <User className="h-5 w-5 text-gray-500" />
+              </button>
+              {profileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <button
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    {tApp('logout')}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
