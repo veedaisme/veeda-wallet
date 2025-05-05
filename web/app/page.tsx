@@ -618,9 +618,7 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
                 <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
                 <Recharts.Tooltip
                   formatter={(value: number) => [formatIDR(value), tDashChart('spent')]}
-                  labelFormatter={(index: number) => {
-                    return `${chartData[index].name}`;
-                  }}
+                  labelFormatter={(label: string) => label}
                 />
                 <Recharts.Legend />
                 <Recharts.Bar dataKey="current" name={tDashChart('current')} fill="#000000" />
@@ -642,9 +640,7 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
                 <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
                 <Recharts.Tooltip
                   formatter={(value: number) => [formatIDR(value), tDashChart('weeklyTotal')]}
-                  labelFormatter={(index: number) => {
-                    return `${chartData[index].name}`;
-                  }}
+                  labelFormatter={(label: string) => label}
                 />
                 <Recharts.Legend />
                 <Recharts.Bar dataKey="current" name={tDashChart('current')} fill="#000000" />
