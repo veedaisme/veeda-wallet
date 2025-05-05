@@ -1,6 +1,21 @@
 {
   "app": { "title": "Transactions", "logout": "Logout" },
-  "dashboard": { "title": "Dashboard", "today": "Today", "yesterday": "Yesterday", "thisWeek": "This Week", "lastWeek": "Last Week", "thisMonth": "This Month", "lastMonth": "Last Month" },
+  "dashboard": { 
+    "title": "Dashboard", 
+    "today": "Today", 
+    "yesterday": "Yesterday", 
+    "thisWeek": "This Week", 
+    "lastWeek": "Last Week", 
+    "thisMonth": "This Month", 
+    "lastMonth": "Last Month",
+    "weeklyComparison": "Weekly Spending Comparison",
+    "monthlyComparison": "Monthly Spending Comparison",
+    "comparison": "Spending Comparison",
+    "current": "Current",
+    "previous": "Previous",
+    "spent": "Spent",
+    "weeklyTotal": "Weekly Total"
+  },
   "transactions": { 
     "add": "Add Transaction", 
     "edit": "Edit Transaction", 

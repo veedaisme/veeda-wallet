@@ -1,6 +1,21 @@
 {
   "app": { "title": "Transaksi", "logout": "Keluar" },
-  "dashboard": { "title": "Dasbor", "today": "Hari Ini", "yesterday": "Kemarin", "thisWeek": "Minggu Ini", "lastWeek": "Minggu Lalu", "thisMonth": "Bulan Ini", "lastMonth": "Bulan Lalu" },
+  "dashboard": { 
+    "title": "Dasbor", 
+    "today": "Hari Ini", 
+    "yesterday": "Kemarin", 
+    "thisWeek": "Minggu Ini", 
+    "lastWeek": "Minggu Lalu", 
+    "thisMonth": "Bulan Ini", 
+    "lastMonth": "Bulan Lalu",
+    "weeklyComparison": "Perbandingan Pengeluaran Mingguan",
+    "monthlyComparison": "Perbandingan Pengeluaran Bulanan",
+    "comparison": "Perbandingan Pengeluaran",
+    "current": "Saat Ini",
+    "previous": "Sebelumnya",
+    "spent": "Pengeluaran",
+    "weeklyTotal": "Total Mingguan"
+  },
   "transactions": {
     "add": "Tambah Transaksi",
     "edit": "Edit Transaksi",
@@ -21,6 +36,17 @@
     "placeholderNote": "Kopi, makan siang, dll.",
     "pickDate": "Pilih tanggal"
   },
-  "categories": { "food": "Makanan", "transportation": "Transportasi", "entertainment": "Hiburan", "housing": "Perumahan", "utilities": "Utilitas", "shopping": "Belanja", "health": "Kesehatan", "education": "Pendidikan", "travel": "Perjalanan", "other": "Lainnya" },
+  "categories": { 
+    "food": "Makanan", 
+    "transportation": "Transportasi", 
+    "entertainment": "Hiburan", 
+    "housing": "Perumahan", 
+    "utilities": "Utilitas", 
+    "shopping": "Belanja", 
+    "health": "Kesehatan", 
+    "education": "Pendidikan", 
+    "travel": "Perjalanan", 
+    "other": "Lainnya" 
+  },
   "language": { "en": "English", "id": "Bahasa Indonesia" }
 }

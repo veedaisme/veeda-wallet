@@ -431,6 +431,8 @@ export default function Home() {
 
 // ChartModalDashboard component
 import { format, startOfWeek, addDays, startOfMonth, addWeeks, endOfWeek, endOfMonth, subMonths, isSameMonth } from "date-fns";
+import { useLocale } from 'next-intl';
+import { id as idLocale, enUS } from 'date-fns/locale';
 
 type ChartModalDashboardProps = {
   open: boolean;
@@ -440,6 +442,7 @@ type ChartModalDashboardProps = {
 };
 
 function getWeekDays(start: Date) {
+  // Default English labels; locale will be applied in component
   return Array.from({ length: 7 }, (_, i) => format(addDays(start, i), "EEE"));
 }
 
@@ -456,6 +459,9 @@ function getMonthWeeks(start: Date, end: Date) {
 }
 
 function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboardProps) {
+  const tDashChart = useTranslations('dashboard');
+  const localeStr = useLocale();
+  const dateFnsLocale = localeStr === 'id' ? idLocale : enUS;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<Array<Record<string, unknown>>>([]);
@@ -490,8 +496,8 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
         }
 
         // Aggregate by day for both weeks
-        const days = getWeekDays(startCurrent);
-        const prevDays = getWeekDays(startPrev);
+        const days = getWeekDays(startCurrent).map((d, idx) => format(addDays(startCurrent, idx), "EEE", { locale: dateFnsLocale }));
+        const prevDays = getWeekDays(startPrev).map((d, idx) => format(addDays(startPrev, idx), "EEE", { locale: dateFnsLocale }));
         const currentWeek: Record<string, number> = {};
         const previousWeek: Record<string, number> = {};
         days.forEach(day => (currentWeek[day] = 0));
@@ -500,10 +506,10 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
         (data as Transaction[]).forEach(tx => {
           const d = new Date(tx.date);
           if (d >= startCurrent && d <= endCurrent) {
-            const label = format(d, "EEE");
+            const label = format(d, "EEE", { locale: dateFnsLocale });
             if (label in currentWeek) currentWeek[label] += tx.amount;
           } else if (d >= startPrev && d <= endPrev) {
-            const label = format(d, "EEE");
+            const label = format(d, "EEE", { locale: dateFnsLocale });
             if (label in previousWeek) previousWeek[label] += tx.amount;
           }
         });
@@ -587,10 +593,10 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
       onClose={onClose}
       title={
         type === "week"
-          ? "Weekly Spending Comparison"
+          ? tDashChart('weeklyComparison')
           : type === "month"
-          ? "Monthly Spending Comparison"
-          : "Spending Comparison"
+          ? tDashChart('monthlyComparison')
+          : tDashChart('comparison')
       }
     >
       {loading ? (
@@ -602,8 +608,8 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
       ) : type === "week" && chartData.length ? (
         <div className="w-full h-64">
           <ChartContainer config={{
-            current: { label: "Current", color: "#000000" },
-            previous: { label: "Previous", color: "#cccccc" }
+            current: { label: tDashChart('current'), color: "#000000" },
+            previous: { label: tDashChart('previous'), color: "#cccccc" }
           }}>
             <Recharts.ResponsiveContainer width="100%" height="100%">
               <Recharts.BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -611,14 +617,14 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
                 <Recharts.XAxis dataKey="name" />
                 <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
                 <Recharts.Tooltip
-                  formatter={(value: number) => [formatIDR(value), 'Spent']}
+                  formatter={(value: number) => [formatIDR(value), tDashChart('spent')]}
                   labelFormatter={(index: number) => {
                     return `${chartData[index].name}`;
                   }}
                 />
                 <Recharts.Legend />
-                <Recharts.Bar dataKey="current" name="Current" fill="#000000" />
-                <Recharts.Bar dataKey="previous" name="Previous" fill="#cccccc" />
+                <Recharts.Bar dataKey="current" name={tDashChart('current')} fill="#000000" />
+                <Recharts.Bar dataKey="previous" name={tDashChart('previous')} fill="#cccccc" />
               </Recharts.BarChart>
             </Recharts.ResponsiveContainer>
           </ChartContainer>
@@ -626,8 +632,8 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
       ) : type === "month" && chartData.length ? (
         <div className="w-full h-64">
           <ChartContainer config={{
-            current: { label: "Current", color: "#000000" },
-            previous: { label: "Previous", color: "#cccccc" }
+            current: { label: tDashChart('current'), color: "#000000" },
+            previous: { label: tDashChart('previous'), color: "#cccccc" }
           }}>
             <Recharts.ResponsiveContainer width="100%" height="100%">
               <Recharts.BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -635,14 +641,14 @@ function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboar
                 <Recharts.XAxis dataKey="name" />
                 <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
                 <Recharts.Tooltip
-                  formatter={(value: number) => [formatIDR(value), 'Weekly Total']}
+                  formatter={(value: number) => [formatIDR(value), tDashChart('weeklyTotal')]}
                   labelFormatter={(index: number) => {
                     return `${chartData[index].name}`;
                   }}
                 />
                 <Recharts.Legend />
-                <Recharts.Bar dataKey="current" name="Current" fill="#000000" />
-                <Recharts.Bar dataKey="previous" name="Previous" fill="#cccccc" />
+                <Recharts.Bar dataKey="current" name={tDashChart('current')} fill="#000000" />
+                <Recharts.Bar dataKey="previous" name={tDashChart('previous')} fill="#cccccc" />
               </Recharts.BarChart>
             </Recharts.ResponsiveContainer>
           </ChartContainer>
