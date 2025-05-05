@@ -16,7 +16,7 @@ const UserContext = createContext<UserContextType>({
   loading: true,
 });
 
-export function UserProvider({ children }: { children: ReactNode }): JSX.Element {
+export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,10 +30,11 @@ export function UserProvider({ children }: { children: ReactNode }): JSX.Element
     };
     getSession();
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
     });
+    const subscription = data.subscription;
 
     return () => {
       subscription.unsubscribe();

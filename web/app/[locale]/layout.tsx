@@ -1,9 +1,6 @@
-import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { UserProvider } from '@/hooks/useUser';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const dynamicParams = false;
 
@@ -16,14 +13,10 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const messages = (await import(`../../messages/${locale}.json`)).default;
 
   return (
-    <html lang={locale}>
-      <body className={`${inter.className} bg-gray-50`}>
-        <UserProvider>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            {children}
-          </NextIntlClientProvider>
-        </UserProvider>
-      </body>
-    </html>
+    <UserProvider>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        {children}
+      </NextIntlClientProvider>
+    </UserProvider>
   );
 }
