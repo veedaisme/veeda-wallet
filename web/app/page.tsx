@@ -16,8 +16,11 @@ import { TransactionsList } from "@/components/transactions-list";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { EditTransactionModal } from "@/components/edit-transaction-modal";
+import { fetchSubscriptions, fetchSubscriptionSummary, fetchExchangeRates, addSubscription, updateSubscription, deleteSubscription } from "@/lib/subscriptionService";
+import { Subscription, SubscriptionData, SubscriptionSummary } from "@/models/subscription";
+import { SubscriptionsList } from "@/components/subscriptions-list";
 
-type TabType = "dashboard" | "transactions";
+type TabType = "dashboard" | "transactions" | "subscriptions";
 type SortField = "date" | "amount";
 type SortDirection = "asc" | "desc";
 
@@ -36,6 +39,7 @@ export default function Home() {
   const tApp = useTranslations('app');
   const tDash = useTranslations('dashboard');
   const tTrans = useTranslations('transactions');
+  const tSub = useTranslations('subscriptions');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -74,6 +78,11 @@ export default function Home() {
 
   // Infinite scroll ref
   const observer = useRef<IntersectionObserver | null>(null);
+
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<any[]>([]);
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -145,6 +154,24 @@ export default function Home() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, user, sortField, sortDirection, searchTerm]);
+
+  useEffect(() => {
+    if (activeTab === "subscriptions" && user) {
+      setLoadingSubscriptions(true);
+      (async () => {
+        const { data: subs, error: subsError } = await fetchSubscriptions(user.id);
+        if (subsError) console.error(subsError);
+        else setSubscriptions(subs ?? []);
+        const { data: summaryData, error: summaryError } = await fetchSubscriptionSummary(user.id);
+        if (summaryError) console.error(summaryError);
+        else setSubscriptionSummary(summaryData);
+        const { data: ratesData, error: ratesError } = await fetchExchangeRates();
+        if (ratesError) console.error(ratesError);
+        else setExchangeRates(ratesData ?? []);
+        setLoadingSubscriptions(false);
+      })();
+    }
+  }, [activeTab, user]);
 
   // Infinite scroll observer
   const lastTransactionRef = useCallback((node: HTMLLIElement | null) => {
@@ -263,6 +290,45 @@ export default function Home() {
     setEditModalOpen(true);
   };
 
+  const handleAddSubscription = async (data: SubscriptionData) => {
+    if (!user) return;
+    setLoadingSubscriptions(true);
+    const { data: newSub, error: addError } = await addSubscription(data, user.id);
+    if (addError) console.error(addError);
+    else if (newSub) {
+      setSubscriptions(prev => [...prev, newSub]);
+      const { data: summaryData } = await fetchSubscriptionSummary(user.id);
+      setSubscriptionSummary(summaryData);
+    }
+    setLoadingSubscriptions(false);
+  };
+
+  const handleEditSubscription = async (data: SubscriptionData) => {
+    if (!user) return;
+    setLoadingSubscriptions(true);
+    const { data: updatedSub, error: updateError } = await updateSubscription(data, user.id);
+    if (updateError) console.error(updateError);
+    else if (updatedSub) {
+      setSubscriptions(prev => prev.map(s => s.id === updatedSub.id ? updatedSub : s));
+      const { data: summaryData } = await fetchSubscriptionSummary(user.id);
+      setSubscriptionSummary(summaryData);
+    }
+    setLoadingSubscriptions(false);
+  };
+
+  const handleDeleteSubscription = async (id: string) => {
+    if (!user) return;
+    setLoadingSubscriptions(true);
+    const { success, error: deleteError } = await deleteSubscription(id, user.id);
+    if (deleteError) console.error(deleteError);
+    else {
+      setSubscriptions(prev => prev.filter(s => s.id !== id));
+      const { data: summaryData } = await fetchSubscriptionSummary(user.id);
+      setSubscriptionSummary(summaryData);
+    }
+    setLoadingSubscriptions(false);
+  };
+
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -340,7 +406,7 @@ export default function Home() {
                 />
               </div>
             </>
-          ) : (
+          ) : activeTab === "transactions" ? (
             <>
               {/* Search and sort controls */}
               <div className="mb-4 flex flex-col md:flex-row md:items-center md:gap-4 gap-2">
@@ -383,6 +449,16 @@ export default function Home() {
                 </div>
               )}
             </>
+          ) : (
+            <SubscriptionsList
+              subscriptions={subscriptions}
+              summary={subscriptionSummary}
+              exchangeRates={exchangeRates}
+              onAdd={handleAddSubscription}
+              onUpdate={handleEditSubscription}
+              onDelete={handleDeleteSubscription}
+              loading={loadingSubscriptions}
+            />
           )}
         </main>
 
@@ -401,6 +477,13 @@ export default function Home() {
           >
             <CreditCard className="h-6 w-6" />
             <span className="text-xs mt-1">{tDash('title')}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("subscriptions")}
+            className={`flex flex-col items-center ${activeTab === "subscriptions" ? "text-black" : "text-gray-400"}`}
+          >
+            <User className="h-6 w-6" />
+            <span className="text-xs mt-1">{tSub('title')}</span>
           </button>
           <button
             onClick={() => setActiveTab("transactions")}

@@ -7,9 +7,8 @@ const inter = Inter({ subsets: ["latin"] });
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: "Spending Analysis Wallet",
+  title: "SpendWise",
   description: "Track and analyze your spending habits",
-  generator: "v0.dev",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
