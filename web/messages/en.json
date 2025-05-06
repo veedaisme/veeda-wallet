@@ -36,7 +36,10 @@
     "placeholderNote": "Coffee, lunch, etc.", 
     "pickDate": "Pick a date",
     "error": "Error",
-    "failedUpdate": "Failed to update transaction"
+    "failedUpdate": "Failed to update transaction",
+    "errorInvalidAmount": "Amount must be a positive number",
+    "errorSelectCategory": "Category is required",
+    "errorSelectDate": "Date is required"
   },
   "categories": { 
     "food": "Food", 

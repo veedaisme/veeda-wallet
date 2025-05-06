@@ -52,11 +52,11 @@ export function LanguagePillToggle() {
   }
 
   return (
-    <div className="flex gap-2 bg-[#fbeee5] p-1 rounded-full shadow-inner">
+    <div className="flex gap-2 bg-accent p-1 rounded-full shadow-inner">
       <button
         className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-150 focus:outline-none
           ${!isID
-            ? 'bg-white ring-2 ring-[#e05d38] shadow-lg scale-105'
+            ? 'bg-background ring-2 ring-primary shadow-lg scale-105'
             : 'opacity-60 grayscale'}
         `}
         onClick={() => switchLocale('en')}
@@ -67,7 +67,7 @@ export function LanguagePillToggle() {
       <button
         className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-150 focus:outline-none
           ${isID
-            ? 'bg-white ring-2 ring-[#e05d38] shadow-lg scale-105'
+            ? 'bg-background ring-2 ring-primary shadow-lg scale-105'
             : 'opacity-60 grayscale'}
         `}
         onClick={() => switchLocale('id')}

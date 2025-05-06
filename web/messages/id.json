@@ -34,7 +34,11 @@
     "updating": "Memperbarui...",
     "update": "Perbarui Transaksi",
     "placeholderNote": "Kopi, makan siang, dll.",
-    "pickDate": "Pilih tanggal"
+    "pickDate": "Pilih tanggal",
+    "failedUpdate": "Gagal memperbarui transaksi",
+    "errorInvalidAmount": "Jumlah transaksi harus positif",
+    "errorSelectCategory": "Kategori harus dipilih",
+    "errorSelectDate": "Tanggal harus dipilih"
   },
   "categories": { 
     "food": "Makanan", 
