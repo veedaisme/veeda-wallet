@@ -14,6 +14,8 @@ import { FREQUENCIES, COMMON_CURRENCIES, type SubscriptionData } from "@/models/
 import { useLocale } from 'next-intl'
 import { id as idLocale } from 'date-fns/locale'
 
+import { COMMON_PLATFORMS, PlatformConfig } from "@/config/platforms";
+
 interface SubscriptionFormProps {
   onSubmit: (data: SubscriptionData) => void
   onCancel: () => void
@@ -119,16 +121,37 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
         <label htmlFor="providerName" className="block text-sm font-medium text-gray-700 mb-1">
           {tSub('providerName')}
         </label>
-        <input
+        <select
           id="providerName"
-          type="text"
-          placeholder={tSub('placeholderProvider')}
-          value={providerName}
-          onChange={(e) => setProviderName(e.target.value)}
+          value={providerName && COMMON_PLATFORMS.some((p: PlatformConfig) => p.name === providerName) ? providerName : 'other'}
+          onChange={(e) => {
+            if (e.target.value === 'other') {
+              setProviderName('');
+            } else {
+              setProviderName(e.target.value);
+            }
+          }}
           className={`w-full p-2 border border-[hsl(var(--border))] rounded-lg focus:ring-2 focus:ring-[hsl(var(--primary))] focus:outline-none ${
             errors.providerName ? "border-red-500" : ""
           }`}
-        />
+        >
+          {COMMON_PLATFORMS.map((platform: PlatformConfig) => (
+            <option key={platform.name} value={platform.name}>{platform.name}</option>
+          ))}
+          <option value="other">Other</option>
+        </select>
+        {/* Show free text input if 'Other' is selected */}
+        {(!providerName || !COMMON_PLATFORMS.some((p: PlatformConfig) => p.name === providerName)) && (
+          <input
+            type="text"
+            placeholder={tSub('placeholderProvider')}
+            value={providerName}
+            onChange={(e) => setProviderName(e.target.value)}
+            className={`mt-2 w-full p-2 border border-[hsl(var(--border))] rounded-lg focus:ring-2 focus:ring-[hsl(var(--primary))] focus:outline-none ${
+              errors.providerName ? "border-red-500" : ""
+            }`}
+          />
+        )}
         {errors.providerName && <p className="mt-1 text-sm text-red-500">{errors.providerName}</p>}
       </div>
 

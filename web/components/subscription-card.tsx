@@ -6,6 +6,7 @@ import { formatDate } from '@/utils/date'
 import { Subscription } from '@/models/subscription'
 import { formatIDR } from '@/utils/currency'
 import { Edit, Trash2 } from 'lucide-react'
+import { PLATFORM_LOGO_MAP, DEFAULT_PLATFORM_LOGO } from '@/config/platforms';
 
 interface SubscriptionCardProps {
   subscription: Subscription
@@ -61,12 +62,22 @@ export function SubscriptionCard({
     }
   }
 
+  // Calculate due status for border color
+  const today = new Date();
+  const paymentDate = new Date(subscription.next_payment_date);
+  const diffDays = Math.ceil((paymentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  let borderColor = "border-[hsl(var(--border))]";
+  if (diffDays < 0) borderColor = "border-[hsl(var(--destructive))]";
+  else if (diffDays <= 3) borderColor = "border-[hsl(var(--primary))]";
+
   return (
-    <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--card))] shadow-sm hover:shadow-md transition-shadow">
+    <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--card))] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
       <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-medium text-lg text-[hsl(var(--foreground))]">{subscription.provider_name}</h3>
-          <p className="text-[hsl(var(--muted-foreground))] text-sm">{tSub(subscription.frequency)}</p>
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex flex-col min-w-0">
+            <span className="font-medium text-lg text-[hsl(var(--foreground))] truncate">{subscription.provider_name}</span>
+            <span className="text-[hsl(var(--muted-foreground))] text-sm truncate">{tSub(subscription.frequency)}</span>
+          </div>
         </div>
         <div className="flex gap-2">
           <button 
@@ -85,10 +96,11 @@ export function SubscriptionCard({
           </button>
         </div>
       </div>
-      
       <div className="mt-3 flex justify-between items-end">
-        <p className="font-bold text-lg text-[hsl(var(--foreground))]">
-          {amount}
+        <p className="font-bold text-xl">
+          <span className="inline-block px-3 py-1 rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]">
+            {amount}
+          </span>
           {showInIDR && subscription.currency !== 'IDR' && (
             <span className="text-xs text-[hsl(var(--muted-foreground))] block">
               ({subscription.amount.toFixed(2)} {subscription.currency})
