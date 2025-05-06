@@ -39,7 +39,8 @@
     "failedUpdate": "Failed to update transaction",
     "errorInvalidAmount": "Amount must be a positive number",
     "errorSelectCategory": "Category is required",
-    "errorSelectDate": "Date is required"
+    "errorSelectDate": "Date is required",
+    "tabTitle": "Transactions"
   },
   "categories": { 
     "food": "Food", 

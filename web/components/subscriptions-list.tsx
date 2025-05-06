@@ -2,38 +2,36 @@
 
 import { useTranslations } from 'next-intl'
 import { useState, useEffect } from 'react'
-import { Subscription, SubscriptionSummary } from '@/models/subscription'
+import { Subscription, SubscriptionSummary, type SubscriptionData } from '@/models/subscription'
 import { Modal } from '@/components/ui/modal'
 import { SubscriptionCard } from '@/components/subscription-card'
-import { SubscriptionForm, SubscriptionData } from '@/components/subscription-form'
+import { SubscriptionForm } from '@/components/subscription-form'
 import { formatIDR } from '@/utils/currency'
 import { Switch } from '@/components/ui/switch'
-import { Plus } from 'lucide-react'
 
 interface SubscriptionsListProps {
   subscriptions: Subscription[];
   summary: SubscriptionSummary | null;
   exchangeRates: any[];
-  onAdd: (data: SubscriptionData) => Promise<void>;
   onUpdate: (data: SubscriptionData) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   loading: boolean;
+  openAddSubscriptionModal: () => void;
 }
 
 export function SubscriptionsList({
   subscriptions,
   summary,
   exchangeRates,
-  onAdd,
   onUpdate,
   onDelete,
-  loading
+  loading,
+  openAddSubscriptionModal
 }: SubscriptionsListProps) {
   const tSub = useTranslations('subscriptions')
   
   // State
   const [showInIDR, setShowInIDR] = useState(true)
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
@@ -56,12 +54,6 @@ export function SubscriptionsList({
     acc[monthYear].push(subscription)
     return acc
   }, {})
-
-  // Handle adding a new subscription
-  const handleAdd = async (data: SubscriptionData) => {
-    await onAdd(data)
-    setIsAddModalOpen(false)
-  }
 
   // Handle editing a subscription
   const handleEdit = (subscription: Subscription) => {
@@ -105,7 +97,10 @@ export function SubscriptionsList({
             <h2 className="text-xl font-bold">{tSub('subscriptions')}</h2>
             {summary && (
               <p className="text-gray-600">
-                {tSub('upcomingThisMonth')}: {formatIDR(summary.upcoming_this_month)}
+                {tSub('upcomingThisMonth')}:{' '}
+                <span className="text-lg font-semibold text-gray-800">
+                  {formatIDR(summary.upcoming_this_month)}
+                </span>
               </p>
             )}
           </div>
@@ -119,15 +114,6 @@ export function SubscriptionsList({
                 aria-label={tSub('toggleCurrency')}
               />
             </div>
-            
-            {/* Add Subscription Button */}
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="bg-black text-white p-2 rounded-full hover:bg-gray-800"
-              aria-label={tSub('addSubscription')}
-            >
-              <Plus size={20} />
-            </button>
           </div>
         </div>
       </div>
@@ -157,22 +143,13 @@ export function SubscriptionsList({
         <div className="text-center py-8">
           <p className="text-gray-500">{tSub('noSubscriptions')}</p>
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={openAddSubscriptionModal}
             className="mt-4 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
           >
             {tSub('addYourFirst')}
           </button>
         </div>
       )}
-
-      {/* Add Subscription Modal */}
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title={tSub('addSubscription')}>
-        <SubscriptionForm
-          onSubmit={handleAdd}
-          onCancel={() => setIsAddModalOpen(false)}
-          loading={loading}
-        />
-      </Modal>
 
       {/* Edit Subscription Modal */}
       {selectedSubscription && (

@@ -38,7 +38,8 @@
     "failedUpdate": "Gagal memperbarui transaksi",
     "errorInvalidAmount": "Jumlah transaksi harus positif",
     "errorSelectCategory": "Kategori harus dipilih",
-    "errorSelectDate": "Tanggal harus dipilih"
+    "errorSelectDate": "Tanggal harus dipilih",
+    "tabTitle": "Transaksi"
   },
   "categories": { 
     "food": "Makanan", 

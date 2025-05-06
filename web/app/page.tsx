@@ -17,8 +17,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { EditTransactionModal } from "@/components/edit-transaction-modal";
 import { fetchSubscriptions, fetchSubscriptionSummary, fetchExchangeRates, addSubscription, updateSubscription, deleteSubscription } from "@/lib/subscriptionService";
-import { Subscription, SubscriptionData, SubscriptionSummary } from "@/models/subscription";
+import { Subscription, type SubscriptionData, SubscriptionSummary } from "@/models/subscription";
 import { SubscriptionsList } from "@/components/subscriptions-list";
+import { SubscriptionForm } from '@/components/subscription-form';
 
 type TabType = "dashboard" | "transactions" | "subscriptions";
 type SortField = "date" | "amount";
@@ -41,6 +42,7 @@ export default function Home() {
   const tTrans = useTranslations('transactions');
   const tSub = useTranslations('subscriptions');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddSubscriptionModalOpen, setIsAddSubscriptionModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [page, setPage] = useState(0);
@@ -454,17 +456,26 @@ export default function Home() {
               subscriptions={subscriptions}
               summary={subscriptionSummary}
               exchangeRates={exchangeRates}
-              onAdd={handleAddSubscription}
               onUpdate={handleEditSubscription}
               onDelete={handleDeleteSubscription}
               loading={loadingSubscriptions}
+              openAddSubscriptionModal={() => setIsAddSubscriptionModalOpen(true)}
             />
           )}
         </main>
 
         {/* Floating Action Button */}
         <div className="fixed bottom-24 right-6 z-30">
-          <button className="bg-black text-white rounded-full p-4 shadow-lg" onClick={() => setIsModalOpen(true)}>
+          <button 
+            className="bg-black text-white rounded-full p-4 shadow-lg" 
+            onClick={() => {
+              if (activeTab === 'subscriptions') {
+                setIsAddSubscriptionModalOpen(true);
+              } else {
+                setIsModalOpen(true); 
+              }
+            }}
+          >
             <Plus className="h-6 w-6" />
           </button>
         </div>
@@ -490,7 +501,7 @@ export default function Home() {
             className={`flex flex-col items-center ${activeTab === "transactions" ? "text-black" : "text-gray-400"}`}
           >
             <Clock className="h-6 w-6" />
-            <span className="text-xs mt-1">{tApp('title')}</span>
+            <span className="text-xs mt-1">{tTrans('tabTitle')}</span>
           </button>
         </nav>
 
@@ -507,6 +518,18 @@ export default function Home() {
           transaction={selectedTransaction}
           onUpdateTransaction={handleEditTransaction}
         />
+
+        {/* Add Subscription Modal */}
+        <Modal isOpen={isAddSubscriptionModalOpen} onClose={() => setIsAddSubscriptionModalOpen(false)} title={tSub('addSubscription')}>
+          <SubscriptionForm 
+            onSubmit={async (data) => {
+              await handleAddSubscription(data);
+              setIsAddSubscriptionModalOpen(false);
+            }}
+            onCancel={() => setIsAddSubscriptionModalOpen(false)} 
+            loading={loadingSubscriptions} 
+          />
+        </Modal>
       </div>
     </ProtectedLayout>
   );

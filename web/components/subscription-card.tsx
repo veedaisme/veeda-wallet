@@ -8,6 +8,16 @@ import { formatIDR } from '@/utils/currency'
 import { Edit, Trash2 } from 'lucide-react'
 import { PLATFORM_LOGO_MAP, DEFAULT_PLATFORM_LOGO } from '@/config/platforms';
 
+// Helper function to capitalize each word
+const capitalizeWords = (str: string): string => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 interface SubscriptionCardProps {
   subscription: Subscription
   showInIDR: boolean
@@ -75,7 +85,7 @@ export function SubscriptionCard({
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex flex-col min-w-0">
-            <span className="font-medium text-lg text-[hsl(var(--foreground))] truncate">{subscription.provider_name}</span>
+            <span className="font-medium text-lg text-[hsl(var(--foreground))] truncate">{capitalizeWords(subscription.provider_name)}</span>
             <span className="text-[hsl(var(--muted-foreground))] text-sm truncate">{tSub(subscription.frequency)}</span>
           </div>
         </div>
