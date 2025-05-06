@@ -201,7 +201,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
         </button>
         <button
           type="submit"
-          className="flex-1 py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-60"
+          className="flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-60"
           disabled={loading}
         >
           {loading ? (initialData ? tTrans('updating') : tTrans('adding')) : (initialData ? tTrans('update') : tTrans('add'))}
