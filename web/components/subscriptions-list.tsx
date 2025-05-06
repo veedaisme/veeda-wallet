@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useState, useEffect } from 'react'
-import { Subscription, SubscriptionSummary, type SubscriptionData } from '@/models/subscription'
+import { Subscription, SubscriptionSummary, type SubscriptionData, ProjectedSubscription } from '@/models/subscription'
 import { Modal } from '@/components/ui/modal'
 import { SubscriptionCard } from '@/components/subscription-card'
 import { SubscriptionForm } from '@/components/subscription-form'
@@ -10,7 +10,7 @@ import { formatIDR } from '@/utils/currency'
 import { Switch } from '@/components/ui/switch'
 
 interface SubscriptionsListProps {
-  subscriptions: Subscription[];
+  subscriptions: ProjectedSubscription[];
   summary: SubscriptionSummary | null;
   exchangeRates: any[];
   onUpdate: (data: SubscriptionData) => Promise<void>;
@@ -34,18 +34,18 @@ export function SubscriptionsList({
   const [showInIDR, setShowInIDR] = useState(true)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
+  const [selectedSubscription, setSelectedSubscription] = useState<ProjectedSubscription | null>(null)
   
-  // Sort subscriptions by next payment date
+  // Sort subscriptions by projected payment date
   const sortedSubscriptions = [...subscriptions].sort((a, b) => {
-    return new Date(a.next_payment_date).getTime() - new Date(b.next_payment_date).getTime()
+    return new Date(a.projected_payment_date).getTime() - new Date(b.projected_payment_date).getTime()
   })
 
-  // Group subscriptions by month
-  const groupedSubscriptions = sortedSubscriptions.reduce<Record<string, Subscription[]>>((acc, subscription) => {
+  // Group subscriptions by month based on projected payment date
+  const groupedSubscriptions = sortedSubscriptions.reduce<Record<string, ProjectedSubscription[]>>((acc, subscription) => {
     // Create month-year string as the group key
-    const date = new Date(subscription.next_payment_date)
-    const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`
+    const date = new Date(subscription.projected_payment_date)
+    const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
     
     if (!acc[monthYear]) {
       acc[monthYear] = []
@@ -56,7 +56,7 @@ export function SubscriptionsList({
   }, {})
 
   // Handle editing a subscription
-  const handleEdit = (subscription: Subscription) => {
+  const handleEdit = (subscription: ProjectedSubscription) => {
     setSelectedSubscription(subscription)
     setIsEditModalOpen(true)
   }
@@ -68,7 +68,7 @@ export function SubscriptionsList({
   }
 
   // Handle deleting a subscription
-  const handleDelete = (subscription: Subscription) => {
+  const handleDelete = (subscription: ProjectedSubscription) => {
     setSelectedSubscription(subscription)
     setIsDeleteModalOpen(true)
   }
@@ -161,7 +161,7 @@ export function SubscriptionsList({
               amount: selectedSubscription.amount,
               currency: selectedSubscription.currency,
               frequency: selectedSubscription.frequency,
-              next_payment_date: new Date(selectedSubscription.next_payment_date)
+              payment_date: new Date(selectedSubscription.projected_payment_date)
             }}
             onSubmit={handleUpdate}
             onCancel={() => setIsEditModalOpen(false)}

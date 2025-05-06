@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import { Subscription, SubscriptionData, SubscriptionSummary } from "@/models/subscription";
+import { Subscription, SubscriptionData, SubscriptionSummary, ProjectedSubscription } from "@/models/subscription";
 
 /**
  * Fetches all subscriptions for the current user with optional sorting
@@ -12,7 +12,7 @@ export async function fetchSubscriptions(
     .from("subscriptions")
     .select("*")
     .eq("user_id", userId)
-    .order("next_payment_date", { ascending: sortDirection === "asc" });
+    .order("payment_date", { ascending: sortDirection === "asc" });
 
   return { data, error };
 }
@@ -40,15 +40,15 @@ export async function addSubscription(
   userId: string
 ): Promise<{ data: Subscription | null; error: any }> {
   // Format the date to ISO string with timezone handling
-  const nextPaymentDate = new Date(data.next_payment_date);
-  nextPaymentDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+  const paymentDate = new Date(data.payment_date);
+  paymentDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
 
   const newSubscription = {
     provider_name: data.provider_name,
     amount: data.amount,
     currency: data.currency,
     frequency: data.frequency,
-    next_payment_date: nextPaymentDate.toISOString().split('T')[0], // YYYY-MM-DD format
+    payment_date: paymentDate.toISOString().split('T')[0], // YYYY-MM-DD format
     user_id: userId,
   };
 
@@ -73,15 +73,15 @@ export async function updateSubscription(
   }
 
   // Format the date to ISO string with timezone handling
-  const nextPaymentDate = new Date(data.next_payment_date);
-  nextPaymentDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+  const paymentDate = new Date(data.payment_date);
+  paymentDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
 
   const updatedSubscription = {
     provider_name: data.provider_name,
     amount: data.amount,
     currency: data.currency,
     frequency: data.frequency,
-    next_payment_date: nextPaymentDate.toISOString().split('T')[0], // YYYY-MM-DD format
+    payment_date: paymentDate.toISOString().split('T')[0], // YYYY-MM-DD format
     updated_at: new Date().toISOString(),
   };
 
@@ -166,4 +166,31 @@ export function convertCurrency(
 
   // If no rate found, return the original amount
   return amount;
+}
+
+/**
+ * Fetches projected subscriptions for the current user
+ */
+export async function fetchProjectedSubscriptions(
+  userId: string,
+  projectionEndDate: string // Expected format: 'YYYY-MM-DD'
+): Promise<{ data: ProjectedSubscription[] | null; error: any }> {
+  if (!userId) {
+    return { data: null, error: "User ID is required" };
+  }
+  if (!projectionEndDate) {
+    return { data: null, error: "Projection end date is required" };
+  }
+
+  const { data, error } = await supabase.rpc("get_projected_subscription_payments", {
+    p_user_id: userId,
+    p_projection_end_date: projectionEndDate,
+  });
+
+  if (error) {
+    console.error("Error fetching projected subscriptions:", error);
+    return { data: null, error };
+  }
+  
+  return { data: data as ProjectedSubscription[] | null, error: null };
 }

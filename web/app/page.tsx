@@ -16,8 +16,16 @@ import { TransactionsList } from "@/components/transactions-list";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { EditTransactionModal } from "@/components/edit-transaction-modal";
-import { fetchSubscriptions, fetchSubscriptionSummary, fetchExchangeRates, addSubscription, updateSubscription, deleteSubscription } from "@/lib/subscriptionService";
-import { Subscription, type SubscriptionData, SubscriptionSummary } from "@/models/subscription";
+import { 
+  fetchSubscriptions, 
+  fetchSubscriptionSummary, 
+  fetchExchangeRates, 
+  addSubscription, 
+  updateSubscription, 
+  deleteSubscription,
+  fetchProjectedSubscriptions 
+} from "@/lib/subscriptionService";
+import { Subscription, type SubscriptionData, SubscriptionSummary, ProjectedSubscription } from "@/models/subscription";
 import { SubscriptionsList } from "@/components/subscriptions-list";
 import { SubscriptionForm } from '@/components/subscription-form';
 
@@ -81,7 +89,7 @@ export default function Home() {
   // Infinite scroll ref
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<ProjectedSubscription[]>([]);
   const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
   const [exchangeRates, setExchangeRates] = useState<any[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
@@ -157,22 +165,40 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, user, sortField, sortDirection, searchTerm]);
 
+  const loadProjectedSubscriptions = async () => {
+    if (!user) return;
+    setLoadingSubscriptions(true);
+    setError(null);
+
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 12); // Project 12 months into the future
+    const projectionEndDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    try {
+      const { data: projectedSubs, error: projectedSubsError } = await fetchProjectedSubscriptions(user.id, projectionEndDateStr);
+      if (projectedSubsError) throw projectedSubsError;
+      setSubscriptions(projectedSubs ?? []);
+
+      const { data: summaryData, error: summaryError } = await fetchSubscriptionSummary(user.id);
+      if (summaryError) throw summaryError;
+      setSubscriptionSummary(summaryData);
+
+      const { data: ratesData, error: ratesError } = await fetchExchangeRates();
+      if (ratesError) throw ratesError;
+      setExchangeRates(ratesData ?? []);
+
+    } catch (e: any) {
+      console.error("Failed to load subscription data:", e);
+      setError(e.message || "Failed to load subscription data");
+    }
+    setLoadingSubscriptions(false);
+  };
+
   useEffect(() => {
     if (activeTab === "subscriptions" && user) {
-      setLoadingSubscriptions(true);
-      (async () => {
-        const { data: subs, error: subsError } = await fetchSubscriptions(user.id);
-        if (subsError) console.error(subsError);
-        else setSubscriptions(subs ?? []);
-        const { data: summaryData, error: summaryError } = await fetchSubscriptionSummary(user.id);
-        if (summaryError) console.error(summaryError);
-        else setSubscriptionSummary(summaryData);
-        const { data: ratesData, error: ratesError } = await fetchExchangeRates();
-        if (ratesError) console.error(ratesError);
-        else setExchangeRates(ratesData ?? []);
-        setLoadingSubscriptions(false);
-      })();
+      loadProjectedSubscriptions();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, user]);
 
   // Infinite scroll observer
@@ -295,38 +321,51 @@ export default function Home() {
   const handleAddSubscription = async (data: SubscriptionData) => {
     if (!user) return;
     setLoadingSubscriptions(true);
-    const { data: newSub, error: addError } = await addSubscription(data, user.id);
-    if (addError) console.error(addError);
-    else if (newSub) {
-      setSubscriptions(prev => [...prev, newSub]);
-      const { data: summaryData } = await fetchSubscriptionSummary(user.id);
-      setSubscriptionSummary(summaryData);
+    try {
+      if (user) {
+        const { data: newSubscription, error } = await addSubscription(data, user.id);
+        if (error) throw error;
+        if (newSubscription) {
+          await loadProjectedSubscriptions();
+        }
+      }
+    } catch (e: any) {
+      console.error("Failed to add subscription:", e);
+      setError(e.message || "Failed to add subscription");
     }
     setLoadingSubscriptions(false);
+    setIsAddSubscriptionModalOpen(false);
   };
 
   const handleEditSubscription = async (data: SubscriptionData) => {
     if (!user) return;
     setLoadingSubscriptions(true);
-    const { data: updatedSub, error: updateError } = await updateSubscription(data, user.id);
-    if (updateError) console.error(updateError);
-    else if (updatedSub) {
-      setSubscriptions(prev => prev.map(s => s.id === updatedSub.id ? updatedSub : s));
-      const { data: summaryData } = await fetchSubscriptionSummary(user.id);
-      setSubscriptionSummary(summaryData);
+    try {
+      if (user && data.id) {
+        const { data: updatedSubscription, error } = await updateSubscription(data, user.id);
+        if (error) throw error;
+        if (updatedSubscription) {
+          await loadProjectedSubscriptions();
+        }
+      }
+    } catch (e: any) {
+      console.error("Failed to update subscription:", e);
+      setError(e.message || "Failed to update subscription");
     }
     setLoadingSubscriptions(false);
+    setEditModalOpen(false); // Corrected
   };
 
   const handleDeleteSubscription = async (id: string) => {
     if (!user) return;
     setLoadingSubscriptions(true);
-    const { success, error: deleteError } = await deleteSubscription(id, user.id);
-    if (deleteError) console.error(deleteError);
-    else {
-      setSubscriptions(prev => prev.filter(s => s.id !== id));
-      const { data: summaryData } = await fetchSubscriptionSummary(user.id);
-      setSubscriptionSummary(summaryData);
+    try {
+      const { error } = await deleteSubscription(id, user.id); // Added user.id
+      if (error) throw error;
+      await loadProjectedSubscriptions();
+    } catch (e: any) {
+      console.error("Failed to delete subscription:", e);
+      setError(e.message || "Failed to delete subscription");
     }
     setLoadingSubscriptions(false);
   };

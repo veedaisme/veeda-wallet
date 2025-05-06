@@ -35,7 +35,7 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
     : "")
   const [currency, setCurrency] = useState(initialData?.currency || "IDR")
   const [frequency, setFrequency] = useState(initialData?.frequency || "monthly")
-  const [nextPaymentDate, setNextPaymentDate] = useState<Date | undefined>(initialData?.next_payment_date || new Date())
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(initialData?.payment_date || new Date())
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validateForm = () => {
@@ -68,8 +68,8 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
       newErrors.frequency = tSub('errorSelectFrequency')
     }
     
-    if (!nextPaymentDate) {
-      newErrors.nextPaymentDate = tSub('errorSelectDate')
+    if (!paymentDate) {
+      newErrors.paymentDate = tSub('errorSelectDate')
     }
 
     setErrors(newErrors)
@@ -79,7 +79,7 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (validateForm() && nextPaymentDate) {
+    if (validateForm() && paymentDate) {
       const parsedAmount = currency === 'IDR' 
         ? parseIDR(amount) 
         : parseFloat(amount)
@@ -89,7 +89,7 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
         amount: parsedAmount,
         currency,
         frequency: frequency as 'monthly' | 'quarterly' | 'annually',
-        next_payment_date: nextPaymentDate,
+        payment_date: paymentDate,
         ...(initialData?.id ? { id: initialData.id } : {})
       })
     }
@@ -227,8 +227,8 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
       </div>
 
       <div>
-        <label htmlFor="nextPaymentDate" className="block text-sm font-medium text-gray-700 mb-1">
-          {tSub('nextPaymentDate')}
+        <label htmlFor="paymentDate" className="block text-sm font-medium text-gray-700 mb-1">
+          {tSub('paymentDate')}
         </label>
         <Popover>
           <PopoverTrigger asChild>
@@ -236,25 +236,25 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
-                !nextPaymentDate && "text-muted-foreground",
-                errors.nextPaymentDate ? "border-red-500" : "border border-[hsl(var(--border))]"
+                !paymentDate && "text-muted-foreground",
+                errors.paymentDate ? "border-red-500" : "border border-[hsl(var(--border))]"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {nextPaymentDate ? format(nextPaymentDate, 'PPP', { locale: locale === 'id' ? idLocale : undefined }) : <span>{tSub('pickDate')}</span>}
+              {paymentDate ? format(paymentDate, 'PPP', { locale: locale === 'id' ? idLocale : undefined }) : <span>{tSub('pickDate')}</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             <Calendar
               mode="single"
-              selected={nextPaymentDate}
-              onSelect={setNextPaymentDate}
+              selected={paymentDate}
+              onSelect={setPaymentDate}
               initialFocus
               locale={locale === 'id' ? idLocale : undefined}
             />
           </PopoverContent>
         </Popover>
-        {errors.nextPaymentDate && <p className="mt-1 text-sm text-red-500">{errors.nextPaymentDate}</p>}
+        {errors.paymentDate && <p className="mt-1 text-sm text-red-500">{errors.paymentDate}</p>}
       </div>
 
       <div className="flex gap-3 pt-2">

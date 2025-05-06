@@ -4,7 +4,7 @@ export interface Subscription {
   amount: number;
   currency: string;
   frequency: 'monthly' | 'quarterly' | 'annually';
-  next_payment_date: string;
+  payment_date: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -14,7 +14,7 @@ export interface SubscriptionData {
   amount: number;
   currency: string;
   frequency: 'monthly' | 'quarterly' | 'annually';
-  next_payment_date: Date;
+  payment_date: Date;
   id?: string;
 }
 
@@ -22,6 +22,19 @@ export interface SubscriptionSummary {
   upcoming_this_month: number;
   total_monthly_amount: number;
   subscription_count: number;
+}
+
+export interface ProjectedSubscription {
+  id: string; // Original subscription ID
+  provider_name: string;
+  amount: number;
+  currency: string;
+  frequency: 'monthly' | 'quarterly' | 'annually';
+  original_payment_date: string; // The anchor payment_date from the subscriptions table
+  projected_payment_date: string; // The calculated future payment date for this instance
+  user_id: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const FREQUENCIES = [
@@ -52,7 +65,7 @@ export const sampleSubscriptions: Subscription[] = [
     amount: 169000,
     currency: "IDR",
     frequency: "monthly",
-    next_payment_date: "2025-05-15",
+    payment_date: "2025-05-15",
   },
   {
     id: "s2",
@@ -60,7 +73,7 @@ export const sampleSubscriptions: Subscription[] = [
     amount: 54990,
     currency: "IDR",
     frequency: "monthly",
-    next_payment_date: "2025-05-20",
+    payment_date: "2025-05-20",
   },
   {
     id: "s3",
@@ -68,7 +81,7 @@ export const sampleSubscriptions: Subscription[] = [
     amount: 52.99,
     currency: "USD",
     frequency: "monthly",
-    next_payment_date: "2025-05-28",
+    payment_date: "2025-05-28",
   },
   {
     id: "s4",
@@ -76,7 +89,7 @@ export const sampleSubscriptions: Subscription[] = [
     amount: 0.99,
     currency: "USD",
     frequency: "monthly",
-    next_payment_date: "2025-06-05",
+    payment_date: "2025-06-05",
   },
   {
     id: "s5",
@@ -84,6 +97,7 @@ export const sampleSubscriptions: Subscription[] = [
     amount: 139,
     currency: "USD",
     frequency: "annually",
-    next_payment_date: "2025-11-12",
+    payment_date: "2025-11-12",
+    updated_at: "2024-04-01T10:00:00Z"
   }
 ];

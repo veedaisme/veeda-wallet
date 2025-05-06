@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { formatDate } from '@/utils/date'
-import { Subscription } from '@/models/subscription'
+import { Subscription, ProjectedSubscription } from '@/models/subscription'
 import { formatIDR } from '@/utils/currency'
 import { Edit, Trash2 } from 'lucide-react'
 import { PLATFORM_LOGO_MAP, DEFAULT_PLATFORM_LOGO } from '@/config/platforms';
@@ -19,11 +19,11 @@ const capitalizeWords = (str: string): string => {
 };
 
 interface SubscriptionCardProps {
-  subscription: Subscription
+  subscription: ProjectedSubscription
   showInIDR: boolean
   exchangeRates: any[]
-  onEdit: (subscription: Subscription) => void
-  onDelete: (subscription: Subscription) => void
+  onEdit: (subscription: ProjectedSubscription) => void
+  onDelete: (subscription: ProjectedSubscription) => void
 }
 
 export function SubscriptionCard({ 
@@ -57,8 +57,8 @@ export function SubscriptionCard({
 
   const daysUntilPayment = () => {
     const today = new Date()
-    const paymentDate = new Date(subscription.next_payment_date)
-    const diffTime = paymentDate.getTime() - today.getTime()
+    const payment_date_obj = new Date(subscription.projected_payment_date)
+    const diffTime = payment_date_obj.getTime() - today.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
     if (diffDays === 0) {
@@ -74,8 +74,8 @@ export function SubscriptionCard({
 
   // Calculate due status for border color
   const today = new Date();
-  const paymentDate = new Date(subscription.next_payment_date);
-  const diffDays = Math.ceil((paymentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const payment_date_obj = new Date(subscription.projected_payment_date);
+  const diffDays = Math.ceil((payment_date_obj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   let borderColor = "border-[hsl(var(--border))]";
   if (diffDays < 0) borderColor = "border-[hsl(var(--destructive))]";
   else if (diffDays <= 3) borderColor = "border-[hsl(var(--primary))]";
@@ -118,8 +118,8 @@ export function SubscriptionCard({
           )}
         </p>
         <div className="text-right">
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">{formatDate(subscription.next_payment_date)}</p>
-          <p className="text-xs text-[hsl(var(--muted-foreground))]">{daysUntilPayment()}</p>
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">{formatDate(subscription.projected_payment_date)}</p>
+          <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">{daysUntilPayment()}</p>
         </div>
       </div>
     </div>
