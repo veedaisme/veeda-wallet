@@ -92,7 +92,8 @@
     "selectCurrency": "Pilih mata uang",
     "selectFrequency": "Pilih frekuensi",
     "add": "Tambah",
-    "update": "Perbarui"
+    "update": "Perbarui",
+    "saving": "Menyimpan..."
   },
   "auth": {
     "signInTitle": "Masuk",

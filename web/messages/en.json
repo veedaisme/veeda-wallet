@@ -96,7 +96,8 @@
     "selectCurrency": "Select currency",
     "selectFrequency": "Select frequency",
     "add": "Add",
-    "update": "Update"
+    "update": "Update",
+    "saving": "Saving..."
   },
   "auth": {
     "signInTitle": "Sign In",
