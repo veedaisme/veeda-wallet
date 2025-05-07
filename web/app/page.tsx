@@ -506,20 +506,19 @@ export default function Home() {
         </main>
 
         {/* Floating Action Button */}
-        <div className="fixed bottom-24 right-6 z-30">
-          <button 
-            className="bg-black text-white rounded-full p-4 shadow-lg" 
-            onClick={() => {
-              if (activeTab === 'subscriptions') {
-                setIsAddSubscriptionModalOpen(true);
-              } else {
-                setIsModalOpen(true); 
-              }
-            }}
-          >
-            <Plus className="h-6 w-6" />
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            if (activeTab === 'subscriptions') {
+              openAddSubscriptionModal();
+            } else { // dashboard or transactions
+              setIsModalOpen(true);
+            }
+          }}
+          className="fixed bottom-24 right-6 bg-primary text-primary-foreground rounded-full p-4 shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-50"
+          aria-label={activeTab === 'subscriptions' ? tSub('addSubscription') : tTrans('add')}
+        >
+          <Plus className="h-6 w-6" />
+        </button>
 
         {/* Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 w-full border-t border-gray-200 p-4 flex justify-around items-center bg-white z-20">
