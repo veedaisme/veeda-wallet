@@ -8,13 +8,15 @@
       "varsIgnorePattern": "^_",
       "argsIgnorePattern": "^_",
       "ignoreRestSiblings": true
-    }]
+    }],
+    "@typescript-eslint/no-explicit-any": "warn"
   },
   "overrides": [
     {
       "files": ["components/ui/**/*.tsx", "components/ui/**/*.ts"],
       "rules": {
-        "@typescript-eslint/no-unused-vars": "off"
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/no-explicit-any": "off"
       }
     }
   ]

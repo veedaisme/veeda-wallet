@@ -1,5 +1,11 @@
 import { supabase } from "@/lib/supabaseClient";
-import { Subscription, SubscriptionData, SubscriptionSummary, ProjectedSubscription } from "@/models/subscription";
+import {
+  Subscription,
+  SubscriptionData,
+  SubscriptionSummary,
+  ProjectedSubscription,
+  ExchangeRate
+} from "@/models/subscription";
 
 /**
  * Fetches all subscriptions for the current user with optional sorting
@@ -7,7 +13,7 @@ import { Subscription, SubscriptionData, SubscriptionSummary, ProjectedSubscript
 export async function fetchSubscriptions(
   userId: string,
   sortDirection: "asc" | "desc" = "asc"
-): Promise<{ data: Subscription[] | null; error: any }> {
+): Promise<{ data: Subscription[] | null; error: Error | null }> {
   const { data, error } = await supabase
     .from("subscriptions")
     .select("*")
@@ -22,9 +28,9 @@ export async function fetchSubscriptions(
  */
 export async function fetchSubscriptionSummary(
   userId: string
-): Promise<{ data: SubscriptionSummary | null; error: any }> {
+): Promise<{ data: SubscriptionSummary | null; error: Error | null }> {
   const { data, error } = await supabase
-    .rpc("subscription_summary", { user_id: userId });
+    .rpc("subscription_summary", { p_user_id: userId });
 
   return { 
     data: data && data[0] ? data[0] : null, 
@@ -38,7 +44,7 @@ export async function fetchSubscriptionSummary(
 export async function addSubscription(
   data: SubscriptionData,
   userId: string
-): Promise<{ data: Subscription | null; error: any }> {
+): Promise<{ data: Subscription | null; error: Error | null }> {
   // Format the date to ISO string with timezone handling
   const paymentDate = new Date(data.payment_date);
   paymentDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
@@ -67,7 +73,7 @@ export async function addSubscription(
 export async function updateSubscription(
   data: SubscriptionData,
   userId: string
-): Promise<{ data: Subscription | null; error: any }> {
+): Promise<{ data: Subscription | null; error: string | Error | null }> {
   if (!data.id) {
     return { data: null, error: "Subscription ID is required for update" };
   }
@@ -102,7 +108,7 @@ export async function updateSubscription(
 export async function deleteSubscription(
   id: string,
   userId: string
-): Promise<{ success: boolean; error: any }> {
+): Promise<{ success: boolean; error: Error | null }> {
   const { error } = await supabase
     .from("subscriptions")
     .delete()
@@ -115,7 +121,7 @@ export async function deleteSubscription(
 /**
  * Fetches currency exchange rates
  */
-export async function fetchExchangeRates(): Promise<{ data: any | null; error: any }> {
+export async function fetchExchangeRates(): Promise<{ data: ExchangeRate[] | null; error: Error | null }> {
   const { data, error } = await supabase
     .from("currency_exchange_rates")
     .select("*")
@@ -131,7 +137,7 @@ export function convertCurrency(
   amount: number,
   fromCurrency: string,
   toCurrency: string,
-  rates: any[]
+  rates: ExchangeRate[]
 ): number {
   if (fromCurrency === toCurrency) {
     return amount;
@@ -141,7 +147,7 @@ export function convertCurrency(
   if (toCurrency === "IDR") {
     const rate = rates.find((r) => r.base_currency === fromCurrency);
     if (rate) {
-      return amount * rate.rate;
+      return amount * parseFloat(rate.rate); // Assuming rate.rate is a string that needs parsing
     }
   }
 
@@ -149,7 +155,7 @@ export function convertCurrency(
   if (fromCurrency === "IDR") {
     const rate = rates.find((r) => r.base_currency === toCurrency);
     if (rate) {
-      return amount / rate.rate;
+      return amount / parseFloat(rate.rate); // Assuming rate.rate is a string that needs parsing
     }
   }
 
@@ -160,8 +166,8 @@ export function convertCurrency(
   
   if (sourceRate && targetRate) {
     // Convert to IDR first, then to the target currency
-    const amountInIDR = amount * sourceRate.rate;
-    return amountInIDR / targetRate.rate;
+    const amountInIDR = amount * parseFloat(sourceRate.rate); // Assuming rate.rate is a string
+    return amountInIDR / parseFloat(targetRate.rate); // Assuming rate.rate is a string
   }
 
   // If no rate found, return the original amount
@@ -174,12 +180,12 @@ export function convertCurrency(
 export async function fetchProjectedSubscriptions(
   userId: string,
   projectionEndDate: string // Expected format: 'YYYY-MM-DD'
-): Promise<{ data: ProjectedSubscription[] | null; error: any }> {
+): Promise<{ data: ProjectedSubscription[] | null; error: Error | null }> {
   if (!userId) {
-    return { data: null, error: "User ID is required" };
+    return { data: null, error: new Error("User ID is required") }; // Return an Error object
   }
   if (!projectionEndDate) {
-    return { data: null, error: "Projection end date is required" };
+    return { data: null, error: new Error("Projection end date is required") }; // Return an Error object
   }
 
   const { data, error } = await supabase.rpc("get_projected_subscription_payments", {

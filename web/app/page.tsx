@@ -17,15 +17,14 @@ import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import { EditTransactionModal } from "@/components/edit-transaction-modal";
 import { 
-  fetchSubscriptions, 
-  fetchSubscriptionSummary, 
-  fetchExchangeRates, 
   addSubscription, 
   updateSubscription, 
   deleteSubscription,
-  fetchProjectedSubscriptions 
+  fetchSubscriptionSummary, 
+  fetchProjectedSubscriptions,
+  fetchExchangeRates
 } from "@/lib/subscriptionService";
-import { Subscription, type SubscriptionData, SubscriptionSummary, ProjectedSubscription } from "@/models/subscription";
+import { type SubscriptionData, type SubscriptionSummary, ProjectedSubscription, ExchangeRate, Subscription } from "@/models/subscription";
 import { SubscriptionsList } from "@/components/subscriptions-list";
 import { SubscriptionForm } from '@/components/subscription-form';
 
@@ -91,7 +90,7 @@ export default function Home() {
 
   const [subscriptions, setSubscriptions] = useState<ProjectedSubscription[]>([]);
   const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
-  const [exchangeRates, setExchangeRates] = useState<any[]>([]);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
 
   useEffect(() => {
@@ -318,56 +317,41 @@ export default function Home() {
     setEditModalOpen(true);
   };
 
-  const handleAddSubscription = async (data: SubscriptionData) => {
+  const handleSaveSubscription = async (data: SubscriptionData) => {
     if (!user) return;
-    setLoadingSubscriptions(true);
     try {
-      if (user) {
-        const { data: newSubscription, error } = await addSubscription(data, user.id);
-        if (error) throw error;
-        if (newSubscription) {
-          await loadProjectedSubscriptions();
-        }
+      setLoadingSubscriptions(true);
+      if (data.id) {
+        await updateSubscription(data, user.id); 
+        // toast({ title: t('subscription_updated_successfully') });
+      } else {
+        // This case should ideally be handled by onSubscriptionAdded if it's a new subscription
+        // For now, assuming onUpdate is primarily for existing ones from SubscriptionsList
+        await addSubscription(data, user.id);
+        // toast({ title: t('subscription_added_successfully') });
       }
-    } catch (e: any) {
-      console.error("Failed to add subscription:", e);
-      setError(e.message || "Failed to add subscription");
+      loadProjectedSubscriptions();
+    } catch (error) {
+      console.error('Error saving subscription:', error);
+      // toast({ title: t('error_saving_subscription'), variant: 'destructive' });
+    } finally {
+      setLoadingSubscriptions(false);
     }
-    setLoadingSubscriptions(false);
-    setIsAddSubscriptionModalOpen(false);
   };
 
-  const handleEditSubscription = async (data: SubscriptionData) => {
+  const handleConfirmDeleteSubscription = async (id: string) => {
     if (!user) return;
-    setLoadingSubscriptions(true);
     try {
-      if (user && data.id) {
-        const { data: updatedSubscription, error } = await updateSubscription(data, user.id);
-        if (error) throw error;
-        if (updatedSubscription) {
-          await loadProjectedSubscriptions();
-        }
-      }
-    } catch (e: any) {
-      console.error("Failed to update subscription:", e);
-      setError(e.message || "Failed to update subscription");
+      setLoadingSubscriptions(true);
+      await deleteSubscription(id, user.id);
+      loadProjectedSubscriptions();
+      // toast({ title: t('subscription_deleted_successfully') });
+    } catch (error) {
+      console.error('Error deleting subscription:', error);
+      // toast({ title: t('error_deleting_subscription'), variant: 'destructive' });
+    } finally {
+      setLoadingSubscriptions(false);
     }
-    setLoadingSubscriptions(false);
-    setEditModalOpen(false); // Corrected
-  };
-
-  const handleDeleteSubscription = async (id: string) => {
-    if (!user) return;
-    setLoadingSubscriptions(true);
-    try {
-      const { error } = await deleteSubscription(id, user.id); // Added user.id
-      if (error) throw error;
-      await loadProjectedSubscriptions();
-    } catch (e: any) {
-      console.error("Failed to delete subscription:", e);
-      setError(e.message || "Failed to delete subscription");
-    }
-    setLoadingSubscriptions(false);
   };
 
   const router = useRouter();
@@ -377,6 +361,8 @@ export default function Home() {
     setProfileMenuOpen(false);
     router.replace("/auth");
   };
+
+  const openAddSubscriptionModal = () => setIsAddSubscriptionModalOpen(true);
 
   return (
     <ProtectedLayout>
@@ -491,15 +477,18 @@ export default function Home() {
               )}
             </>
           ) : (
-            <SubscriptionsList
-              subscriptions={subscriptions}
-              summary={subscriptionSummary}
-              exchangeRates={exchangeRates}
-              onUpdate={handleEditSubscription}
-              onDelete={handleDeleteSubscription}
-              loading={loadingSubscriptions}
-              openAddSubscriptionModal={() => setIsAddSubscriptionModalOpen(true)}
-            />
+            user && (
+              <SubscriptionsList
+                subscriptions={subscriptions}
+                summary={subscriptionSummary}
+                exchangeRates={exchangeRates}
+                onUpdate={handleSaveSubscription}
+                onDelete={handleConfirmDeleteSubscription}
+                loading={loadingSubscriptions}
+                userId={user.id}
+                openAddSubscriptionModal={openAddSubscriptionModal}
+              />
+            )
           )}
         </main>
 
@@ -561,9 +550,9 @@ export default function Home() {
         {/* Add Subscription Modal */}
         <Modal isOpen={isAddSubscriptionModalOpen} onClose={() => setIsAddSubscriptionModalOpen(false)} title={tSub('addSubscription')}>
           <SubscriptionForm 
-            onSubmit={async (data) => {
-              await handleAddSubscription(data);
-              setIsAddSubscriptionModalOpen(false);
+            onSubmit={async (formData) => { 
+              await handleSaveSubscription(formData); 
+              setIsAddSubscriptionModalOpen(false); 
             }}
             onCancel={() => setIsAddSubscriptionModalOpen(false)} 
             loading={loadingSubscriptions} 

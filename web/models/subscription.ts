@@ -20,21 +20,30 @@ export interface SubscriptionData {
 
 export interface SubscriptionSummary {
   upcoming_this_month: number;
-  total_monthly_amount: number;
+  total_monthly_recurring: number;
   subscription_count: number;
 }
 
 export interface ProjectedSubscription {
   id: string; // Original subscription ID
   provider_name: string;
-  amount: number;
-  currency: string;
+  original_amount: number;     // Renamed from amount
+  original_currency: string; // Renamed from currency
+  amount_in_idr: number;     // New field
   frequency: 'monthly' | 'quarterly' | 'annually';
   original_payment_date: string; // The anchor payment_date from the subscriptions table
   projected_payment_date: string; // The calculated future payment date for this instance
   user_id: string;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface ExchangeRate {
+  id: string;
+  base_currency: string;
+  target_currency: string;
+  rate: string; // Using string for rate to maintain precision as seen in DB
+  last_updated: string; // ISO date string
 }
 
 export const FREQUENCIES = [

@@ -3,10 +3,9 @@
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { formatDate } from '@/utils/date'
-import { Subscription, ProjectedSubscription } from '@/models/subscription'
+import { ProjectedSubscription, ExchangeRate } from '@/models/subscription'
 import { formatIDR } from '@/utils/currency'
 import { Edit, Trash2 } from 'lucide-react'
-import { PLATFORM_LOGO_MAP, DEFAULT_PLATFORM_LOGO } from '@/config/platforms';
 
 // Helper function to capitalize each word
 const capitalizeWords = (str: string): string => {
@@ -21,39 +20,38 @@ const capitalizeWords = (str: string): string => {
 interface SubscriptionCardProps {
   subscription: ProjectedSubscription
   showInIDR: boolean
-  exchangeRates: any[]
+  exchangeRates: ExchangeRate[]
   onEdit: (subscription: ProjectedSubscription) => void
   onDelete: (subscription: ProjectedSubscription) => void
+  userId: string
 }
 
-export function SubscriptionCard({ 
+export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ 
   subscription, 
   showInIDR, 
   exchangeRates,
   onEdit,
-  onDelete
-}: SubscriptionCardProps) {
+  onDelete,
+}: SubscriptionCardProps) => {
   const tSub = useTranslations('subscriptions')
   const [amount, setAmount] = useState<string>('')
   
   // Format amount based on currency
   useEffect(() => {
-    if (showInIDR && subscription.currency !== 'IDR') {
-      // Find the exchange rate
-      const rate = exchangeRates?.find(r => r.base_currency === subscription.currency)
-      if (rate) {
-        const amountInIDR = subscription.amount * rate.rate
-        setAmount(formatIDR(amountInIDR))
-      } else {
-        setAmount(`${subscription.amount} ${subscription.currency}`)
-      }
-    } else if (subscription.currency === 'IDR') {
-      setAmount(formatIDR(subscription.amount))
+    let displayAmount = '';
+    if (showInIDR) {
+      // Always show amount_in_idr, formatted.
+      displayAmount = formatIDR(subscription.amount_in_idr);
     } else {
-      // Non-IDR currency when not showing in IDR
-      setAmount(`${subscription.amount.toFixed(2)} ${subscription.currency}`)
+      // Show in original currency
+      if (subscription.original_currency === 'IDR') {
+        displayAmount = formatIDR(subscription.original_amount);
+      } else {
+        displayAmount = `${subscription.original_amount.toFixed(2)} ${subscription.original_currency}`;
+      }
     }
-  }, [subscription, showInIDR, exchangeRates])
+    setAmount(displayAmount);
+  }, [subscription.original_amount, subscription.original_currency, subscription.amount_in_idr, showInIDR])
 
   const daysUntilPayment = () => {
     const today = new Date()
@@ -76,12 +74,12 @@ export function SubscriptionCard({
   const today = new Date();
   const payment_date_obj = new Date(subscription.projected_payment_date);
   const diffDays = Math.ceil((payment_date_obj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  let borderColor = "border-[hsl(var(--border))]";
-  if (diffDays < 0) borderColor = "border-[hsl(var(--destructive))]";
-  else if (diffDays <= 3) borderColor = "border-[hsl(var(--primary))]";
+  let computedBorderColor = "border-[hsl(var(--border))]";
+  if (diffDays < 0) computedBorderColor = "border-[hsl(var(--destructive))]";
+  else if (diffDays <= 3) computedBorderColor = "border-[hsl(var(--primary))]";
 
   return (
-    <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--card))] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+    <div className={`border rounded-lg p-4 bg-[hsl(var(--card))] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden ${computedBorderColor}`}>
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex flex-col min-w-0">
@@ -111,9 +109,9 @@ export function SubscriptionCard({
           <span className="inline-block px-3 py-1 rounded-full bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]">
             {amount}
           </span>
-          {showInIDR && subscription.currency !== 'IDR' && (
+          {showInIDR && subscription.original_currency !== 'IDR' && (
             <span className="text-xs text-[hsl(var(--muted-foreground))] block">
-              ({subscription.amount.toFixed(2)} {subscription.currency})
+              ({subscription.original_amount.toFixed(2)} {subscription.original_currency})
             </span>
           )}
         </p>

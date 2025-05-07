@@ -2,21 +2,23 @@
 
 import { useTranslations } from 'next-intl'
 import { useState, useEffect } from 'react'
-import { Subscription, SubscriptionSummary, type SubscriptionData, ProjectedSubscription } from '@/models/subscription'
+import { Subscription, SubscriptionSummary, type SubscriptionData, ProjectedSubscription, ExchangeRate } from '@/models/subscription'
 import { Modal } from '@/components/ui/modal'
 import { SubscriptionCard } from '@/components/subscription-card'
 import { SubscriptionForm } from '@/components/subscription-form'
 import { formatIDR } from '@/utils/currency'
+import { formatDate } from '@/utils/date';
 import { Switch } from '@/components/ui/switch'
 
 interface SubscriptionsListProps {
   subscriptions: ProjectedSubscription[];
   summary: SubscriptionSummary | null;
-  exchangeRates: any[];
+  exchangeRates: ExchangeRate[];
   onUpdate: (data: SubscriptionData) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   loading: boolean;
   openAddSubscriptionModal: () => void;
+  userId: string;
 }
 
 export function SubscriptionsList({
@@ -26,7 +28,8 @@ export function SubscriptionsList({
   onUpdate,
   onDelete,
   loading,
-  openAddSubscriptionModal
+  openAddSubscriptionModal,
+  userId
 }: SubscriptionsListProps) {
   const tSub = useTranslations('subscriptions')
   
@@ -133,6 +136,7 @@ export function SubscriptionsList({
                     exchangeRates={exchangeRates}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    userId={userId}
                   />
                 ))}
               </div>
@@ -158,8 +162,8 @@ export function SubscriptionsList({
             initialData={{
               id: selectedSubscription.id,
               provider_name: selectedSubscription.provider_name,
-              amount: selectedSubscription.amount,
-              currency: selectedSubscription.currency,
+              amount: selectedSubscription.original_amount,
+              currency: selectedSubscription.original_currency,
               frequency: selectedSubscription.frequency,
               payment_date: new Date(selectedSubscription.projected_payment_date)
             }}
