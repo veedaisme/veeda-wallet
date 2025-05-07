@@ -1,35 +1,30 @@
 "use client"
 
 import { useTranslations } from 'next-intl'
-import { useState, useEffect } from 'react'
-import { Subscription, SubscriptionSummary, type SubscriptionData, ProjectedSubscription, ExchangeRate } from '@/models/subscription'
+import { useState } from 'react'
+import { ProjectedSubscription, SubscriptionSummary, type SubscriptionData } from '@/models/subscription'
 import { Modal } from '@/components/ui/modal'
 import { SubscriptionCard } from '@/components/subscription-card'
 import { SubscriptionForm } from '@/components/subscription-form'
 import { formatIDR } from '@/utils/currency'
-import { formatDate } from '@/utils/date';
 import { Switch } from '@/components/ui/switch'
 
 interface SubscriptionsListProps {
   subscriptions: ProjectedSubscription[];
   summary: SubscriptionSummary | null;
-  exchangeRates: ExchangeRate[];
   onUpdate: (data: SubscriptionData) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (subscription: ProjectedSubscription) => void;
   loading: boolean;
   openAddSubscriptionModal: () => void;
-  userId: string;
 }
 
 export function SubscriptionsList({
   subscriptions,
   summary,
-  exchangeRates,
   onUpdate,
   onDelete,
   loading,
   openAddSubscriptionModal,
-  userId
 }: SubscriptionsListProps) {
   const tSub = useTranslations('subscriptions')
   
@@ -79,7 +74,7 @@ export function SubscriptionsList({
   // Confirm delete subscription
   const confirmDelete = async () => {
     if (selectedSubscription) {
-      await onDelete(selectedSubscription.id)
+      await onDelete(selectedSubscription)
       setIsDeleteModalOpen(false)
     }
   }
@@ -133,10 +128,8 @@ export function SubscriptionsList({
                     key={subscription.id}
                     subscription={subscription}
                     showInIDR={showInIDR}
-                    exchangeRates={exchangeRates}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    userId={userId}
+                    onEdit={() => handleEdit(subscription)}
+                    onDelete={() => handleDelete(subscription)}
                   />
                 ))}
               </div>

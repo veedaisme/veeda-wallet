@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { formatDate } from '@/utils/date'
-import { ProjectedSubscription, ExchangeRate } from '@/models/subscription'
+import { ProjectedSubscription } from '@/models/subscription'
 import { formatIDR } from '@/utils/currency'
 import { Edit, Trash2 } from 'lucide-react'
 
@@ -20,18 +20,15 @@ const capitalizeWords = (str: string): string => {
 interface SubscriptionCardProps {
   subscription: ProjectedSubscription
   showInIDR: boolean
-  exchangeRates: ExchangeRate[]
   onEdit: (subscription: ProjectedSubscription) => void
   onDelete: (subscription: ProjectedSubscription) => void
-  userId: string
 }
 
 export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ 
   subscription, 
   showInIDR, 
-  exchangeRates,
   onEdit,
-  onDelete,
+  onDelete
 }: SubscriptionCardProps) => {
   const tSub = useTranslations('subscriptions')
   const [amount, setAmount] = useState<string>('')

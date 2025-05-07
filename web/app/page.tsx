@@ -12,6 +12,16 @@ import { SpendingCard } from "@/components/spending-card";
 import { Modal } from "@/components/ui/modal";
 import { TransactionForm, type TransactionData } from "@/components/transaction-form";
 import { Transaction } from "@/models/transaction";
+// import {
+//   TransactionSummary,
+//   CategoryPercentage,
+//   DailySpending,
+//   WeeklySpending,
+//   MonthlySpending,
+//   DateRange,
+//   SortField,
+//   SortDirection,
+// } from "@/models/transaction";
 import { TransactionsList } from "@/components/transactions-list";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
@@ -20,11 +30,10 @@ import {
   addSubscription, 
   updateSubscription, 
   deleteSubscription,
-  fetchSubscriptionSummary, 
+  fetchSubscriptionSummary,
   fetchProjectedSubscriptions,
-  fetchExchangeRates
 } from "@/lib/subscriptionService";
-import { type SubscriptionData, type SubscriptionSummary, ProjectedSubscription, ExchangeRate, Subscription } from "@/models/subscription";
+import { type SubscriptionData, type SubscriptionSummary, ProjectedSubscription } from "@/models/subscription";
 import { SubscriptionsList } from "@/components/subscriptions-list";
 import { SubscriptionForm } from '@/components/subscription-form';
 
@@ -90,7 +99,6 @@ export default function Home() {
 
   const [subscriptions, setSubscriptions] = useState<ProjectedSubscription[]>([]);
   const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
-  const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
 
   useEffect(() => {
@@ -178,19 +186,24 @@ export default function Home() {
       if (projectedSubsError) throw projectedSubsError;
       setSubscriptions(projectedSubs ?? []);
 
-      const { data: summaryData, error: summaryError } = await fetchSubscriptionSummary(user.id);
-      if (summaryError) throw summaryError;
-      setSubscriptionSummary(summaryData);
+      const { data, error } = await fetchSubscriptionSummary(user.id);
+      if (error) {
+        console.error("Error fetching subscription summary:", error);
+        setSubscriptionSummary(null);
+      } else {
+        setSubscriptionSummary(data);
+      }
 
-      const { data: ratesData, error: ratesError } = await fetchExchangeRates();
-      if (ratesError) throw ratesError;
-      setExchangeRates(ratesData ?? []);
-
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Failed to load subscription data:", e);
-      setError(e.message || "Failed to load subscription data");
+      if (e instanceof Error) {
+        setError(e.message || "Failed to load subscription data");
+      } else {
+        setError("An unknown error occurred while loading subscription data");
+      }
+    } finally {
+      setLoadingSubscriptions(false);
     }
-    setLoadingSubscriptions(false);
   };
 
   useEffect(() => {
@@ -339,16 +352,18 @@ export default function Home() {
     }
   };
 
-  const handleConfirmDeleteSubscription = async (id: string) => {
-    if (!user) return;
+  const handleConfirmDeleteSubscription = async (subscription: ProjectedSubscription) => {
+    if (!user || !subscription) return;
     try {
       setLoadingSubscriptions(true);
-      await deleteSubscription(id, user.id);
-      loadProjectedSubscriptions();
-      // toast({ title: t('subscription_deleted_successfully') });
+      await deleteSubscription(subscription.id, user.id);
+      setSubscriptions(prev => prev.filter(s => s.id !== subscription.id));
+      // Re-fetch summary after deleting
+      const { data: summaryData, error: summaryError } = await fetchSubscriptionSummary(user.id);
+      if (summaryError) throw summaryError;
+      setSubscriptionSummary(summaryData);
     } catch (error) {
-      console.error('Error deleting subscription:', error);
-      // toast({ title: t('error_deleting_subscription'), variant: 'destructive' });
+      console.error("Error deleting subscription:", error);
     } finally {
       setLoadingSubscriptions(false);
     }
@@ -481,11 +496,9 @@ export default function Home() {
               <SubscriptionsList
                 subscriptions={subscriptions}
                 summary={subscriptionSummary}
-                exchangeRates={exchangeRates}
                 onUpdate={handleSaveSubscription}
                 onDelete={handleConfirmDeleteSubscription}
                 loading={loadingSubscriptions}
-                userId={user.id}
                 openAddSubscriptionModal={openAddSubscriptionModal}
               />
             )
