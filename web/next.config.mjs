@@ -1,3 +1,5 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+
 let userConfig = undefined
 try {
   // try to import ESM first
@@ -48,4 +50,9 @@ if (userConfig) {
   }
 }
 
-export default nextConfig
+const withNextIntl = createNextIntlPlugin();
+// The i18n/request.ts file is expected to be in the root or src/i18n directory.
+// If it's elsewhere, you'd pass the path to createNextIntlPlugin, e.g.:
+// const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+
+export default withNextIntl(nextConfig);
