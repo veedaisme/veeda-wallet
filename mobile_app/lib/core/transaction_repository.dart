@@ -1,6 +1,8 @@
 // transaction_repository.dart
 import 'package:isar/isar.dart';
 
+part 'transaction_repository.g.dart'; // Link to the generated file
+
 enum TransactionCategory {
   food,
   transport,
@@ -17,6 +19,8 @@ class Transaction {
 
   late String userId;
   late double amount;
+
+  @Enumerated(EnumType.name)
   late TransactionCategory category;
   String? note;
   late DateTime date;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../core/di/transaction_providers.dart';
 import '../../core/transaction_repository.dart';
-import '../../core/utils/currency.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -12,28 +12,12 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
-  String _searchQuery = '';
-  String _sortBy = 'date_desc';
+  final TextEditingController _searchController = TextEditingController();
+  DateTime? _selectedDate;
 
   @override
   Widget build(BuildContext context) {
-    final transactions = ref.watch(transactionListProvider);
-
-    // Filter and sort transactions
-    List<Transaction> filtered = transactions.where((tx) {
-      return _searchQuery.isEmpty ||
-          (tx.note?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
-    }).toList();
-
-    if (_sortBy == 'date_desc') {
-      filtered.sort((a, b) => b.date.compareTo(a.date));
-    } else if (_sortBy == 'date_asc') {
-      filtered.sort((a, b) => a.date.compareTo(b.date));
-    } else if (_sortBy == 'amount_desc') {
-      filtered.sort((a, b) => b.amount.compareTo(a.amount));
-    } else if (_sortBy == 'amount_asc') {
-      filtered.sort((a, b) => a.amount.compareTo(b.amount));
-    }
+    final transactionsAsyncValue = ref.watch(transactionListProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,83 +27,100 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(
-                      hintText: 'Search by note...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                      isDense: true,
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      labelText: 'Search by note',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
+                    onChanged: (value) => setState(() {}), // Rebuild to filter
                   ),
                 ),
-                const SizedBox(width: 12),
-                DropdownButton<String>(
-                  value: _sortBy,
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'date_desc',
-                      child: Text('Newest'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'date_asc',
-                      child: Text('Oldest'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'amount_desc',
-                      child: Text('Amount ↓'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'amount_asc',
-                      child: Text('Amount ↑'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
+                IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101),
+                    );
+                    if (picked != null && picked != _selectedDate) {
                       setState(() {
-                        _sortBy = value;
+                        _selectedDate = picked;
                       });
                     }
                   },
                 ),
+                if (_selectedDate != null)
+                  IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      setState(() {
+                        _selectedDate = null;
+                      });
+                    },
+                  ),
               ],
             ),
           ),
-          const Divider(height: 1),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: filtered.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final tx = filtered[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(tx.category.name[0].toUpperCase()),
+            child: transactionsAsyncValue.when(
+              data: (transactions) {
+                List<Transaction> filteredTransactions = transactions;
+
+                if (_searchController.text.isNotEmpty) {
+                  filteredTransactions = filteredTransactions.where((tx) {
+                    return tx.note?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false;
+                  }).toList();
+                }
+
+                if (_selectedDate != null) {
+                  filteredTransactions = filteredTransactions.where((tx) {
+                    return tx.date.year == _selectedDate!.year &&
+                           tx.date.month == _selectedDate!.month &&
+                           tx.date.day == _selectedDate!.day;
+                  }).toList();
+                }
+                
+                if (filteredTransactions.isEmpty) {
+                  return const Center(child: Text('No transactions found.'));
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () => ref.refresh(transactionListProvider.future),
+                  child: ListView.builder(
+                    itemCount: filteredTransactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = filteredTransactions[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          child: Text(transaction.category.name[0].toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        title: Text(transaction.note ?? 'No note'),
+                        subtitle: Text(DateFormat('dd MMM yyyy, HH:mm').format(transaction.date)),
+                        trailing: Text(
+                          'Rp ${transaction.amount.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            color: transaction.amount < 0 ? Colors.red : Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // TODO: Add onTap for editing or deleting transaction
+                      );
+                    },
                   ),
-                  title: Text(formatRupiah(tx.amount)),
-                  subtitle: Text(
-                    '${tx.category.name} • ${tx.note ?? ''}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Text(
-                    '${tx.date.month}/${tx.date.day}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  onTap: () {
-                    // TODO: Open edit modal
-                  },
                 );
               },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error: $err')),
             ),
           ),
         ],
@@ -131,5 +132,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
