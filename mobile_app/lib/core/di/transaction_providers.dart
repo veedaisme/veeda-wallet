@@ -32,7 +32,7 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 });
 
 // New provider to fetch the list of transactions using the repository
-final transactionListProvider = FutureProvider<List<Transaction>>((ref) async {
+final transactionListProvider = StreamProvider<List<Transaction>>((ref) {
   final repository = ref.watch(transactionRepositoryProvider);
   // You might want to pass a userId or other filters here in a real scenario
   return repository.getTransactions(); 

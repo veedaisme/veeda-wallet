@@ -21,16 +21,16 @@ class IsarTransactionRepository implements TransactionRepository {
   }
 
   @override
-  Future<List<Transaction>> getTransactions({String? userId}) async {
+  Stream<List<Transaction>> getTransactions({String? userId}) {
     // For Isar, ensure 'userId' is indexed in the Transaction collection for efficient querying
     // if you plan to filter by it frequently.
     if (userId != null) {
       // Assuming 'userId' is a field in your Transaction object that can be filtered.
       // Make sure the Transaction collection has an index on 'userId' for performance.
-      return await isar.transactions.filter().userIdEqualTo(userId).sortByDateDesc().findAll();
+      return isar.transactions.filter().userIdEqualTo(userId).sortByDateDesc().watch(fireImmediately: true);
     }
     // If no userId is provided, fetch all transactions. Be cautious with large datasets.
-    return await isar.transactions.where().sortByDateDesc().findAll();
+    return isar.transactions.where().sortByDateDesc().watch(fireImmediately: true);
   }
 
   @override

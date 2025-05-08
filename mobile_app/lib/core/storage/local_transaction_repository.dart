@@ -4,9 +4,10 @@ import '../transaction_repository.dart';
 
 class LocalTransactionRepository implements TransactionRepository {
   @override
-  Future<List<Transaction>> getTransactions({String? userId}) async {
-    // TODO: Implement local transaction retrieval using Isar
-    throw UnimplementedError();
+  Stream<List<Transaction>> getTransactions({String? userId}) {
+    // TODO: Implement local storage stream fetching if needed
+    print('LocalTransactionRepository.getTransactions called - returning empty stream');
+    return Stream.value([]); // Return an empty stream for now
   }
 
   @override

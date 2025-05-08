@@ -4,9 +4,10 @@ import '../transaction_repository.dart';
 
 class SupabaseTransactionRepository implements TransactionRepository {
   @override
-  Future<List<Transaction>> getTransactions({String? userId}) async {
-    // TODO: Implement Supabase transaction retrieval
-    throw UnimplementedError();
+  Stream<List<Transaction>> getTransactions({String? userId}) {
+    // TODO: Implement Supabase stream fetching if/when needed
+    print('SupabaseTransactionRepository.getTransactions called - returning empty stream');
+    return Stream.value([]); // Return an empty stream for now
   }
 
   @override
