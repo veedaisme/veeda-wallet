@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'core/theme/app_theme.dart';
 
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/transactions/transactions_screen.dart';
@@ -12,9 +13,9 @@ class VeedaApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Simplest Spending Tracker',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: _router,
     );
   }
