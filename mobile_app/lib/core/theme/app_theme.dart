@@ -9,7 +9,7 @@ Color _hslToColor(double h, double s, double l, [double opacity = 1.0]) {
 
 class AppColors {
   // Light Theme Colors from :root
-  static final Color lightBackground = _hslToColor(204.00, 12.20, 91.96);
+  static final Color lightBackground = Colors.white;
   static final Color lightForeground = _hslToColor(0, 0, 20);
   static final Color lightCard = _hslToColor(0, 0, 100);
   static final Color lightCardForeground = _hslToColor(0, 0, 20);

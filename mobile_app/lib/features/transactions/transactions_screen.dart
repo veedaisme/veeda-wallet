@@ -20,10 +20,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final transactionsAsyncValue = ref.watch(transactionListProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Transactions'),
-        centerTitle: true,
-      ),
       body: Column(
         children: [
           Padding(

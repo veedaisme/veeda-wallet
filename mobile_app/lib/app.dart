@@ -12,7 +12,7 @@ class VeedaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Simplest Spending Tracker',
+      title: 'SpendWise',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
@@ -67,44 +67,57 @@ class _MainAppShellState extends State<MainAppShell> {
   static const _tabs = [
     '/dashboard',
     '/transactions',
-    '/profile',
   ];
 
   void _onTabTapped(int index) {
     if (_currentIndex != index) {
       context.go(_tabs[index]);
-      setState(() {
-        _currentIndex = index;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     // Update the current index based on the current location
-    final location = GoRouter.of(context).routeInformationProvider.value.location;
-    final tabIndex = _tabs.indexWhere((tab) => location.startsWith(tab));
-    if (tabIndex != -1 && tabIndex != _currentIndex) {
-      _currentIndex = tabIndex;
-    }
+    final String? location = GoRouter.of(context).routeInformationProvider.value.location;
+    int tabIndex = -1; // Default to no tab selected
 
+    if (location != null) {
+      tabIndex = _tabs.indexWhere((tab) => location.startsWith(tab));
+    }
+    
+    if (tabIndex != -1) {
+      _currentIndex = tabIndex;
+    } // If on a non-tab route like /profile, _currentIndex retains its last value, so a tab might still appear selected.
+      // This is an okay intermediate state. A more advanced solution might involve passing a different currentIndex or styling.
+
+    String currentTitle = "SpendWise"; // Default title
     return Scaffold(
+      appBar: AppBar(
+        title: Text(currentTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Profile',
+            onPressed: () {
+              context.go('/profile');
+            },
+          ),
+        ],
+      ),
       body: widget.child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
+            icon: Icon(Icons.list_alt_outlined),
+            activeIcon: Icon(Icons.list_alt),
             label: 'Transactions',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
           ),
         ],
       ),

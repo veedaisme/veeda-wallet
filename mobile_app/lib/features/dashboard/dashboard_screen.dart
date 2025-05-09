@@ -162,20 +162,40 @@ class DashboardScreen extends ConsumerWidget {
                     borderData: FlBorderData(show: true, border: Border.all(color: Theme.of(context).dividerColor, width: 1)),
                     lineTouchData: LineTouchData(
                        touchTooltipData: LineTouchTooltipData(
+                         tooltipBgColor: Colors.white,
+                         tooltipBorder: BorderSide(color: Colors.grey.shade300, width: 1),
+                         tooltipRoundedRadius: 8,
                          getTooltipItems: (touchedSpots) {
                            return touchedSpots.map((spot) {
                              final date = allDates[spot.spotIndex];
-                             String label;
-                             if (spot.barIndex == 0) label = 'This Period';
-                             else label = 'Previous Period';
+                             final dayOfWeek = DateFormat('EEE').format(date); // E.g., 'Thu'
+                             final fullAmount = spot.y * 1000;
+                             final formattedAmount = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(fullAmount);
+
+                             String textToShow;
+                             Color textColor;
+                             FontWeight fontWeight = FontWeight.normal;
+
+                             if (spot.barIndex == 0) { // This Period
+                               textToShow = '$dayOfWeek\nSpent: $formattedAmount';
+                               textColor = Theme.of(context).colorScheme.primary; // Use primary color
+                               fontWeight = FontWeight.bold;
+                             } else { // Previous Period
+                               textToShow = '$dayOfWeek\nSpent: $formattedAmount';
+                               textColor = Colors.grey.shade700;
+                             }
 
                              return LineTooltipItem(
-                               '$label (${dateFormatter(date)}):\nRp ${(spot.y * 1000).toStringAsFixed(0)}',
-                               TextStyle(color: spot.bar.color, fontWeight: FontWeight.bold, fontSize: 12),
+                               textToShow,
+                               TextStyle(
+                                 color: textColor,
+                                 fontWeight: fontWeight,
+                                 fontSize: 12,
+                               ),
                              );
                            }).toList();
-                         }
-                       )
+                         },
+                       ),
                     ),
                   ),
                 ),
@@ -191,12 +211,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsyncValue = ref.watch(transactionListProvider);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        centerTitle: true,
-      ),
       body: transactionsAsyncValue.when(
         data: (transactions) {
           final now = DateTime.now();
