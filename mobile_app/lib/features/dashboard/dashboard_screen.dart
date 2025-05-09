@@ -4,9 +4,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart'; 
 import '../../core/di/transaction_providers.dart';
 import '../../core/transaction_repository.dart'; 
-// import '../../core/utils/currency.dart';
+// import '../../core/utils/currency.dart'; 
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:veeda_wallet/features/transactions/widgets/add_transaction_modal.dart'; // Corrected import path
+import '../../core/ui/widgets/add_transaction_fab.dart'; 
 
 double? getChange(double current, double previous) {
   if (previous == 0) return null;
@@ -15,17 +15,6 @@ double? getChange(double current, double previous) {
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
-
-  void _showAddTransactionModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => const AddTransactionModal(),
-    );
-  }
 
   void _showComparisonChart(BuildContext context, String title, Map<DateTime, double> currentData, Map<DateTime, double> previousData, String Function(DateTime) dateFormatter, DateTime startDate, bool isDaily) {
     showModalBottomSheet(
@@ -336,12 +325,7 @@ class DashboardScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTransactionModal(context),
-        shape: const CircleBorder(), 
-        child: const Icon(LucideIcons.plus),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
+      floatingActionButton: const AddTransactionFAB(),
     );
   }
 }

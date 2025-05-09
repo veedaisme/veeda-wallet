@@ -43,14 +43,7 @@ type SortDirection = "asc" | "desc";
 
 import ProtectedLayout from "@/components/ProtectedLayout";
 
-import { ChartContainer } from "@/components/ui/chart";
-import * as Recharts from "recharts";
 import { formatIDR } from "@/utils/currency";
-
-function getChange(current: number, previous: number): number | undefined {
-  if (previous === 0) return undefined;
-  return ((current - previous) / previous) * 100;
-}
 
 export default function Home() {
   const tApp = useTranslations('app');
@@ -416,35 +409,24 @@ export default function Home() {
         <main className="flex-1 p-6 overflow-hidden">
           {activeTab === "dashboard" ? (
             <>
-              <ChartModalDashboard
-                open={chartModal.open}
-                type={chartModal.type}
-                onClose={() => setChartModal({ open: false, type: null })}
-                userId={user?.id}
-              />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <SpendingCard
                   title={tDash('today')}
                   amount={Number(dashboardData.spent_today)}
-                  change={getChange(Number(dashboardData.spent_today), Number(dashboardData.spent_yesterday))}
                   previousLabel={tDash('yesterday')}
                   previousAmount={Number(dashboardData.spent_yesterday)}
                 />
                 <SpendingCard
                   title={tDash('thisWeek')}
                   amount={Number(dashboardData.spent_this_week)}
-                  change={getChange(Number(dashboardData.spent_this_week), Number(dashboardData.spent_last_week))}
                   previousLabel={tDash('lastWeek')}
                   previousAmount={Number(dashboardData.spent_last_week)}
-                  onClick={() => setChartModal({ open: true, type: "week" })}
                 />
                 <SpendingCard
                   title={tDash('thisMonth')}
                   amount={Number(dashboardData.spent_this_month)}
-                  change={getChange(Number(dashboardData.spent_this_month), Number(dashboardData.spent_last_month))}
                   previousLabel={tDash('lastMonth')}
                   previousAmount={Number(dashboardData.spent_last_month)}
-                  onClick={() => setChartModal({ open: true, type: "month" })}
                 />
               </div>
             </>
@@ -572,232 +554,5 @@ export default function Home() {
         </Modal>
       </div>
     </ProtectedLayout>
-  );
-}
-
-// ChartModalDashboard component
-import { format, startOfWeek, addDays, startOfMonth, addWeeks, endOfWeek, endOfMonth, subMonths, isSameMonth } from "date-fns";
-import { useLocale } from 'next-intl';
-import { id as idLocale, enUS } from 'date-fns/locale';
-
-type ChartModalDashboardProps = {
-  open: boolean;
-  type: "week" | "month" | null;
-  onClose: () => void;
-  userId?: string | null;
-};
-
-function getWeekDays(start: Date) {
-  // Default English labels; locale will be applied in component
-  return Array.from({ length: 7 }, (_, i) => format(addDays(start, i), "EEE"));
-}
-
-function getMonthWeeks(start: Date, end: Date) {
-  const weeks = [];
-  let current = startOfWeek(start, { weekStartsOn: 1 });
-  let idx = 1;
-  while (current < end) {
-    weeks.push({ label: `Week ${idx}`, start: current, end: endOfWeek(current, { weekStartsOn: 1 }) });
-    current = addWeeks(current, 1);
-    idx++;
-  }
-  return weeks;
-}
-
-function ChartModalDashboard({ open, type, onClose, userId }: ChartModalDashboardProps) {
-  const tDashChart = useTranslations('dashboard');
-  const localeStr = useLocale();
-  const dateFnsLocale = localeStr === 'id' ? idLocale : enUS;
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [chartData, setChartData] = useState<Array<Record<string, unknown>>>([]);
-
-  useEffect(() => {
-    if (!open || !type || !userId) return;
-    setLoading(true);
-    setError(null);
-
-    const fetchData = async () => {
-      const now = new Date();
-      if (type === "week") {
-        // Current week: Mon–Sun this week
-        const startCurrent = startOfWeek(now, { weekStartsOn: 1 });
-        const endCurrent = addDays(startCurrent, 6);
-        // Previous week: Mon–Sun last week
-        const startPrev = addDays(startCurrent, -7);
-        const endPrev = addDays(startPrev, 6);
-
-        // Fetch both weeks
-        const { data, error } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("user_id", userId)
-          .gte("date", startPrev.toISOString())
-          .lte("date", endCurrent.toISOString());
-
-        if (error) {
-          setError("Failed to fetch transactions");
-          setLoading(false);
-          return;
-        }
-
-        // Aggregate by day for both weeks
-        const days = getWeekDays(startCurrent).map((d, idx) => format(addDays(startCurrent, idx), "EEE", { locale: dateFnsLocale }));
-        const prevDays = getWeekDays(startPrev).map((d, idx) => format(addDays(startPrev, idx), "EEE", { locale: dateFnsLocale }));
-        const currentWeek: Record<string, number> = {};
-        const previousWeek: Record<string, number> = {};
-        days.forEach(day => (currentWeek[day] = 0));
-        prevDays.forEach(day => (previousWeek[day] = 0));
-
-        (data as Transaction[]).forEach(tx => {
-          const d = new Date(tx.date);
-          if (d >= startCurrent && d <= endCurrent) {
-            const label = format(d, "EEE", { locale: dateFnsLocale });
-            if (label in currentWeek) currentWeek[label] += tx.amount;
-          } else if (d >= startPrev && d <= endPrev) {
-            const label = format(d, "EEE", { locale: dateFnsLocale });
-            if (label in previousWeek) previousWeek[label] += tx.amount;
-          }
-        });
-
-        // Compose chart data
-        setChartData(
-          days.map(day => ({
-            name: day,
-            current: currentWeek[day] || 0,
-            previous: previousWeek[day] || 0,
-          }))
-        );
-      } else if (type === "month") {
-        // Current month: weeks in this month
-        const startCurrent = startOfMonth(now);
-        const endCurrent = endOfMonth(now);
-        // Previous month: weeks in previous month
-        const prevMonth = subMonths(now, 1);
-        const startPrev = startOfMonth(prevMonth);
-        const endPrev = endOfMonth(prevMonth);
-
-        // Fetch both months
-        const { data, error } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("user_id", userId)
-          .gte("date", startPrev.toISOString())
-          .lte("date", endCurrent.toISOString());
-
-        if (error) {
-          setError("Failed to fetch transactions");
-          setLoading(false);
-          return;
-        }
-
-        // Get week ranges for both months
-        const currentWeeks = getMonthWeeks(startCurrent, endCurrent);
-        const prevWeeks = getMonthWeeks(startPrev, endPrev);
-
-        // Aggregate by week for both months
-        const currentMonth: Record<string, number> = {};
-        const previousMonth: Record<string, number> = {};
-        currentWeeks.forEach(w => (currentMonth[w.label] = 0));
-        prevWeeks.forEach(w => (previousMonth[w.label] = 0));
-
-        (data as Transaction[]).forEach(tx => {
-          const d = new Date(tx.date);
-          // Current month
-          currentWeeks.forEach(w => {
-            if (d >= w.start && d <= w.end && isSameMonth(d, startCurrent)) {
-              currentMonth[w.label] += tx.amount;
-            }
-          });
-          // Previous month
-          prevWeeks.forEach(w => {
-            if (d >= w.start && d <= w.end && isSameMonth(d, startPrev)) {
-              previousMonth[w.label] += tx.amount;
-            }
-          });
-        });
-
-        // Compose chart data (align week labels)
-        const allLabels = Array.from(new Set([...currentWeeks.map(w => w.label), ...prevWeeks.map(w => w.label)]));
-        setChartData(
-          allLabels.map(label => ({
-            name: label,
-            current: currentMonth[label] || 0,
-            previous: previousMonth[label] || 0,
-          }))
-        );
-      }
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [open, type, userId, dateFnsLocale]);
-
-  return (
-    <Modal
-      isOpen={open}
-      onClose={onClose}
-      title={
-        type === "week"
-          ? tDashChart('weeklyComparison')
-          : type === "month"
-          ? tDashChart('monthlyComparison')
-          : tDashChart('comparison')
-      }
-    >
-      {loading ? (
-        <div className="flex flex-col items-center justify-center h-full">
-          <div className="text-center py-8">Loading...</div>
-        </div>
-      ) : error ? (
-        <div className="text-red-500">{error}</div>
-      ) : type === "week" && chartData.length ? (
-        <div className="w-full h-64">
-          <ChartContainer config={{
-            current: { label: tDashChart('current'), color: "#000000" },
-            previous: { label: tDashChart('previous'), color: "#cccccc" }
-          }}>
-            <Recharts.ResponsiveContainer width="100%" height="100%">
-              <Recharts.LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-  <Recharts.CartesianGrid strokeDasharray="3 3" />
-  <Recharts.XAxis dataKey="name" />
-  <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
-  <Recharts.Tooltip
-    formatter={(value: number) => [formatIDR(value), tDashChart('spent')]}
-    labelFormatter={(label: string) => label}
-  />
-  <Recharts.Legend />
-  <Recharts.Line type="monotone" dataKey="current" name={tDashChart('current')} stroke="#e05d38" strokeWidth={3} dot={{ r: 5, stroke: '#e05d38', strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7, fill: '#e05d38', stroke: '#fff', strokeWidth: 2 }} />
-  <Recharts.Line type="monotone" dataKey="previous" name={tDashChart('previous')} stroke="#cccccc" strokeWidth={2} dot={{ r: 4, stroke: '#cccccc', strokeWidth: 1, fill: '#fff' }} activeDot={{ r: 6, fill: '#cccccc', stroke: '#fff', strokeWidth: 2 }} />
-</Recharts.LineChart>
-            </Recharts.ResponsiveContainer>
-          </ChartContainer>
-        </div>
-      ) : type === "month" && chartData.length ? (
-        <div className="w-full h-64">
-          <ChartContainer config={{
-            current: { label: tDashChart('current'), color: "#000000" },
-            previous: { label: tDashChart('previous'), color: "#cccccc" }
-          }}>
-            <Recharts.ResponsiveContainer width="100%" height="100%">
-              <Recharts.LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-  <Recharts.CartesianGrid strokeDasharray="3 3" />
-  <Recharts.XAxis dataKey="name" />
-  <Recharts.YAxis tickFormatter={(value) => formatIDR(value).split(',')[0]} />
-  <Recharts.Tooltip
-    formatter={(value: number) => [formatIDR(value), tDashChart('weeklyTotal')]}
-    labelFormatter={(label: string) => label}
-  />
-  <Recharts.Legend />
-  <Recharts.Line type="monotone" dataKey="current" name={tDashChart('current')} stroke="#e05d38" strokeWidth={3} dot={{ r: 5, stroke: '#e05d38', strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 7, fill: '#e05d38', stroke: '#fff', strokeWidth: 2 }} />
-  <Recharts.Line type="monotone" dataKey="previous" name={tDashChart('previous')} stroke="#cccccc" strokeWidth={2} dot={{ r: 4, stroke: '#cccccc', strokeWidth: 1, fill: '#fff' }} activeDot={{ r: 6, fill: '#cccccc', stroke: '#fff', strokeWidth: 2 }} />
-</Recharts.LineChart>
-            </Recharts.ResponsiveContainer>
-          </ChartContainer>
-        </div>
-      ) : (
-        <div className="text-gray-400">No data available</div>
-      )}
-    </Modal>
   );
 }

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/di/transaction_providers.dart';
 import '../../core/transaction_repository.dart';
+// import '../../core/ui/category_icons.dart'; // No longer used directly here
+// import './widgets/add_transaction_modal.dart'; // No longer used directly here
+import './widgets/transaction_list_item_card.dart';
+import '../../core/ui/widgets/add_transaction_fab.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -23,24 +27,29 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      labelText: 'Search by note',
-                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search by note',
+                      prefixIcon: const Icon(LucideIcons.search, size: 20),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide.none,
                       ),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
                     ),
-                    onChanged: (value) => setState(() {}), // Rebuild to filter
+                    onChanged: (value) => setState(() {}),
                   ),
                 ),
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.calendar_today),
+                  icon: const Icon(LucideIcons.calendarDays, size: 20),
                   onPressed: () async {
                     final DateTime? picked = await showDatePicker(
                       context: context,
@@ -57,7 +66,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 ),
                 if (_selectedDate != null)
                   IconButton(
-                    icon: const Icon(Icons.clear),
+                    icon: const Icon(LucideIcons.xCircle, size: 20, color: Colors.grey),
                     onPressed: () {
                       setState(() {
                         _selectedDate = null;
@@ -70,7 +79,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           Expanded(
             child: transactionsAsyncValue.when(
               data: (transactions) {
-                List<Transaction> filteredTransactions = transactions;
+                List<Transaction> filteredTransactions = List.from(transactions);
+
+                filteredTransactions.sort((a, b) => b.date.compareTo(a.date));
 
                 if (_searchController.text.isNotEmpty) {
                   filteredTransactions = filteredTransactions.where((tx) {
@@ -87,30 +98,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 }
                 
                 if (filteredTransactions.isEmpty) {
-                  return const Center(child: Text('No transactions found.'));
+                  return const Center(child: Text('No transactions found.', style: TextStyle(color: Colors.grey)));
                 }
 
                 return RefreshIndicator(
                   onRefresh: () => ref.refresh(transactionListProvider.future),
                   child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                     itemCount: filteredTransactions.length,
                     itemBuilder: (context, index) {
                       final transaction = filteredTransactions[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          child: Text(transaction.category.name[0].toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        title: Text(transaction.note ?? 'No note'),
-                        subtitle: Text(DateFormat('dd MMM yyyy, HH:mm').format(transaction.date)),
-                        trailing: Text(
-                          'Rp ${transaction.amount.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            color: transaction.amount < 0 ? Colors.red : Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        // TODO: Add onTap for editing or deleting transaction
-                      );
+                      return TransactionListItemCard(transaction: transaction);
                     },
                   ),
                 );
@@ -121,12 +119,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Open add transaction modal
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: const AddTransactionFAB(),
     );
   }
 
