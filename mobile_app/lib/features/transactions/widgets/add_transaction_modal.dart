@@ -16,14 +16,13 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _categoryController = TextEditingController();
+  TransactionCategory? _selectedCategory;
   DateTime _selectedDate = DateTime.now();
 
   @override
   void dispose() {
     _amountController.dispose();
     _descriptionController.dispose();
-    _categoryController.dispose();
     super.dispose();
   }
 
@@ -45,7 +44,6 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
     if (_formKey.currentState!.validate()) {
       final amount = double.tryParse(_amountController.text);
       final note = _descriptionController.text;
-      final categoryString = _categoryController.text;
 
       if (amount == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -54,24 +52,14 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
         return;
       }
 
-      TransactionCategory category;
-      try {
-        category = TransactionCategory.values.firstWhere(
-          (e) => e.toString().split('.').last.toLowerCase() == categoryString.toLowerCase().trim()
-        );
-      } catch (e) {
-        category = TransactionCategory.other;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid category \'$categoryString\'. Defaulting to \'Other\'.')),
-        );
-      }
+      final categoryToSave = _selectedCategory ?? TransactionCategory.other;
 
       final newTransaction = Transaction()
         ..userId = 'user_placeholder'
         ..amount = amount
         ..note = note
         ..date = _selectedDate
-        ..category = category
+        ..category = categoryToSave
         ..createdAt = DateTime.now()
         ..updatedAt = DateTime.now();
       
@@ -133,19 +121,37 @@ class _AddTransactionModalState extends ConsumerState<AddTransactionModal> {
               controller: _descriptionController,
               decoration: const InputDecoration(labelText: 'Note (Description)'),
               validator: (value) {
-                return null;
+                return null; // Note is optional
               },
             ),
             const SizedBox(height: 16),
-            TextFormField(
-              controller: _categoryController,
+            DropdownButtonFormField<TransactionCategory>(
+              value: _selectedCategory, // Bind to the state variable
               decoration: const InputDecoration(
                 labelText: 'Category',
-                hintText: 'e.g., Food, Transport, Shopping'
+                border: OutlineInputBorder(), // Optional: adds a border like other TextFormFields
               ),
+              hint: const Text('Select a category'), // Show a hint when no category is selected
+              isExpanded: true, // Makes the dropdown take the full width
+              items: TransactionCategory.values.map((TransactionCategory category) {
+                // Capitalize the first letter for display
+                String displayName = category.name;
+                if (displayName.isNotEmpty) {
+                  displayName = displayName[0].toUpperCase() + displayName.substring(1);
+                }
+                return DropdownMenuItem<TransactionCategory>(
+                  value: category,
+                  child: Text(displayName),
+                );
+              }).toList(),
+              onChanged: (TransactionCategory? newValue) {
+                setState(() {
+                  _selectedCategory = newValue;
+                });
+              },
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a category';
+                if (value == null) {
+                  return 'Please select a category';
                 }
                 return null;
               },
