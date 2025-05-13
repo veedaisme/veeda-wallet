@@ -71,6 +71,10 @@ flutter:
 
   uses-material-design: true
 
+  # Add assets
+  assets:
+    - assets/icon/
+
 # flutter_launcher_icons configuration
 flutter_icons:
   android: true
