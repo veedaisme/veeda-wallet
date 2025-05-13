@@ -22,7 +22,7 @@ class TransactionListItemCard extends StatelessWidget {
     final Color amountColor = transaction.amount >= 0 ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error;
 
     return Card(
-      elevation: 1.5, // A subtle shadow similar to shadow-sm
+      elevation: 0.05, // A subtle shadow similar to shadow-sm
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0), // Corresponds to rounded-xl
         side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.5), width: 1), // Corresponds to border border-gray-100
