@@ -14,8 +14,10 @@ class AddTransactionFAB extends StatelessWidget {
           builder: (BuildContext context) {
             return const AddTransactionModal();
           },
-          isScrollControlled: true, 
-          shape: const CircleBorder(),
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
         );
       },
       child: const Icon(LucideIcons.plus),

@@ -12,7 +12,7 @@ class VeedaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'SpendWise',
+      title: 'Sense',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
@@ -90,7 +90,7 @@ class _MainAppShellState extends State<MainAppShell> {
     } // If on a non-tab route like /profile, _currentIndex retains its last value, so a tab might still appear selected.
       // This is an okay intermediate state. A more advanced solution might involve passing a different currentIndex or styling.
 
-    String currentTitle = "SpendWise"; // Default title
+    String currentTitle = "Sense"; // Default title
     return Scaffold(
       appBar: AppBar(
         title: Text(currentTitle),

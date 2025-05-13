@@ -1,5 +1,5 @@
 {
-  "app": { "title": "SpendWise", "logout": "Keluar" },
+  "app": { "title": "Sense", "logout": "Keluar" },
   "dashboard": { 
     "title": "Dasbor", 
     "today": "Hari Ini", 
