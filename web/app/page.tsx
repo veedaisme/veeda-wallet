@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 
 import { useTranslations } from 'next-intl';
 import { LanguagePillToggle } from '@/components/ui/language-pill-toggle';
+import ChartModal from '@/components/dashboard/ChartModal';
 
 import { SpendingCard } from "@/components/spending-card";
 import { Modal } from "@/components/ui/modal";
@@ -421,12 +422,14 @@ export default function Home() {
                   amount={Number(dashboardData.spent_this_week)}
                   previousLabel={tDash('lastWeek')}
                   previousAmount={Number(dashboardData.spent_last_week)}
+                  onClick={() => setChartModal({ open: true, type: "week" })}
                 />
                 <SpendingCard
                   title={tDash('thisMonth')}
                   amount={Number(dashboardData.spent_this_month)}
                   previousLabel={tDash('lastMonth')}
                   previousAmount={Number(dashboardData.spent_last_month)}
+                  onClick={() => setChartModal({ open: true, type: "month" })}
                 />
               </div>
             </>
@@ -552,6 +555,14 @@ export default function Home() {
             loading={loadingSubscriptions} 
           />
         </Modal>
+
+        {/* Chart Modal */}
+        <ChartModal 
+          open={chartModal.open}
+          type={chartModal.type}
+          onClose={() => setChartModal({ open: false, type: null })}
+          userId={user?.id}
+        />
       </div>
     </ProtectedLayout>
   );
