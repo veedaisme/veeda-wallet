@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from "react";
 import { Clock, CreditCard, Plus, User, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { LanguagePillToggle } from '@/components/ui/language-pill-toggle';
 import { Modal } from "@/components/ui/modal";
@@ -24,9 +24,12 @@ export default function Home() {
   const tApp = useTranslations('app');
   const tTrans = useTranslations('transactions');
   const tSub = useTranslations('subscriptions');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabType | null;
+  
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [activeTab, setActiveTab] = useState<TabType>(tabParam || "dashboard");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();

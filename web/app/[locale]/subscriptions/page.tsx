@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Subscription, ProjectedSubscription, SubscriptionData } from '@/models/subscription';
 import { SubscriptionCard } from '@/components/subscription-card';
 import { Modal } from '@/components/ui/modal';
@@ -18,6 +18,8 @@ import {
 export default function SubscriptionsPage() {
   const tSub = useTranslations('subscriptions');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromTab = searchParams.get('from');
   const { user } = useUser();
   
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -107,7 +109,14 @@ export default function SubscriptionsPage() {
       {/* Header */}
       <div className="sticky top-0 bg-white p-4 border-b border-gray-200 flex items-center z-10">
         <button 
-          onClick={() => router.back()}
+          onClick={() => {
+            // Navigate back to the correct tab if specified
+            if (fromTab === 'subscriptions') {
+              router.push('/?tab=subscriptions');
+            } else {
+              router.back();
+            }
+          }}
           className="mr-3 p-1 rounded-full hover:bg-gray-100"
           aria-label="Back"
         >

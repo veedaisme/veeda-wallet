@@ -122,7 +122,7 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
             </div>
             <div 
               className="bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => router.push('/subscriptions')}
+              onClick={() => router.push('/subscriptions?from=subscriptions')}
             >
               <div className="flex justify-between items-center">
                 <div>
