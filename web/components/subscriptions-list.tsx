@@ -92,7 +92,6 @@ export function SubscriptionsList({
       <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-xl font-bold">{tSub('subscriptions')}</h2>
             {summary && (
               <p className="text-gray-600">
                 {tSub('upcomingThisMonth')}:{' '}
