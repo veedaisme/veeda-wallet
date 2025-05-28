@@ -31,6 +31,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  
+  // Add refresh keys to trigger component reloads
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
+  const [transactionsRefreshKey, setTransactionsRefreshKey] = useState(0);
+  const [subscriptionsRefreshKey, setSubscriptionsRefreshKey] = useState(0);
 
   const router = useRouter();
 
@@ -80,6 +85,10 @@ export default function Home() {
 
     setIsTransactionModalOpen(false);
     setLoading(false);
+    
+    // Trigger a refresh of both dashboard and transactions views
+    setDashboardRefreshKey(prev => prev + 1);
+    setTransactionsRefreshKey(prev => prev + 1);
   };
 
   const handleAddSubscription = async (data: SubscriptionData) => {
@@ -112,6 +121,9 @@ export default function Home() {
 
     setIsSubscriptionModalOpen(false);
     setLoading(false);
+    
+    // Trigger a refresh of the subscriptions view
+    setSubscriptionsRefreshKey(prev => prev + 1);
   };
 
   return (
@@ -150,11 +162,11 @@ export default function Home() {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-hidden">
           {activeTab === "dashboard" ? (
-            <DashboardView userId={user?.id ?? null} />
+            <DashboardView key={`dashboard-${dashboardRefreshKey}`} userId={user?.id ?? null} />
           ) : activeTab === "transactions" ? (
-            <TransactionsView userId={user?.id ?? null} />
+            <TransactionsView key={`transactions-${transactionsRefreshKey}`} userId={user?.id ?? null} />
           ) : (
-            <SubscriptionsView userId={user?.id ?? null} />
+            <SubscriptionsView key={`subscriptions-${subscriptionsRefreshKey}`} userId={user?.id ?? null} />
           )}
         </main>
 
