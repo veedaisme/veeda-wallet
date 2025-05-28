@@ -87,7 +87,6 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
   }
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Get only numbers from input
     const value = e.target.value.replace(/[^\d]/g, "")
 
     if (value === "") {
@@ -95,13 +94,15 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
       return
     }
 
-    // Convert to number and format as IDR
     const numValue = Number.parseInt(value, 10)
     setAmount(formatIDR(numValue).replace("Rp", "").trim())
   }
 
+  const isFormDisabled = loading;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      
       <div>
         <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
           {tTrans('amount')} (Rp)
@@ -117,6 +118,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
             className={`w-full p-2 pl-10 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${
               errors.amount ? "border-red-500" : "border-gray-300"
             }`}
+            disabled={isFormDisabled}
           />
         </div>
         {errors.amount && <p className="mt-1 text-sm text-red-500">{errors.amount}</p>}
@@ -133,6 +135,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
           value={note}
           onChange={(e) => setNote(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:outline-none"
+          disabled={isFormDisabled}
         />
       </div>
 
@@ -147,6 +150,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
           className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-black focus:outline-none ${
             errors.category ? "border-red-500" : "border-gray-300"
           }`}
+          disabled={isFormDisabled}
         >
           <option value="" disabled>
             {tTrans('selectCategory')}
@@ -173,6 +177,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
                 !date && "text-muted-foreground",
                 errors.date ? "border-red-500" : ""
               )}
+              disabled={isFormDisabled}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {date ? format(date, 'PPP', { locale: locale === 'id' ? idLocale : undefined }) : <span>{tTrans('pickDate')}</span>}
@@ -185,6 +190,7 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
               onSelect={setDate}
               initialFocus
               locale={locale === 'id' ? idLocale : undefined}
+              disabled={isFormDisabled}
             />
           </PopoverContent>
         </Popover>
@@ -196,17 +202,18 @@ export function TransactionForm({ onSubmit, onCancel, loading = false, initialDa
           type="button"
           onClick={onCancel}
           className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+          disabled={loading}
         >
           {tTrans('cancel')}
         </button>
         <button
           type="submit"
-          className="flex-1 py-2 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-60"
-          disabled={loading}
+          className="flex-1 py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
+          disabled={isFormDisabled}
         >
-          {loading ? (initialData ? tTrans('updating') : tTrans('adding')) : (initialData ? tTrans('update') : tTrans('add'))}
+          {loading ? tTrans('saving') : tTrans('save')}
         </button>
       </div>
     </form>
-  )
+  );
 }

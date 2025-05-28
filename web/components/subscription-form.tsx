@@ -35,7 +35,7 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
     : "")
   const [currency, setCurrency] = useState(initialData?.currency || "IDR")
   const [frequency, setFrequency] = useState(initialData?.frequency || "monthly")
-  const [paymentDate, setPaymentDate] = useState<Date | undefined>(initialData?.payment_date || new Date())
+  const [paymentDate, setPaymentDate] = useState<Date>(initialData?.payment_date ? new Date(initialData.payment_date) : new Date())
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validateForm = () => {
@@ -68,7 +68,7 @@ export function SubscriptionForm({ onSubmit, onCancel, loading = false, initialD
       newErrors.frequency = tSub('errorSelectFrequency')
     }
     
-    if (!paymentDate) {
+    if (!(paymentDate instanceof Date) || isNaN(paymentDate.getTime())) {
       newErrors.paymentDate = tSub('errorSelectDate')
     }
 

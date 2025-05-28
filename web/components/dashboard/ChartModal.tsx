@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { format, startOfWeek, addDays, startOfMonth, addWeeks, endOfWeek, endOfMonth, subMonths, isSameMonth } from "date-fns";
+import { format, startOfWeek, addDays, startOfMonth, endOfMonth, subMonths, isSameMonth } from "date-fns";
 import { id as idLocale, enUS } from 'date-fns/locale';
 import { supabase } from '@/lib/supabaseClient'; 
 import { Transaction } from '@/models/transaction'; 

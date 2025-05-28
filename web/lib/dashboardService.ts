@@ -11,7 +11,7 @@ export interface DashboardSummaryData {
   spent_last_month: number;
 }
 
-export const fetchDashboardSummary = async (): Promise<{ data: DashboardSummaryData | null, error: any }> => {
+export const fetchDashboardSummary = async (): Promise<{ data: DashboardSummaryData | null, error: Error | null }> => {
   console.log('Service: Fetching dashboard summary');
   const { data, error } = await supabase.rpc('dashboard_summary');
   if (error) {
@@ -22,15 +22,27 @@ export const fetchDashboardSummary = async (): Promise<{ data: DashboardSummaryD
   return { data: data && data.length > 0 ? data[0] : null, error: null };
 };
 
+// Type for chart data points
+export interface ChartDataPoint {
+  date: string;
+  amount: number;
+}
+
+// Type for chart data response
+export interface ChartDataResponse {
+  data: ChartDataPoint[];
+  error: Error | null;
+}
+
 // Placeholder for fetching weekly spending for chart
-export const fetchWeeklySpendingForChart = async (userId: string, dateRange: { start: string, end: string }): Promise<any> => {
+export const fetchWeeklySpendingForChart = async (userId: string, dateRange: { start: string, end: string }): Promise<ChartDataResponse> => {
   console.log('Service: Fetching weekly spending for chart. User:', userId, 'Range:', dateRange);
   // TODO: Implement actual Supabase call for weekly chart data
   return { data: [], error: null }; 
 };
 
 // Placeholder for fetching monthly spending for chart
-export const fetchMonthlySpendingForChart = async (userId: string, dateRange: { start: string, end: string }): Promise<any> => {
+export const fetchMonthlySpendingForChart = async (userId: string, dateRange: { start: string, end: string }): Promise<ChartDataResponse> => {
   console.log('Service: Fetching monthly spending for chart. User:', userId, 'Range:', dateRange);
   // TODO: Implement actual Supabase call for monthly chart data
   return { data: [], error: null };

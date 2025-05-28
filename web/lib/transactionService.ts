@@ -15,7 +15,7 @@ interface FetchTransactionsParams {
 
 export const fetchTransactions = async (
   { userId, page, sortField, sortDirection, searchTerm }: FetchTransactionsParams
-): Promise<{ data: Transaction[], error: any, hasMore: boolean }> => {
+): Promise<{ data: Transaction[], error: Error | null, hasMore: boolean }> => {
   console.log(`Service: Fetching transactions. User: ${userId}, Page: ${page}, Sort: ${sortField} ${sortDirection}, Search: ${searchTerm}`);
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
@@ -30,7 +30,7 @@ export const fetchTransactions = async (
     query = query.ilike('note', `%${searchTerm}%`); // Or search across multiple fields
   }
 
-  const { data, error, count } = await query.range(from, to);
+  const { data, error, count: _count } = await query.range(from, to);
 
   if (error) {
     console.error('Error fetching transactions:', error);
@@ -40,7 +40,7 @@ export const fetchTransactions = async (
   return { data: data || [], error: null, hasMore: (data || []).length === PAGE_SIZE };
 };
 
-export const addTransaction = async (userId: string, transactionData: TransactionData): Promise<{ data: Transaction | null, error: any }> => {
+export const addTransaction = async (userId: string, transactionData: TransactionData): Promise<{ data: Transaction | null, error: Error | null }> => {
   console.log('Service: Adding transaction for user:', userId);
   const { data, error } = await supabase
     .from('transactions')
@@ -54,7 +54,7 @@ export const addTransaction = async (userId: string, transactionData: Transactio
   return { data, error };
 };
 
-export const updateTransaction = async (id: string, userId: string, transactionData: Partial<TransactionData>): Promise<{ data: Transaction | null, error: any }> => {
+export const updateTransaction = async (id: string, userId: string, transactionData: Partial<TransactionData>): Promise<{ data: Transaction | null, error: Error | null }> => {
   console.log('Service: Updating transaction:', id, 'for user:', userId);
   const { data, error } = await supabase
     .from('transactions')
@@ -70,7 +70,7 @@ export const updateTransaction = async (id: string, userId: string, transactionD
   return { data, error };
 };
 
-export const deleteTransaction = async (id: string, userId: string): Promise<{ error: any }> => {
+export const deleteTransaction = async (id: string, userId: string): Promise<{ error: Error | null }> => {
   console.log('Service: Deleting transaction:', id, 'for user:', userId);
   const { error } = await supabase
     .from('transactions')

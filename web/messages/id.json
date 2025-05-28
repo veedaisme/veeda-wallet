@@ -1,5 +1,5 @@
 {
-  "app": { "title": "Sense", "logout": "Keluar" },
+  "app": { "title": "Sense", "logout": "Keluar", "dashboard": "Dasbor" },
   "dashboard": { 
     "title": "Dasbor", 
     "today": "Hari Ini", 
@@ -39,7 +39,9 @@
     "errorInvalidAmount": "Jumlah transaksi harus positif",
     "errorSelectCategory": "Kategori harus dipilih",
     "errorSelectDate": "Tanggal harus dipilih",
-    "tabTitle": "Transaksi"
+    "tabTitle": "Transaksi",
+    "save": "Simpan",
+    "saving": "Menyimpan..."
   },
   "categories": { 
     "food": "Makanan", 
@@ -65,6 +67,7 @@
     "amount": "Jumlah",
     "currency": "Mata Uang",
     "frequency": "Frekuensi",
+    "paymentDate": "Tanggal Pembayaran",
     "nextPaymentDate": "Tanggal Pembayaran Berikutnya",
     "monthly": "Bulanan",
     "quarterly": "Triwulanan",
@@ -94,7 +97,13 @@
     "selectFrequency": "Pilih frekuensi",
     "add": "Tambah",
     "update": "Perbarui",
-    "saving": "Menyimpan..."
+    "saving": "Menyimpan...",
+    "monthlySpending": "Pengeluaran Bulanan",
+    "yearlySpending": "Pengeluaran Tahunan",
+    "activeSubscriptions": "Langganan Aktif",
+    "noSubscriptionsYet": "Belum ada langganan",
+    "upcomingPayments": "Pembayaran Mendatang",
+    "noUpcomingPayments": "Tidak ada pembayaran mendatang"
   },
   "auth": {
     "signInTitle": "Masuk",

@@ -34,16 +34,25 @@ export default function AuthForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
       if (error) setError(error.message);
       else setSuccess(tAuth('loginSuccess'));
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password 
+      });
+      
       if (error) setError(error.message);
       else setSuccess(tAuth('signupSuccess'));
     }
@@ -57,6 +66,7 @@ export default function AuthForm() {
           <h2 className="text-2xl font-bold text-left">{mode === "login" ? tAuth('signInTitle') : tAuth('signUpTitle')}</h2>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+          
           <div>
             <Label htmlFor="email">{tAuth('email')}</Label>
             <Input

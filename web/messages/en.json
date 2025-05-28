@@ -1,5 +1,5 @@
 {
-  "app": { "title": "Sense", "logout": "Logout" },
+  "app": { "title": "Sense", "logout": "Logout", "dashboard": "Dashboard" },
   "dashboard": { 
     "title": "Dashboard", 
     "today": "Today", 
@@ -40,7 +40,9 @@
     "errorInvalidAmount": "Amount must be a positive number",
     "errorSelectCategory": "Category is required",
     "errorSelectDate": "Date is required",
-    "tabTitle": "Transactions"
+    "tabTitle": "Transactions",
+    "save": "Save",
+    "saving": "Saving..."
   },
   "categories": { 
     "food": "Food", 
@@ -69,6 +71,7 @@
     "amount": "Amount",
     "currency": "Currency",
     "frequency": "Frequency",
+    "paymentDate": "Payment Date",
     "nextPaymentDate": "Next Payment Date",
     "monthly": "Monthly",
     "quarterly": "Quarterly",
@@ -98,7 +101,13 @@
     "selectFrequency": "Select frequency",
     "add": "Add",
     "update": "Update",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "monthlySpending": "Monthly Spending",
+    "yearlySpending": "Yearly Spending",
+    "activeSubscriptions": "Active Subscriptions",
+    "noSubscriptionsYet": "No subscriptions yet",
+    "upcomingPayments": "Upcoming Payments",
+    "noUpcomingPayments": "No upcoming payments"
   },
   "auth": {
     "signInTitle": "Sign In",
