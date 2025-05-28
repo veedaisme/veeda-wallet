@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { SubscriptionScheduleList } from "@/components/subscriptionScheduleList";
 import { Modal } from "@/components/ui/modal";
 import { SubscriptionForm } from '@/components/subscription-form';
-import { SubscriptionList } from './SubscriptionList';
 import { SubscriptionData, SubscriptionSummary, ProjectedSubscription, Subscription } from "@/models/subscription";
 import {
   addSubscription,
   updateSubscription,
-  deleteSubscription,
   fetchProjectedSubscriptions,
   fetchSubscriptionSummary,
   fetchSubscriptions
@@ -20,13 +19,13 @@ interface SubscriptionsViewProps {
 
 export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) => {
   const tSub = useTranslations('subscriptions');
+  const router = useRouter();
   
   const [projectedSubscriptions, setProjectedSubscriptions] = useState<ProjectedSubscription[]>([]);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [isAddSubscriptionModalOpen, setIsAddSubscriptionModalOpen] = useState(false);
-  const [isSubscriptionListOpen, setIsSubscriptionListOpen] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<SubscriptionData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,27 +96,6 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
     }
   };
 
-  const handleConfirmDeleteSubscription = async (subscription: ProjectedSubscription | Subscription) => {
-    if (!userId || !subscription) return;
-    try {
-      setLoadingSubscriptions(true);
-      await deleteSubscription(subscription.id, userId);
-      
-      // Update both subscription lists
-      setProjectedSubscriptions(prev => prev.filter(s => s.id !== subscription.id));
-      setSubscriptions(prev => prev.filter(s => s.id !== subscription.id));
-      
-      // Re-fetch summary after deleting
-      const { data: summaryData, error: summaryError } = await fetchSubscriptionSummary(userId);
-      if (summaryError) throw summaryError;
-      setSubscriptionSummary(summaryData);
-    } catch (error) {
-      console.error("Error deleting subscription:", error);
-    } finally {
-      setLoadingSubscriptions(false);
-    }
-  };
-
   return (
     <div className="flex flex-col space-y-6">
       {/* Summary Header */}
@@ -144,7 +122,7 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
             </div>
             <div 
               className="bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => setIsSubscriptionListOpen(true)}
+              onClick={() => router.push('/subscriptions')}
             >
               <div className="flex justify-between items-center">
                 <div>
@@ -208,30 +186,7 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
         />
       </Modal>
 
-      {/* Subscription List Screen */}
-      {isSubscriptionListOpen && (
-        <SubscriptionList 
-          subscriptions={subscriptions}
-          onEdit={(subscription) => {
-            // Convert the Subscription to SubscriptionData format for the form
-            const subscriptionData: SubscriptionData = {
-              id: subscription.id,
-              provider_name: subscription.provider_name,
-              amount: subscription.amount,
-              currency: subscription.currency,
-              frequency: subscription.frequency,
-              payment_date: new Date(subscription.payment_date)
-            };
-            // Set editing subscription and open modal
-            setEditingSubscription(subscriptionData);
-            setIsAddSubscriptionModalOpen(true);
-            setIsSubscriptionListOpen(false);
-          }}
-          onDelete={handleConfirmDeleteSubscription}
-          loading={loadingSubscriptions}
-          onBack={() => setIsSubscriptionListOpen(false)}
-        />
-      )}
+
     </div>
   );
 };

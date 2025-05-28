@@ -2,10 +2,8 @@
 
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { ProjectedSubscription, SubscriptionSummary, type SubscriptionData } from '@/models/subscription'
-import { Modal } from '@/components/ui/modal'
+import { ProjectedSubscription, SubscriptionSummary } from '@/models/subscription'
 import { SubscriptionCard } from '@/components/subscription-card'
-import { SubscriptionForm } from '@/components/subscription-form'
 import { formatIDR } from '@/utils/currency'
 import { Switch } from '@/components/ui/switch'
 
