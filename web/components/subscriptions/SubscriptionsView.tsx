@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { SubscriptionsList } from "@/components/subscriptions-list";
+import { SubscriptionScheduleList } from "@/components/subscriptionScheduleList";
 import { Modal } from "@/components/ui/modal";
 import { SubscriptionForm } from '@/components/subscription-form';
-import { SubscriptionData, SubscriptionSummary, ProjectedSubscription } from "@/models/subscription";
+import { SubscriptionList } from './SubscriptionList';
+import { SubscriptionData, SubscriptionSummary, ProjectedSubscription, Subscription } from "@/models/subscription";
 import {
   addSubscription,
   updateSubscription,
   deleteSubscription,
   fetchProjectedSubscriptions,
-  fetchSubscriptionSummary
+  fetchSubscriptionSummary,
+  fetchSubscriptions
 } from '@/lib/subscriptionService';
 
 interface SubscriptionsViewProps {
@@ -19,14 +21,17 @@ interface SubscriptionsViewProps {
 export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) => {
   const tSub = useTranslations('subscriptions');
   
-  const [subscriptions, setSubscriptions] = useState<ProjectedSubscription[]>([]);
+  const [projectedSubscriptions, setProjectedSubscriptions] = useState<ProjectedSubscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [isAddSubscriptionModalOpen, setIsAddSubscriptionModalOpen] = useState(false);
+  const [isSubscriptionListOpen, setIsSubscriptionListOpen] = useState(false);
+  const [editingSubscription, setEditingSubscription] = useState<SubscriptionData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Use useCallback to prevent the function from being recreated on every render
-  const loadProjectedSubscriptions = useCallback(async () => {
+  const loadSubscriptionData = useCallback(async () => {
     if (!userId) return;
     setLoadingSubscriptions(true);
     setError(null);
@@ -36,10 +41,17 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
     const projectionEndDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
     try {
+      // Fetch regular subscriptions (not projected)
+      const { data: regularSubs, error: regularSubsError } = await fetchSubscriptions(userId);
+      if (regularSubsError) throw regularSubsError;
+      setSubscriptions(regularSubs ?? []);
+
+      // Fetch projected subscriptions for the upcoming payments list
       const { data: projectedSubs, error: projectedSubsError } = await fetchProjectedSubscriptions(userId, projectionEndDateStr);
       if (projectedSubsError) throw projectedSubsError;
-      setSubscriptions(projectedSubs ?? []);
+      setProjectedSubscriptions(projectedSubs ?? []);
 
+      // Fetch subscription summary
       const { data, error } = await fetchSubscriptionSummary(userId);
       if (error) {
         console.error("Error fetching subscription summary:", error);
@@ -63,9 +75,9 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
 
   useEffect(() => {
     if (userId) {
-      loadProjectedSubscriptions();
+      loadSubscriptionData();
     }
-  }, [userId, loadProjectedSubscriptions]);
+  }, [userId, loadSubscriptionData]);
 
   const handleSaveSubscription = async (data: SubscriptionData) => {
     if (!userId) return;
@@ -76,7 +88,7 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
       } else {
         await addSubscription(data, userId);
       }
-      loadProjectedSubscriptions();
+      loadSubscriptionData();
       setIsAddSubscriptionModalOpen(false);
     } catch (error) {
       console.error('Error saving subscription:', error);
@@ -85,12 +97,16 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
     }
   };
 
-  const handleConfirmDeleteSubscription = async (subscription: ProjectedSubscription) => {
+  const handleConfirmDeleteSubscription = async (subscription: ProjectedSubscription | Subscription) => {
     if (!userId || !subscription) return;
     try {
       setLoadingSubscriptions(true);
       await deleteSubscription(subscription.id, userId);
+      
+      // Update both subscription lists
+      setProjectedSubscriptions(prev => prev.filter(s => s.id !== subscription.id));
       setSubscriptions(prev => prev.filter(s => s.id !== subscription.id));
+      
       // Re-fetch summary after deleting
       const { data: summaryData, error: summaryError } = await fetchSubscriptionSummary(userId);
       if (summaryError) throw summaryError;
@@ -126,9 +142,22 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
               <div className="text-sm text-gray-500">{tSub('yearlySpending')}</div>
               <div className="text-2xl font-bold">Rp {(subscriptionSummary.total_monthly_recurring * 12).toLocaleString()}</div>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-500">{tSub('activeSubscriptions')}</div>
-              <div className="text-2xl font-bold">{subscriptionSummary.subscription_count}</div>
+            <div 
+              className="bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => setIsSubscriptionListOpen(true)}
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-gray-500">{tSub('activeSubscriptions')}</div>
+                  <div className="text-2xl font-bold">{subscriptionSummary.subscription_count}</div>
+                </div>
+                <div className="text-gray-400 flex items-center">
+                  <span className="text-xs mr-1">{tSub('viewAll')}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
@@ -147,12 +176,9 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : subscriptions.length > 0 ? (
-          <SubscriptionsList 
-            subscriptions={subscriptions} 
+          <SubscriptionScheduleList 
+            subscriptions={projectedSubscriptions} 
             summary={subscriptionSummary}
-            onDelete={handleConfirmDeleteSubscription}
-            onUpdate={handleSaveSubscription}
-            loading={loadingSubscriptions}
             openAddSubscriptionModal={() => setIsAddSubscriptionModalOpen(true)}
           />
         ) : (
@@ -162,18 +188,50 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
         )}
       </div>
       
-      {/* Add Subscription Modal */}
+      {/* Add/Edit Subscription Modal */}
       <Modal
         isOpen={isAddSubscriptionModalOpen}
-        onClose={() => setIsAddSubscriptionModalOpen(false)}
-        title={tSub('addSubscription')}
+        onClose={() => {
+          setIsAddSubscriptionModalOpen(false);
+          setEditingSubscription(null);
+        }}
+        title={editingSubscription ? tSub('editSubscription') : tSub('addSubscription')}
       >
         <SubscriptionForm
+          initialData={editingSubscription || undefined}
           onSubmit={handleSaveSubscription}
-          onCancel={() => setIsAddSubscriptionModalOpen(false)}
+          onCancel={() => {
+            setIsAddSubscriptionModalOpen(false);
+            setEditingSubscription(null);
+          }}
           loading={loadingSubscriptions}
         />
       </Modal>
+
+      {/* Subscription List Screen */}
+      {isSubscriptionListOpen && (
+        <SubscriptionList 
+          subscriptions={subscriptions}
+          onEdit={(subscription) => {
+            // Convert the Subscription to SubscriptionData format for the form
+            const subscriptionData: SubscriptionData = {
+              id: subscription.id,
+              provider_name: subscription.provider_name,
+              amount: subscription.amount,
+              currency: subscription.currency,
+              frequency: subscription.frequency,
+              payment_date: new Date(subscription.payment_date)
+            };
+            // Set editing subscription and open modal
+            setEditingSubscription(subscriptionData);
+            setIsAddSubscriptionModalOpen(true);
+            setIsSubscriptionListOpen(false);
+          }}
+          onDelete={handleConfirmDeleteSubscription}
+          loading={loadingSubscriptions}
+          onBack={() => setIsSubscriptionListOpen(false)}
+        />
+      )}
     </div>
   );
 };

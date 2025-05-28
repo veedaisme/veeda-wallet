@@ -103,7 +103,9 @@
     "activeSubscriptions": "Langganan Aktif",
     "noSubscriptionsYet": "Belum ada langganan",
     "upcomingPayments": "Pembayaran Mendatang",
-    "noUpcomingPayments": "Tidak ada pembayaran mendatang"
+    "noUpcomingPayments": "Tidak ada pembayaran mendatang",
+    "manageSubscriptions": "Kelola Langganan Anda",
+    "viewAll": "Lihat Semua"
   },
   "auth": {
     "signInTitle": "Masuk",

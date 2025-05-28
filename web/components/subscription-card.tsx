@@ -20,8 +20,8 @@ const capitalizeWords = (str: string): string => {
 interface SubscriptionCardProps {
   subscription: ProjectedSubscription
   showInIDR: boolean
-  onEdit: (subscription: ProjectedSubscription) => void
-  onDelete: (subscription: ProjectedSubscription) => void
+  onEdit?: (subscription: ProjectedSubscription) => void
+  onDelete?: (subscription: ProjectedSubscription) => void
 }
 
 export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ 
@@ -84,22 +84,29 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             <span className="text-[hsl(var(--muted-foreground))] text-sm truncate">{tSub(subscription.frequency)}</span>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button 
-            onClick={() => onEdit(subscription)}
-            className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" 
-            aria-label={tSub('edit')}
-          >
-            <Edit size={16} />
-          </button>
-          <button 
-            onClick={() => onDelete(subscription)}
-            className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))]" 
-            aria-label={tSub('delete')}
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+        {/* Only show action buttons if handlers are provided */}
+        {(onEdit || onDelete) && (
+          <div className="flex gap-2">
+            {onEdit && (
+              <button 
+                onClick={() => onEdit(subscription)}
+                className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" 
+                aria-label={tSub('edit')}
+              >
+                <Edit size={16} />
+              </button>
+            )}
+            {onDelete && (
+              <button 
+                onClick={() => onDelete(subscription)}
+                className="p-1 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--destructive))]" 
+                aria-label={tSub('delete')}
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <div className="mt-3 flex justify-between items-end">
         <p className="font-bold text-xl">

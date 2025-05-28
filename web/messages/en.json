@@ -107,7 +107,9 @@
     "activeSubscriptions": "Active Subscriptions",
     "noSubscriptionsYet": "No subscriptions yet",
     "upcomingPayments": "Upcoming Payments",
-    "noUpcomingPayments": "No upcoming payments"
+    "noUpcomingPayments": "No upcoming payments",
+    "manageSubscriptions": "Manage Your Subscriptions",
+    "viewAll": "View All"
   },
   "auth": {
     "signInTitle": "Sign In",

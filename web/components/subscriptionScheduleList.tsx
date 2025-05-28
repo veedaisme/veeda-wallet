@@ -12,27 +12,18 @@ import { Switch } from '@/components/ui/switch'
 interface SubscriptionsListProps {
   subscriptions: ProjectedSubscription[];
   summary: SubscriptionSummary | null;
-  onUpdate: (data: SubscriptionData) => Promise<void>;
-  onDelete: (subscription: ProjectedSubscription) => void;
-  loading: boolean;
   openAddSubscriptionModal: () => void;
 }
 
-export function SubscriptionsList({
+export function SubscriptionScheduleList({
   subscriptions,
   summary,
-  onUpdate,
-  onDelete,
-  loading,
   openAddSubscriptionModal,
 }: SubscriptionsListProps) {
   const tSub = useTranslations('subscriptions')
   
   // State
   const [showInIDR, setShowInIDR] = useState(true)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [selectedSubscription, setSelectedSubscription] = useState<ProjectedSubscription | null>(null)
   
   // Sort subscriptions by projected payment date
   const sortedSubscriptions = [...subscriptions].sort((a, b) => {
@@ -52,33 +43,7 @@ export function SubscriptionsList({
     acc[monthYear].push(subscription)
     return acc
   }, {})
-
-  // Handle editing a subscription
-  const handleEdit = (subscription: ProjectedSubscription) => {
-    setSelectedSubscription(subscription)
-    setIsEditModalOpen(true)
-  }
-
-  // Handle updating a subscription
-  const handleUpdate = async (data: SubscriptionData) => {
-    await onUpdate(data)
-    setIsEditModalOpen(false)
-  }
-
-  // Handle deleting a subscription
-  const handleDelete = (subscription: ProjectedSubscription) => {
-    setSelectedSubscription(subscription)
-    setIsDeleteModalOpen(true)
-  }
-
-  // Confirm delete subscription
-  const confirmDelete = async () => {
-    if (selectedSubscription) {
-      await onDelete(selectedSubscription)
-      setIsDeleteModalOpen(false)
-    }
-  }
-
+  
   // Get month name
   const getMonthName = (monthYear: string) => {
     const [year, month] = monthYear.split('-')
@@ -127,8 +92,6 @@ export function SubscriptionsList({
                     key={subscription.id}
                     subscription={subscription}
                     showInIDR={showInIDR}
-                    onEdit={() => handleEdit(subscription)}
-                    onDelete={() => handleDelete(subscription)}
                   />
                 ))}
               </div>
@@ -145,54 +108,6 @@ export function SubscriptionsList({
             {tSub('addYourFirst')}
           </button>
         </div>
-      )}
-
-      {/* Edit Subscription Modal */}
-      {selectedSubscription && (
-        <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title={tSub('editSubscription')}>
-          <SubscriptionForm
-            initialData={{
-              id: selectedSubscription.id,
-              provider_name: selectedSubscription.provider_name,
-              amount: selectedSubscription.original_amount,
-              currency: selectedSubscription.original_currency,
-              frequency: selectedSubscription.frequency,
-              payment_date: new Date(selectedSubscription.projected_payment_date)
-            }}
-            onSubmit={handleUpdate}
-            onCancel={() => setIsEditModalOpen(false)}
-            loading={loading}
-          />
-        </Modal>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {selectedSubscription && (
-        <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title={tSub('confirmDelete')}>
-          <div className="p-4">
-            <p className="mb-4">
-              {(() => {
-                const text = tSub('deleteConfirmText', { provider: 'PROVIDER_PLACEHOLDER' });
-                const [before, after] = text.split('PROVIDER_PLACEHOLDER');
-                return <>{before}<strong className="font-semibold text-black">{selectedSubscription.provider_name}</strong>{after}</>;
-              })()}
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                {tSub('delete')}
-              </button>
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                {tSub('cancel')}
-              </button>
-            </div>
-          </div>
-        </Modal>
       )}
     </div>
   )
