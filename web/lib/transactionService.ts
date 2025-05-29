@@ -83,3 +83,49 @@ export const deleteTransaction = async (id: string, userId: string): Promise<{ e
   }
   return { error };
 };
+
+// React Query compatible function signatures
+interface GetTransactionsParams {
+  page: number;
+  pageSize: number;
+  sortField: SortField;
+  sortDirection: SortDirection;
+  searchTerm?: string;
+}
+
+export const getTransactions = async (
+  userId: string,
+  params: GetTransactionsParams
+): Promise<Transaction[]> => {
+  console.log(`Service: Fetching transactions. User: ${userId}, Page: ${params.page}, Sort: ${params.sortField} ${params.sortDirection}, Search: ${params.searchTerm}`);
+  const from = params.page * params.pageSize;
+  const to = from + params.pageSize - 1;
+
+  let query = supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', userId)
+    .order(params.sortField, { ascending: params.sortDirection === 'asc' });
+
+  if (params.searchTerm) {
+    query = query.ilike('note', `%${params.searchTerm}%`);
+  }
+
+  const { data, error } = await query.range(from, to);
+
+  if (error) {
+    console.error('Error fetching transactions:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+// Export as default object for easier importing
+export const transactionService = {
+  getTransactions,
+  fetchTransactions,
+  addTransaction,
+  updateTransaction,
+  deleteTransaction,
+};

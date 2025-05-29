@@ -248,3 +248,54 @@ export async function fetchConsolidatedSubscriptionData(
     error: null 
   };
 }
+
+// React Query compatible function signatures
+export const getProjectedSubscriptions = async (userId: string): Promise<ProjectedSubscription[]> => {
+  const projectionEndDate = new Date();
+  projectionEndDate.setMonth(projectionEndDate.getMonth() + 12); // Project 12 months ahead
+  const endDateString = projectionEndDate.toISOString().split('T')[0];
+  
+  const { data, error } = await fetchProjectedSubscriptions(userId, endDateString);
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data || [];
+};
+
+export const getSubscriptionSummary = async (userId: string): Promise<SubscriptionSummary | null> => {
+  const { data, error } = await fetchSubscriptionSummary(userId);
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data;
+};
+
+export const getSubscriptions = async (userId: string, sortDirection: "asc" | "desc" = "asc"): Promise<Subscription[]> => {
+  const { data, error } = await fetchSubscriptions(userId, sortDirection);
+  
+  if (error) {
+    throw error;
+  }
+  
+  return data || [];
+};
+
+// Export as default object for easier importing
+export const subscriptionService = {
+  getProjectedSubscriptions,
+  getSubscriptionSummary,
+  getSubscriptions,
+  fetchSubscriptions,
+  fetchSubscriptionSummary,
+  fetchProjectedSubscriptions,
+  fetchConsolidatedSubscriptionData,
+  addSubscription,
+  updateSubscription,
+  deleteSubscription,
+  fetchExchangeRates,
+  convertCurrency,
+};

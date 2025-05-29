@@ -3,6 +3,18 @@
  * This ensures consistent caching and invalidation across the application
  */
 
+// Type definitions for query parameters
+interface TransactionQueryParams {
+  page?: number;
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
+  searchTerm?: string;
+}
+
+interface SubscriptionQueryParams {
+  sortDirection?: 'asc' | 'desc';
+}
+
 export const QUERY_KEYS = {
   // Dashboard queries
   dashboard: ['dashboard'] as const,
@@ -11,7 +23,7 @@ export const QUERY_KEYS = {
   
   // Transaction queries
   transactions: ['transactions'] as const,
-  transactionsList: (userId: string, params?: any) => 
+  transactionsList: (userId: string, params?: TransactionQueryParams) => 
     [...QUERY_KEYS.transactions, 'list', userId, params] as const,
   transactionDetail: (transactionId: string) => 
     [...QUERY_KEYS.transactions, 'detail', transactionId] as const,
@@ -20,7 +32,7 @@ export const QUERY_KEYS = {
   
   // Subscription queries
   subscriptions: ['subscriptions'] as const,
-  subscriptionsList: (userId: string, params?: any) => 
+  subscriptionsList: (userId: string, params?: SubscriptionQueryParams) => 
     [...QUERY_KEYS.subscriptions, 'list', userId, params] as const,
   subscriptionDetail: (subscriptionId: string) => 
     [...QUERY_KEYS.subscriptions, 'detail', subscriptionId] as const,
@@ -42,6 +54,11 @@ export const QUERY_KEYS = {
  * These provide intellisense and type checking for query keys
  */
 export type QueryKeys = typeof QUERY_KEYS;
+
+/**
+ * Export queryKeys as an alias for QUERY_KEYS for consistency
+ */
+export const queryKeys = QUERY_KEYS;
 
 /**
  * Helper function to invalidate all queries for a specific entity

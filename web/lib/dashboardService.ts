@@ -22,6 +22,26 @@ export const fetchDashboardSummary = async (): Promise<{ data: DashboardSummaryD
   return { data: data && data.length > 0 ? data[0] : null, error: null };
 };
 
+// New function signature for React Query compatibility
+export const getDashboardSummary = async (userId: string): Promise<DashboardSummaryData> => {
+  console.log('Service: Fetching dashboard summary for user:', userId);
+  const { data, error } = await supabase.rpc('dashboard_summary', { p_user_id: userId });
+  if (error) {
+    console.error('Error fetching dashboard summary:', error);
+    throw error;
+  }
+  // The RPC returns an array, we expect a single object or null/empty array
+  return data && data.length > 0 ? data[0] : null;
+};
+
+// Export as default object for easier importing
+export const dashboardService = {
+  getDashboardSummary,
+  fetchDashboardSummary,
+  fetchWeeklySpendingForChart,
+  fetchMonthlySpendingForChart,
+};
+
 // Type for chart data points
 export interface ChartDataPoint {
   date: string;
