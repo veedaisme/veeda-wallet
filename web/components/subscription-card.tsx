@@ -33,14 +33,18 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   const tSub = useTranslations('subscriptions')
   const [amount, setAmount] = useState<string>('')
   
+  // Check if currency toggle is enabled via environment variable
+  const isCurrencyToggleEnabled = process.env.NEXT_PUBLIC_ENABLE_SUBSCRIPTION_CURRENCY_TOGGLE === 'true'
+  
   // Format amount based on currency
   useEffect(() => {
     let displayAmount = '';
-    if (showInIDR) {
+    // If feature flag is disabled, always show in IDR regardless of showInIDR prop
+    if (showInIDR || !isCurrencyToggleEnabled) {
       // Always show amount_in_idr, formatted.
       displayAmount = formatIDR(subscription.amount_in_idr);
     } else {
-      // Show in original currency
+      // Show in original currency (only when toggle is enabled and showInIDR is false)
       if (subscription.original_currency === 'IDR') {
         displayAmount = formatIDR(subscription.original_amount);
       } else {
@@ -48,7 +52,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
       }
     }
     setAmount(displayAmount);
-  }, [subscription.original_amount, subscription.original_currency, subscription.amount_in_idr, showInIDR])
+  }, [subscription.original_amount, subscription.original_currency, subscription.amount_in_idr, showInIDR, isCurrencyToggleEnabled])
 
   const daysUntilPayment = () => {
     const today = new Date()

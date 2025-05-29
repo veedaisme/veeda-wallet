@@ -20,7 +20,10 @@ export function SubscriptionScheduleList({
 }: SubscriptionsListProps) {
   const tSub = useTranslations('subscriptions')
   
-  // State
+  // Feature flag for currency toggle
+  const isCurrencyToggleEnabled = process.env.NEXT_PUBLIC_ENABLE_SUBSCRIPTION_CURRENCY_TOGGLE === 'true'
+  
+  // State - default to IDR when toggle is disabled
   const [showInIDR, setShowInIDR] = useState(true)
   
   // Sort subscriptions by projected payment date
@@ -65,15 +68,17 @@ export function SubscriptionScheduleList({
             )}
           </div>
           <div className="flex items-center space-x-4">
-            {/* Currency Toggle */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">{showInIDR ? 'IDR' : tSub('original')}</span>
-              <Switch
-                checked={showInIDR}
-                onCheckedChange={setShowInIDR}
-                aria-label={tSub('toggleCurrency')}
-              />
-            </div>
+            {/* Currency Toggle - only show when feature flag is enabled */}
+            {isCurrencyToggleEnabled && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">{showInIDR ? 'IDR' : tSub('original')}</span>
+                <Switch
+                  checked={showInIDR}
+                  onCheckedChange={setShowInIDR}
+                  aria-label={tSub('toggleCurrency')}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
