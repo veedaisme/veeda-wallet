@@ -8,9 +8,7 @@ import { SubscriptionData, SubscriptionSummary, ProjectedSubscription, Subscript
 import {
   addSubscription,
   updateSubscription,
-  fetchProjectedSubscriptions,
-  fetchSubscriptionSummary,
-  fetchSubscriptions
+  fetchConsolidatedSubscriptionData
 } from '@/lib/subscriptionService';
 
 interface SubscriptionsViewProps {
@@ -40,25 +38,16 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
     const projectionEndDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
     try {
-      // Fetch regular subscriptions (not projected)
-      const { data: regularSubs, error: regularSubsError } = await fetchSubscriptions(userId);
-      if (regularSubsError) throw regularSubsError;
-      setSubscriptions(regularSubs ?? []);
-
-      // Fetch projected subscriptions for the upcoming payments list
-      const { data: projectedSubs, error: projectedSubsError } = await fetchProjectedSubscriptions(userId, projectionEndDateStr);
-      if (projectedSubsError) throw projectedSubsError;
-      setProjectedSubscriptions(projectedSubs ?? []);
-
-      // Fetch subscription summary
-      const { data, error } = await fetchSubscriptionSummary(userId);
-      if (error) {
-        console.error("Error fetching subscription summary:", error);
-        setSubscriptionSummary(null);
-      } else {
-        console.log("Subscription summary data:", data);
-        setSubscriptionSummary(data);
-      }
+      // Fetch all subscription data in a single API call
+      const { data, error } = await fetchConsolidatedSubscriptionData(userId, projectionEndDateStr);
+      
+      if (error) throw error;
+      if (!data) throw new Error("No data returned from server");
+      
+      // Update all state from the consolidated data
+      setSubscriptions(data.subscriptions ?? []);
+      setProjectedSubscriptions(data.projected_subscriptions ?? []);
+      setSubscriptionSummary(data.subscription_summary);
 
     } catch (e: unknown) {
       console.error("Failed to load subscription data:", e);

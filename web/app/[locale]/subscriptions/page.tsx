@@ -9,7 +9,7 @@ import { Modal } from '@/components/ui/modal';
 import { SubscriptionForm } from '@/components/subscription-form';
 import { useUser } from '@/hooks/useUser';
 import {
-  fetchSubscriptions,
+  fetchConsolidatedSubscriptionData,
   addSubscription,
   updateSubscription,
   deleteSubscription
@@ -42,9 +42,13 @@ export default function SubscriptionsPage() {
       setError(null);
       
       try {
-        const { data, error } = await fetchSubscriptions(user.id);
+        // Use the consolidated API function
+        const { data, error } = await fetchConsolidatedSubscriptionData(user.id);
         if (error) throw error;
-        setSubscriptions(data || []);
+        if (!data) throw new Error("No data returned from server");
+        
+        // We only need regular subscriptions for this page
+        setSubscriptions(data.subscriptions || []);
       } catch (e) {
         console.error('Failed to load subscriptions:', e);
         if (e instanceof Error) {
@@ -72,9 +76,11 @@ export default function SubscriptionsPage() {
         await addSubscription(data, user.id);
       }
       
-      // Refresh the list
-      const { data: refreshedData } = await fetchSubscriptions(user.id);
-      setSubscriptions(refreshedData || []);
+      // Refresh the list using consolidated data
+      const { data: refreshedData } = await fetchConsolidatedSubscriptionData(user.id);
+      if (refreshedData) {
+        setSubscriptions(refreshedData.subscriptions || []);
+      }
       
       setIsAddSubscriptionModalOpen(false);
       setEditingSubscription(null);

@@ -200,3 +200,51 @@ export async function fetchProjectedSubscriptions(
   
   return { data: data as ProjectedSubscription[] | null, error: null };
 }
+
+/**
+ * Fetches consolidated subscription data in a single call
+ * This combines regular subscriptions, projected subscriptions, and summary in one API call
+ */
+export async function fetchConsolidatedSubscriptionData(
+  userId: string,
+  projectionEndDate?: string // Optional - format: 'YYYY-MM-DD'
+): Promise<{ 
+  data: { 
+    subscriptions: Subscription[] | null;
+    projected_subscriptions: ProjectedSubscription[] | null;
+    subscription_summary: SubscriptionSummary | null;
+  } | null; 
+  error: Error | null 
+}> {
+  if (!userId) {
+    return { data: null, error: new Error("User ID is required") };
+  }
+
+  const params: Record<string, string> = {
+    p_user_id: userId
+  };
+
+  // Add projection end date if provided
+  if (projectionEndDate) {
+    params.p_projection_end_date = projectionEndDate;
+  }
+
+  const { data, error } = await supabase.rpc(
+    "get_consolidated_subscription_data",
+    params
+  );
+
+  if (error) {
+    console.error("Error fetching consolidated subscription data:", error);
+    return { data: null, error };
+  }
+  
+  return { 
+    data: data as {
+      subscriptions: Subscription[] | null;
+      projected_subscriptions: ProjectedSubscription[] | null;
+      subscription_summary: SubscriptionSummary | null;
+    } | null, 
+    error: null 
+  };
+}
