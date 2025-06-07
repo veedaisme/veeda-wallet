@@ -46,6 +46,12 @@ export interface ExchangeRate {
   last_updated: string; // ISO date string
 }
 
+export interface ConsolidatedSubscriptionData {
+  subscriptions: Subscription[];
+  projected_subscriptions: ProjectedSubscription[];
+  subscription_summary: SubscriptionSummary;
+}
+
 export const FREQUENCIES = [
   'monthly',
   'quarterly',
