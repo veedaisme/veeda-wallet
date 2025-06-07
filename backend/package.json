@@ -1,0 +1,36 @@
+{
+  "name": "veeda-wallet-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Veeda Wallet spending tracker",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc",
+    "test": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.3",
+    "@hono/zod-validator": "^0.2.2",
+    "@supabase/supabase-js": "^2.49.4",
+    "zod": "^3.24.1",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.95.0"
+  },
+  "keywords": [
+    "hono",
+    "cloudflare-workers",
+    "spending-tracker",
+    "api",
+    "supabase"
+  ],
+  "author": "Veeda",
+  "license": "MIT"
+}
