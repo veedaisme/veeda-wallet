@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { SubscriptionScheduleList } from "@/components/subscriptionScheduleList";
 import { Modal } from "@/components/ui/modal";
 import { SubscriptionForm } from '@/components/subscription-form';
-import { SubscriptionData, SubscriptionSummary, ProjectedSubscription, Subscription } from "@/models/subscription";
+import { SubscriptionData } from "@/models/subscription";
+import { useAppStore } from '@/stores/appStore';
 import {
-  addSubscription,
-  updateSubscription,
-  fetchConsolidatedSubscriptionData
-} from '@/lib/subscriptionService';
+  useConsolidatedSubscriptionData,
+  useAddSubscription,
+  useUpdateSubscription
+} from '@/hooks/queries/useSubscriptionsQuery';
+import { DashboardCardSkeleton } from '@/components/ui/skeletons';
 
 interface SubscriptionsViewProps {
   userId: string | null;
@@ -18,86 +20,80 @@ interface SubscriptionsViewProps {
 export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) => {
   const tSub = useTranslations('subscriptions');
   const router = useRouter();
-  
-  const [projectedSubscriptions, setProjectedSubscriptions] = useState<ProjectedSubscription[]>([]);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
-  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
-  const [isAddSubscriptionModalOpen, setIsAddSubscriptionModalOpen] = useState(false);
-  const [editingSubscription, setEditingSubscription] = useState<SubscriptionData | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  // Use useCallback to prevent the function from being recreated on every render
-  const loadSubscriptionData = useCallback(async () => {
-    if (!userId) return;
-    setLoadingSubscriptions(true);
-    setError(null);
+  // UI state from Zustand store
+  const {
+    isSubscriptionModalOpen,
+    editingSubscriptionData,
+    setSubscriptionModalOpen,
+    setEditingSubscriptionData,
+    closeEditSubscriptionModal,
+  } = useAppStore();
 
+  // Calculate projection end date (12 months from now)
+  const projectionEndDate = React.useMemo(() => {
     const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + 12); // Project 12 months into the future
-    const projectionEndDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    endDate.setMonth(endDate.getMonth() + 12);
+    return endDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  }, []);
 
-    try {
-      // Fetch all subscription data in a single API call
-      const { data, error } = await fetchConsolidatedSubscriptionData(userId, projectionEndDateStr);
-      
-      if (error) throw error;
-      if (!data) throw new Error("No data returned from server");
-      
-      // Update all state from the consolidated data
-      setSubscriptions(data.subscriptions ?? []);
-      setProjectedSubscriptions(data.projected_subscriptions ?? []);
-      setSubscriptionSummary(data.subscription_summary);
+  // React Query hooks
+  const {
+    data: consolidatedData,
+    isLoading,
+    isError,
+    error,
+  } = useConsolidatedSubscriptionData(userId, projectionEndDate);
 
-    } catch (e: unknown) {
-      console.error("Failed to load subscription data:", e);
-      if (e instanceof Error) {
-        setError(e.message || "Failed to load subscription data");
-      } else {
-        setError("An unknown error occurred while loading subscription data");
-      }
-    } finally {
-      setLoadingSubscriptions(false);
-    }
-  }, [userId]);
+  const addSubscriptionMutation = useAddSubscription();
+  const updateSubscriptionMutation = useUpdateSubscription();
 
-  useEffect(() => {
-    if (userId) {
-      loadSubscriptionData();
-    }
-  }, [userId, loadSubscriptionData]);
+  // Extract data from consolidated response
+  const subscriptions = consolidatedData?.subscriptions || [];
+  const projectedSubscriptions = consolidatedData?.projectedSubscriptions || [];
+  const subscriptionSummary = consolidatedData?.summary || null;
 
+  // Handle saving subscription
   const handleSaveSubscription = async (data: SubscriptionData) => {
     if (!userId) return;
+
     try {
-      setLoadingSubscriptions(true);
       if (data.id) {
-        await updateSubscription(data, userId);
+        await updateSubscriptionMutation.mutateAsync({
+          subscriptionData: data,
+          userId: userId,
+        });
       } else {
-        await addSubscription(data, userId);
+        await addSubscriptionMutation.mutateAsync({
+          subscriptionData: data,
+          userId: userId,
+        });
       }
-      loadSubscriptionData();
-      setIsAddSubscriptionModalOpen(false);
+
+      closeEditSubscriptionModal();
     } catch (error) {
       console.error('Error saving subscription:', error);
-    } finally {
-      setLoadingSubscriptions(false);
     }
   };
+
+  // Loading state for mutations
+  const isMutating = addSubscriptionMutation.isPending || updateSubscriptionMutation.isPending;
 
   return (
     <div className="flex flex-col space-y-6">
       {/* Summary Header */}
       <div className="bg-white rounded-lg p-6 shadow-sm">
         <h2 className="text-2xl font-semibold mb-4">{tSub('title')}</h2>
-        
-        {loadingSubscriptions && !subscriptionSummary ? (
-          <div className="flex justify-center items-center h-24">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <DashboardCardSkeleton key={i} />
+            ))}
           </div>
-        ) : error ? (
+        ) : isError ? (
           <div className="text-red-500 p-4 border border-red-200 rounded bg-red-50">
-            {error}
+            {error?.message || 'An error occurred while loading subscription data'}
           </div>
         ) : subscriptionSummary ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -145,16 +141,21 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
       {/* Subscriptions List */}
       <div className="bg-white rounded-lg p-6 shadow-sm">
         <h3 className="text-xl font-semibold mb-4">{tSub('upcomingPayments')}</h3>
-        
-        {loadingSubscriptions && subscriptions.length === 0 ? (
-          <div className="flex justify-center items-center h-24">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <DashboardCardSkeleton key={i} />
+            ))}
           </div>
         ) : subscriptions.length > 0 ? (
-          <SubscriptionScheduleList 
-            subscriptions={projectedSubscriptions} 
+          <SubscriptionScheduleList
+            subscriptions={projectedSubscriptions}
             summary={subscriptionSummary}
-            openAddSubscriptionModal={() => setIsAddSubscriptionModalOpen(true)}
+            openAddSubscriptionModal={() => {
+              setEditingSubscriptionData(null);
+              setSubscriptionModalOpen(true);
+            }}
           />
         ) : (
           <div className="text-center p-8 bg-gray-50 rounded-lg">
@@ -165,21 +166,15 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
       
       {/* Add/Edit Subscription Modal */}
       <Modal
-        isOpen={isAddSubscriptionModalOpen}
-        onClose={() => {
-          setIsAddSubscriptionModalOpen(false);
-          setEditingSubscription(null);
-        }}
-        title={editingSubscription ? tSub('editSubscription') : tSub('addSubscription')}
+        isOpen={isSubscriptionModalOpen}
+        onClose={closeEditSubscriptionModal}
+        title={editingSubscriptionData ? tSub('editSubscription') : tSub('addSubscription')}
       >
         <SubscriptionForm
-          initialData={editingSubscription || undefined}
+          initialData={editingSubscriptionData || undefined}
           onSubmit={handleSaveSubscription}
-          onCancel={() => {
-            setIsAddSubscriptionModalOpen(false);
-            setEditingSubscription(null);
-          }}
-          loading={loadingSubscriptions}
+          onCancel={closeEditSubscriptionModal}
+          loading={isMutating}
         />
       </Modal>
 
