@@ -2,15 +2,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { SubscriptionScheduleList } from "@/components/subscriptionScheduleList";
-import { Modal } from "@/components/ui/modal";
-import { SubscriptionForm } from '@/components/subscription-form';
-import { SubscriptionData } from "@/models/subscription";
-import { useAppStore } from '@/stores/appStore';
-import {
-  useConsolidatedSubscriptionData,
-  useAddSubscription,
-  useUpdateSubscription
-} from '@/hooks/queries/useSubscriptionsQuery';
+import { useConsolidatedSubscriptionData } from '@/hooks/queries/useSubscriptionsQuery';
 import { DashboardCardSkeleton } from '@/components/ui/skeletons';
 
 interface SubscriptionsViewProps {
@@ -21,14 +13,8 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
   const tSub = useTranslations('subscriptions');
   const router = useRouter();
 
-  // UI state from Zustand store
-  const {
-    isSubscriptionModalOpen,
-    editingSubscriptionData,
-    setSubscriptionModalOpen,
-    setEditingSubscriptionData,
-    closeEditSubscriptionModal,
-  } = useAppStore();
+  // Note: SubscriptionsView is now read-only.
+  // Users should navigate to /subscriptions page to manage subscriptions.
 
   // Calculate projection end date (12 months from now)
   const projectionEndDate = React.useMemo(() => {
@@ -45,39 +31,10 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
     error,
   } = useConsolidatedSubscriptionData(userId, projectionEndDate);
 
-  const addSubscriptionMutation = useAddSubscription();
-  const updateSubscriptionMutation = useUpdateSubscription();
-
   // Extract data from consolidated response
   const subscriptions = consolidatedData?.subscriptions || [];
   const projectedSubscriptions = consolidatedData?.projectedSubscriptions || [];
   const subscriptionSummary = consolidatedData?.summary || null;
-
-  // Handle saving subscription
-  const handleSaveSubscription = async (data: SubscriptionData) => {
-    if (!userId) return;
-
-    try {
-      if (data.id) {
-        await updateSubscriptionMutation.mutateAsync({
-          subscriptionData: data,
-          userId: userId,
-        });
-      } else {
-        await addSubscriptionMutation.mutateAsync({
-          subscriptionData: data,
-          userId: userId,
-        });
-      }
-
-      closeEditSubscriptionModal();
-    } catch (error) {
-      console.error('Error saving subscription:', error);
-    }
-  };
-
-  // Loading state for mutations
-  const isMutating = addSubscriptionMutation.isPending || updateSubscriptionMutation.isPending;
 
   return (
     <div className="flex flex-col space-y-6">
@@ -152,10 +109,7 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
           <SubscriptionScheduleList
             subscriptions={projectedSubscriptions}
             summary={subscriptionSummary}
-            openAddSubscriptionModal={() => {
-              setEditingSubscriptionData(null);
-              setSubscriptionModalOpen(true);
-            }}
+            openAddSubscriptionModal={undefined}
           />
         ) : (
           <div className="text-center p-8 bg-gray-50 rounded-lg">
@@ -163,22 +117,6 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
           </div>
         )}
       </div>
-      
-      {/* Add/Edit Subscription Modal */}
-      <Modal
-        isOpen={isSubscriptionModalOpen}
-        onClose={closeEditSubscriptionModal}
-        title={editingSubscriptionData ? tSub('editSubscription') : tSub('addSubscription')}
-      >
-        <SubscriptionForm
-          initialData={editingSubscriptionData || undefined}
-          onSubmit={handleSaveSubscription}
-          onCancel={closeEditSubscriptionModal}
-          loading={isMutating}
-        />
-      </Modal>
-
-
     </div>
   );
 };

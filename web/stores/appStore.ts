@@ -20,7 +20,6 @@ interface AppState {
   // Subscription-specific UI state
   selectedSubscription: Subscription | null;
   editingSubscriptionData: SubscriptionData | null;
-  isEditSubscriptionModalOpen: boolean;
   isDeleteSubscriptionModalOpen: boolean;
   subscriptionToDelete: Subscription | null;
 
@@ -42,12 +41,11 @@ interface AppState {
   // Subscription-specific actions
   setSelectedSubscription: (subscription: Subscription | null) => void;
   setEditingSubscriptionData: (data: SubscriptionData | null) => void;
-  setEditSubscriptionModalOpen: (open: boolean) => void;
   setDeleteSubscriptionModalOpen: (open: boolean) => void;
   setSubscriptionToDelete: (subscription: Subscription | null) => void;
   openEditSubscriptionModal: (subscription: Subscription) => void;
   openDeleteSubscriptionModal: (subscription: Subscription) => void;
-  closeEditSubscriptionModal: () => void;
+  closeSubscriptionModal: () => void;
   closeDeleteSubscriptionModal: () => void;
 
   reset: () => void;
@@ -68,7 +66,6 @@ const initialState = {
   // Subscription-specific UI state
   selectedSubscription: null,
   editingSubscriptionData: null,
-  isEditSubscriptionModalOpen: false,
   isDeleteSubscriptionModalOpen: false,
   subscriptionToDelete: null,
 };
@@ -128,9 +125,6 @@ export const useAppStore = create<AppState>()(
       setEditingSubscriptionData: (data: SubscriptionData | null) =>
         set({ editingSubscriptionData: data }, false, 'setEditingSubscriptionData'),
 
-      setEditSubscriptionModalOpen: (open: boolean) =>
-        set({ isEditSubscriptionModalOpen: open }, false, 'setEditSubscriptionModalOpen'),
-
       setDeleteSubscriptionModalOpen: (open: boolean) =>
         set({ isDeleteSubscriptionModalOpen: open }, false, 'setDeleteSubscriptionModalOpen'),
 
@@ -149,7 +143,7 @@ export const useAppStore = create<AppState>()(
         set({
           selectedSubscription: subscription,
           editingSubscriptionData: subscriptionData,
-          isEditSubscriptionModalOpen: true
+          isSubscriptionModalOpen: true
         }, false, 'openEditSubscriptionModal');
       },
 
@@ -159,12 +153,12 @@ export const useAppStore = create<AppState>()(
           isDeleteSubscriptionModalOpen: true
         }, false, 'openDeleteSubscriptionModal'),
 
-      closeEditSubscriptionModal: () =>
+      closeSubscriptionModal: () =>
         set({
           selectedSubscription: null,
           editingSubscriptionData: null,
-          isEditSubscriptionModalOpen: false
-        }, false, 'closeEditSubscriptionModal'),
+          isSubscriptionModalOpen: false
+        }, false, 'closeSubscriptionModal'),
 
       closeDeleteSubscriptionModal: () =>
         set({

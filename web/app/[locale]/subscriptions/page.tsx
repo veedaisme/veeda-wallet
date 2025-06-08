@@ -34,7 +34,7 @@ export default function SubscriptionsPage() {
     setEditingSubscriptionData,
     openEditSubscriptionModal,
     openDeleteSubscriptionModal,
-    closeEditSubscriptionModal,
+    closeSubscriptionModal,
     closeDeleteSubscriptionModal,
   } = useAppStore();
 
@@ -74,7 +74,7 @@ export default function SubscriptionsPage() {
         });
       }
 
-      closeEditSubscriptionModal();
+      closeSubscriptionModal();
     } catch (error) {
       console.error('Error saving subscription:', error);
     }
@@ -197,13 +197,13 @@ export default function SubscriptionsPage() {
       {/* Add/Edit Subscription Modal */}
       <Modal
         isOpen={isSubscriptionModalOpen}
-        onClose={closeEditSubscriptionModal}
+        onClose={closeSubscriptionModal}
         title={editingSubscriptionData ? tSub('editSubscription') : tSub('addSubscription')}
       >
         <SubscriptionForm
           initialData={editingSubscriptionData || undefined}
           onSubmit={handleSaveSubscription}
-          onCancel={closeEditSubscriptionModal}
+          onCancel={closeSubscriptionModal}
           loading={isMutating}
         />
       </Modal>
