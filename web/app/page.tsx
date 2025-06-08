@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = 'force-dynamic';
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { Clock, CreditCard, Plus, User, LogOut } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
@@ -13,6 +13,9 @@ import { type SubscriptionData } from "@/models/subscription";
 import { supabase } from "@/lib/supabaseClient";
 import { useUser } from "@/hooks/useUser";
 import ProtectedLayout from "@/components/ProtectedLayout";
+import { useAppStore } from "@/stores/appStore";
+import { useAddTransaction } from "@/hooks/queries/useTransactionsQuery";
+import { useAddSubscription } from "@/hooks/queries/useSubscriptionsQuery";
 
 import DashboardView from "@/components/dashboard/DashboardView";
 import TransactionsView from "@/components/transactions/TransactionsView";
@@ -26,21 +29,37 @@ export default function Home() {
   const tSub = useTranslations('subscriptions');
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as TabType | null;
-  
-  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
-  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>(tabParam || "dashboard");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useUser();
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  
-  // Add refresh keys to trigger component reloads
-  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
-  const [transactionsRefreshKey, setTransactionsRefreshKey] = useState(0);
-  const [subscriptionsRefreshKey, setSubscriptionsRefreshKey] = useState(0);
 
+  // Use Zustand store for state management
+  const {
+    activeTab,
+    profileMenuOpen,
+    isTransactionModalOpen,
+    isSubscriptionModalOpen,
+    loading,
+    error,
+    setActiveTab,
+    setProfileMenuOpen,
+    setTransactionModalOpen,
+    setSubscriptionModalOpen,
+    setLoading,
+    setError,
+    clearError,
+  } = useAppStore();
+
+  const { user } = useUser();
   const router = useRouter();
+
+  // React Query mutations
+  const addTransactionMutation = useAddTransaction();
+  const addSubscriptionMutation = useAddSubscription();
+
+  // Set initial tab from URL params
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam, activeTab, setActiveTab]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -49,84 +68,43 @@ export default function Home() {
   };
 
   const handleAddTransaction = async (data: TransactionData) => {
-    setLoading(true);
-    setError(null);
-
     if (!user) {
       setError("You must be logged in to add a transaction.");
-      setLoading(false);
       return;
     }
 
-    // Set the time to noon to avoid timezone issues
-    const dateWithoutTime = new Date(data.date);
-    dateWithoutTime.setHours(12, 0, 0, 0);
+    clearError();
 
-    const newTransaction = {
-      amount: data.amount,
-      category: data.category,
-      note: data.note,
-      date: dateWithoutTime.toISOString(),
-      user_id: user.id,
-    };
+    try {
+      await addTransactionMutation.mutateAsync({
+        transactionData: data,
+        userId: user.id,
+      });
 
-    // TODO: Add proper CSRF protection for Supabase requests
-    // Current implementation in AuthForm.tsx shows the pattern to follow
-    
-    // Perform the transaction insertion
-    const { error: insertError } = await supabase
-      .from("transactions")
-      .insert([newTransaction])
-      .select()
-      .single();
-
-    if (insertError) {
-      setError(insertError.message);
-      setLoading(false);
-      return;
+      setTransactionModalOpen(false);
+    } catch (error: any) {
+      setError(error.message || 'Failed to add transaction');
     }
-
-    setIsTransactionModalOpen(false);
-    setLoading(false);
-    
-    // Trigger a refresh of both dashboard and transactions views
-    setDashboardRefreshKey(prev => prev + 1);
-    setTransactionsRefreshKey(prev => prev + 1);
   };
 
   const handleAddSubscription = async (data: SubscriptionData) => {
-    setLoading(true);
-    setError(null);
-
     if (!user) {
       setError("You must be logged in to add a subscription.");
-      setLoading(false);
       return;
     }
 
-    const newSubscription = {
-      ...data,
-      user_id: user.id,
-    };
+    clearError();
 
-    // Perform the subscription insertion
-    const { error: insertError } = await supabase
-      .from("subscriptions")
-      .insert([newSubscription])
-      .select()
-      .single();
+    try {
+      await addSubscriptionMutation.mutateAsync({
+        subscriptionData: data,
+        userId: user.id,
+      });
 
-    if (insertError) {
-      setError(insertError.message);
-      setLoading(false);
-      return;
+      setSubscriptionModalOpen(false);
+    } catch (error: any) {
+      setError(error.message || 'Failed to add subscription');
     }
-
-    setIsSubscriptionModalOpen(false);
-    setLoading(false);
-    
-    // Trigger a refresh of the subscriptions view
-    setSubscriptionsRefreshKey(prev => prev + 1);
   };
 
   return (
@@ -165,17 +143,17 @@ export default function Home() {
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-hidden">
           {activeTab === "dashboard" ? (
-            <DashboardView key={`dashboard-${dashboardRefreshKey}`} userId={user?.id ?? null} />
+            <DashboardView userId={user?.id ?? null} />
           ) : activeTab === "transactions" ? (
-            <TransactionsView key={`transactions-${transactionsRefreshKey}`} userId={user?.id ?? null} />
+            <TransactionsView userId={user?.id ?? null} />
           ) : (
-            <SubscriptionsView key={`subscriptions-${subscriptionsRefreshKey}`} userId={user?.id ?? null} />
+            <SubscriptionsView userId={user?.id ?? null} />
           )}
         </main>
 
         {/* Floating Action Button */}
         <button
-          onClick={() => activeTab === "subscriptions" ? setIsSubscriptionModalOpen(true) : setIsTransactionModalOpen(true)}
+          onClick={() => activeTab === "subscriptions" ? setSubscriptionModalOpen(true) : setTransactionModalOpen(true)}
           className="fixed bottom-24 right-6 bg-primary text-primary-foreground rounded-full p-4 shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-50"
           aria-label={activeTab === "subscriptions" ? tSub('add') : tTrans('add')}
         >
@@ -208,14 +186,22 @@ export default function Home() {
         </nav>
 
         {/* Add Transaction Modal */}
-        <Modal isOpen={isTransactionModalOpen} onClose={() => setIsTransactionModalOpen(false)} title={tTrans('add')}>
-          <TransactionForm onSubmit={handleAddTransaction} onCancel={() => setIsTransactionModalOpen(false)} loading={loading} />
+        <Modal isOpen={isTransactionModalOpen} onClose={() => setTransactionModalOpen(false)} title={tTrans('add')}>
+          <TransactionForm
+            onSubmit={handleAddTransaction}
+            onCancel={() => setTransactionModalOpen(false)}
+            loading={addTransactionMutation.isPending}
+          />
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         </Modal>
 
         {/* Add Subscription Modal */}
-        <Modal isOpen={isSubscriptionModalOpen} onClose={() => setIsSubscriptionModalOpen(false)} title={tSub('addSubscription')}>
-          <SubscriptionForm onSubmit={handleAddSubscription} onCancel={() => setIsSubscriptionModalOpen(false)} loading={loading} />
+        <Modal isOpen={isSubscriptionModalOpen} onClose={() => setSubscriptionModalOpen(false)} title={tSub('addSubscription')}>
+          <SubscriptionForm
+            onSubmit={handleAddSubscription}
+            onCancel={() => setSubscriptionModalOpen(false)}
+            loading={addSubscriptionMutation.isPending}
+          />
           {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         </Modal>
       </div>
