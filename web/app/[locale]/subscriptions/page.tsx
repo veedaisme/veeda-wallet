@@ -185,7 +185,7 @@ export default function SubscriptionsPage() {
             setEditingSubscriptionData(null);
             setSubscriptionModalOpen(true);
           }}
-          className="fixed bottom-6 right-6 p-4 bg-black text-white rounded-full shadow-lg hover:bg-gray-800"
+          className="fixed bottom-6 right-6 p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           aria-label={tSub('addSubscription')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
