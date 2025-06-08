@@ -109,9 +109,17 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
               <div className="text-sm text-gray-500">{tSub('yearlySpending')}</div>
               <div className="text-2xl font-bold">Rp {(subscriptionSummary.total_monthly_recurring * 12).toLocaleString()}</div>
             </div>
-            <div 
+            <div
               className="bg-gray-50 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-              onClick={() => router.push('/subscriptions?from=subscriptions')}
+              onClick={() => {
+                // Navigate to subscriptions page with clean parameter handling
+                const currentUrl = new URL(window.location.href);
+                const locale = currentUrl.pathname.split('/')[1];
+                const subscriptionsUrl = locale && (locale === 'en' || locale === 'id')
+                  ? `/${locale}/subscriptions?from=subscriptions`
+                  : '/subscriptions?from=subscriptions';
+                router.push(subscriptionsUrl);
+              }}
             >
               <div className="flex justify-between items-center">
                 <div>

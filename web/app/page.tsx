@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = 'force-dynamic';
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { Clock, CreditCard, Plus, User, LogOut } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
@@ -16,6 +16,7 @@ import ProtectedLayout from "@/components/ProtectedLayout";
 import { useAppStore } from "@/stores/appStore";
 import { useAddTransaction } from "@/hooks/queries/useTransactionsQuery";
 import { useAddSubscription } from "@/hooks/queries/useSubscriptionsQuery";
+import { useUrlParams } from "@/hooks/useUrlParams";
 
 import DashboardView from "@/components/dashboard/DashboardView";
 import TransactionsView from "@/components/transactions/TransactionsView";
@@ -49,6 +50,7 @@ export default function Home() {
 
   const { user } = useUser();
   const router = useRouter();
+  const { cleanUrl, navigateToTab } = useUrlParams();
 
   // React Query mutations
   const addTransactionMutation = useAddTransaction();
@@ -60,6 +62,17 @@ export default function Home() {
       setActiveTab(tabParam);
     }
   }, [tabParam, activeTab, setActiveTab]);
+
+  // Function to handle tab navigation with URL sync
+  const handleTabNavigation = useCallback((tab: TabType) => {
+    setActiveTab(tab);
+    navigateToTab(tab);
+  }, [setActiveTab, navigateToTab]);
+
+  // Clean up URL parameters on mount to ensure clean state
+  useEffect(() => {
+    cleanUrl(['from']);
+  }, [cleanUrl]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -163,21 +176,21 @@ export default function Home() {
         {/* Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 w-full border-t border-gray-200 p-4 flex justify-around items-center bg-white z-20">
           <button
-            onClick={() => setActiveTab("dashboard")}
+            onClick={() => handleTabNavigation("dashboard")}
             className={`flex flex-col items-center ${activeTab === "dashboard" ? "text-black" : "text-gray-400"}`}
           >
             <CreditCard className="h-6 w-6" />
             <span className="text-xs mt-1">{tApp('dashboard')}</span>
           </button>
           <button
-            onClick={() => setActiveTab("subscriptions")}
+            onClick={() => handleTabNavigation("subscriptions")}
             className={`flex flex-col items-center ${activeTab === "subscriptions" ? "text-black" : "text-gray-400"}`}
           >
             <User className="h-6 w-6" />
             <span className="text-xs mt-1">{tSub('title')}</span>
           </button>
           <button
-            onClick={() => setActiveTab("transactions")}
+            onClick={() => handleTabNavigation("transactions")}
             className={`flex flex-col items-center ${activeTab === "transactions" ? "text-black" : "text-gray-400"}`}
           >
             <Clock className="h-6 w-6" />
