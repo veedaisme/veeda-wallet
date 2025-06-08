@@ -11,9 +11,9 @@ export interface DashboardSummaryData {
   spent_last_month: number;
 }
 
-export const fetchDashboardSummary = async (): Promise<{ data: DashboardSummaryData | null, error: Error | null }> => {
-  console.log('Service: Fetching dashboard summary');
-  const { data, error } = await supabase.rpc('dashboard_summary');
+export const fetchDashboardSummary = async (userId: string): Promise<{ data: DashboardSummaryData | null, error: Error | null }> => {
+  console.log('Service: Fetching dashboard summary for user:', userId);
+  const { data, error } = await supabase.rpc('dashboard_summary', { user_id: userId });
   if (error) {
     console.error('Error fetching dashboard summary:', error);
     return { data: null, error };

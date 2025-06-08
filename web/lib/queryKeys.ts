@@ -12,8 +12,8 @@
 export const queryKeys = {
   // Dashboard related queries
   dashboard: ['dashboard'] as const,
-  dashboardSummary: () => [...queryKeys.dashboard, 'summary'] as const,
-  dashboardChart: (type: 'week' | 'month', userId: string, dateRange?: { start: string; end: string }) => 
+  dashboardSummary: (userId?: string | null) => [...queryKeys.dashboard, 'summary', userId] as const,
+  dashboardChart: (type: 'week' | 'month', userId: string, dateRange?: { start: string; end: string }) =>
     [...queryKeys.dashboard, 'chart', type, userId, dateRange] as const,
   
   // Transaction related queries
@@ -61,7 +61,7 @@ export const invalidationKeys = {
   
   // Invalidate specific user's data
   userSpecific: (userId: string) => [
-    queryKeys.dashboardSummary(),
+    queryKeys.dashboardSummary(userId),
     queryKeys.transactionsList(userId),
     queryKeys.transactionsPaginated(userId),
     queryKeys.subscriptionsList(userId),

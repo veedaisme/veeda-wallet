@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Mode = "login" | "signup";
 
@@ -21,6 +22,7 @@ export default function AuthForm() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (success && mode === "login") {
@@ -40,13 +42,21 @@ export default function AuthForm() {
     setSuccess(null);
 
     if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-      
-      if (error) setError(error.message);
-      else setSuccess(tAuth('loginSuccess'));
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(tAuth('loginSuccess'));
+        // Invalidate all queries to ensure fresh data is loaded for the new user
+        if (data.user) {
+          console.log('Login successful, invalidating queries for user:', data.user.id);
+          await queryClient.invalidateQueries();
+        }
+      }
     } else {
       const { error } = await supabase.auth.signUp({ 
         email, 

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
-import { UserProvider } from '@/hooks/useUser';
 
 export const dynamic = 'force-dynamic';
 export const dynamicParams = false;
@@ -14,10 +13,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const messages = (await import(`../../messages/${locale}.json`)).default;
 
   return (
-    <UserProvider>
-      <NextIntlClientProvider locale={locale} messages={messages}>
-        {children}
-      </NextIntlClientProvider>
-    </UserProvider>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      {children}
+    </NextIntlClientProvider>
   );
 }

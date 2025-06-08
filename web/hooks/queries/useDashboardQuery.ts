@@ -8,11 +8,14 @@ import {
   type ChartDataPoint 
 } from '@/lib/dashboardService';
 
-export function useDashboardSummary() {
+export function useDashboardSummary(userId?: string | null) {
   return useQuery({
-    queryKey: queryKeys.dashboardSummary(),
+    queryKey: queryKeys.dashboardSummary(userId),
     queryFn: async () => {
-      const { data, error } = await fetchDashboardSummary();
+      if (!userId) {
+        throw new Error('User ID is required for dashboard data');
+      }
+      const { data, error } = await fetchDashboardSummary(userId);
       if (error) {
         throw error;
       }
@@ -25,6 +28,7 @@ export function useDashboardSummary() {
         spent_last_month: 0,
       };
     },
+    enabled: !!userId, // Only run query when userId is available
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 3,
@@ -70,18 +74,20 @@ export function useMonthlyChartData(
   });
 }
 
-export function useRefreshDashboard() {
+export function useRefreshDashboard(userId?: string | null) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async () => {
       await queryClient.invalidateQueries({
         queryKey: invalidationKeys.allDashboard(),
       });
-      
-      await queryClient.refetchQueries({
-        queryKey: queryKeys.dashboardSummary(),
-      });
+
+      if (userId) {
+        await queryClient.refetchQueries({
+          queryKey: queryKeys.dashboardSummary(userId),
+        });
+      }
     },
     onSuccess: () => {
       console.log('Dashboard data refreshed successfully');

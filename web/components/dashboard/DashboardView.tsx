@@ -19,7 +19,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userId }) => {
     isLoading,
     error,
     isError
-  } = useDashboardSummary();
+  } = useDashboardSummary(userId);
 
   // Chart modal state
   const [chartModal, setChartModal] = useState<{ open: boolean; type: "week" | "month" | null }>({ open: false, type: null });
