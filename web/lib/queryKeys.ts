@@ -18,11 +18,13 @@ export const queryKeys = {
   
   // Transaction related queries
   transactions: ['transactions'] as const,
-  transactionsList: (userId: string, filters?: Record<string, any>) => 
+  transactionsList: (userId: string, filters?: Record<string, any>) =>
     [...queryKeys.transactions, 'list', userId, filters] as const,
-  transactionsDetail: (transactionId: string) => 
+  transactionsPaginated: (userId: string, filters?: Record<string, any>) =>
+    [...queryKeys.transactions, 'paginated', userId, filters] as const,
+  transactionsDetail: (transactionId: string) =>
     [...queryKeys.transactions, 'detail', transactionId] as const,
-  transactionsSearch: (userId: string, query: string) => 
+  transactionsSearch: (userId: string, query: string) =>
     [...queryKeys.transactions, 'search', userId, query] as const,
   
   // Subscription related queries

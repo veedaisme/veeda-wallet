@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from 'next-intl';
 import { TransactionsList } from "@/components/transactions-list";
 import { EditTransactionModal } from "@/components/edit-transaction-modal";
-import { supabase } from "@/lib/supabaseClient";
 import { Transaction } from "@/models/transaction";
 import { TransactionData } from "@/components/transaction-form";
-
-type SortField = "date" | "amount";
-type SortDirection = "asc" | "desc";
+import {
+  useTransactionsPaginated,
+  useUpdateTransaction,
+  type SortField,
+  type SortDirection,
+  type TransactionFilters
+} from "@/hooks/queries/useTransactionsQuery";
+import { useAppStore } from "@/stores/appStore";
+import { TransactionListSkeleton, TransactionSearchSkeleton } from "@/components/ui/skeletons";
 
 interface TransactionsViewProps {
   userId: string | null;
@@ -18,19 +23,16 @@ interface TransactionsViewProps {
 
 export const TransactionsView: React.FC<TransactionsViewProps> = ({ userId }) => {
   const tTrans = useTranslations('transactions');
-  
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [page, setPage] = useState(0);
-  const pageSize = 20;
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingTransactions, setLoadingTransactions] = useState(false);
-  const [_error, setError] = useState<string | null>(null);
-  
-  // Edit transaction state
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  
-  // Sorting and searching state
+
+  // UI state from Zustand store
+  const {
+    selectedTransaction,
+    isEditTransactionModalOpen,
+    openEditTransactionModal,
+    closeEditTransactionModal,
+  } = useAppStore();
+
+  // Local state for filters and sorting
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,57 +40,43 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ userId }) =>
   // Infinite scroll ref
   const observer = useRef<IntersectionObserver | null>(null);
 
-  // Fetch paginated transactions with sorting and searching
-  const fetchTransactions = useCallback(async (reset = false) => {
-    if (!userId) return;
-    setLoadingTransactions(true);
-    const from = (reset ? 0 : page * pageSize);
-    const to = from + pageSize - 1;
-    let query = supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", userId)
-      .order(sortField, { ascending: sortDirection === "asc" });
+  // Memoized filters to prevent unnecessary re-renders
+  const filters = useMemo<TransactionFilters>(() => ({
+    sortField,
+    sortDirection,
+    searchTerm: searchTerm.trim() || undefined,
+  }), [sortField, sortDirection, searchTerm]);
 
-    if (searchTerm) {
-      query = query.ilike("note", `%${searchTerm}%`);
-    }
+  // React Query hooks
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useTransactionsPaginated(userId, filters);
 
-    const { data, error } = await query.range(from, to);
+  const updateTransactionMutation = useUpdateTransaction();
 
-    if (error) {
-      setError(error.message);
-    } else {
-      if (reset) {
-        setTransactions(data);
-        setPage(0);
-      } else {
-        setTransactions(prev => [...prev, ...data]);
-      }
-      setHasMore(data.length === pageSize);
-      if (!reset) setPage(prev => prev + 1);
-    }
-    setLoadingTransactions(false);
-  }, [userId, pageSize, sortField, sortDirection, searchTerm, page]);
-
-  // Reset and fetch when sort/search changes or when userId changes
-  useEffect(() => {
-    if (userId) {
-      fetchTransactions(true);
-    }
-  }, [userId, sortField, sortDirection, searchTerm, fetchTransactions]);
+  // Flatten paginated data into a single array
+  const transactions = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.transactions);
+  }, [data?.pages]);
 
   // Infinite scroll observer
   const lastTransactionRef = useCallback((node: HTMLLIElement | null) => {
-    if (loadingTransactions) return;
+    if (isFetchingNextPage) return;
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore) {
-        fetchTransactions();
+      if (entries[0].isIntersecting && hasNextPage) {
+        fetchNextPage();
       }
     });
     if (node) observer.current.observe(node);
-  }, [loadingTransactions, hasMore, fetchTransactions]);
+  }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -101,40 +89,53 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ userId }) =>
 
   const handleEditTransaction = async (data: TransactionData) => {
     if (!userId || !data.id) return;
-    
-    // Set the time to noon to avoid timezone issues
-    const dateWithoutTime = new Date(data.date);
-    dateWithoutTime.setHours(12, 0, 0, 0);
-    
-    const updatedTransaction = {
-      amount: data.amount,
-      category: data.category,
-      note: data.note,
-      date: dateWithoutTime.toISOString(),
-    };
-    
-    const { error: updateError } = await supabase
-      .from("transactions")
-      .update(updatedTransaction)
-      .eq('id', data.id)
-      .select()
-      .single();
-      
-    if (updateError) {
-      throw new Error(updateError.message);
+
+    try {
+      // Convert Date to string if necessary
+      const dateString = data.date instanceof Date ? data.date.toISOString() : data.date;
+
+      await updateTransactionMutation.mutateAsync({
+        transactionId: data.id,
+        transactionData: {
+          amount: data.amount,
+          category: data.category,
+          note: data.note,
+          date: dateString,
+        },
+        userId,
+      });
+
+      // Close the modal on success
+      closeEditTransactionModal();
+    } catch (error) {
+      // Error handling is managed by the mutation hook
+      throw error;
     }
-    
-    // Refresh the transaction list to ensure correct sorting after date changes
-    setPage(0); // Reset to first page
-    fetchTransactions(true); // Refresh the transaction list
-    
-    return;
   };
-  
-  const openEditModal = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setEditModalOpen(true);
-  };
+
+  // Show loading skeleton on initial load
+  if (isLoading) {
+    return (
+      <>
+        <TransactionSearchSkeleton />
+        <TransactionListSkeleton count={8} />
+      </>
+    );
+  }
+
+  // Show error state
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Failed to load transactions</p>
+          <p className="text-sm text-gray-500">
+            {error?.message || 'An unexpected error occurred'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -169,22 +170,31 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({ userId }) =>
         </div>
       </div>
 
-      <TransactionsList 
-        transactions={transactions} 
-        lastTransactionRef={lastTransactionRef} 
-        onEditTransaction={openEditModal}
+      <TransactionsList
+        transactions={transactions}
+        lastTransactionRef={lastTransactionRef}
+        onEditTransaction={openEditTransactionModal}
       />
-      
-      {loadingTransactions && (
+
+      {isFetchingNextPage && (
         <div className="flex justify-center mt-4">
-          <span className="text-gray-500">Loading...</span>
+          <span className="text-gray-500">Loading more...</span>
+        </div>
+      )}
+
+      {/* Show message when no transactions found */}
+      {transactions.length === 0 && !isLoading && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">
+            {searchTerm ? 'No transactions found matching your search.' : 'No transactions yet.'}
+          </p>
         </div>
       )}
 
       {/* Edit Transaction Modal */}
       <EditTransactionModal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        isOpen={isEditTransactionModalOpen}
+        onClose={closeEditTransactionModal}
         transaction={selectedTransaction}
         onUpdateTransaction={handleEditTransaction}
       />
