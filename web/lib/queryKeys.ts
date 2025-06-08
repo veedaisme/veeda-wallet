@@ -29,12 +29,14 @@ export const queryKeys = {
   
   // Subscription related queries
   subscriptions: ['subscriptions'] as const,
-  subscriptionsList: (userId: string) => 
+  subscriptionsList: (userId: string) =>
     [...queryKeys.subscriptions, 'list', userId] as const,
-  subscriptionsDetail: (subscriptionId: string) => 
+  subscriptionsDetail: (subscriptionId: string) =>
     [...queryKeys.subscriptions, 'detail', subscriptionId] as const,
-  subscriptionsSummary: (userId: string) => 
+  subscriptionsSummary: (userId: string) =>
     [...queryKeys.subscriptions, 'summary', userId] as const,
+  subscriptionsConsolidated: (userId: string, projectionEndDate?: string) =>
+    [...queryKeys.subscriptions, 'consolidated', userId, projectionEndDate] as const,
   
   // User related queries
   user: ['user'] as const,
@@ -65,5 +67,6 @@ export const invalidationKeys = {
     queryKeys.transactionsList(userId),
     queryKeys.transactionsPaginated(userId),
     queryKeys.subscriptionsList(userId),
+    queryKeys.subscriptionsSummary(userId),
   ],
 } as const;

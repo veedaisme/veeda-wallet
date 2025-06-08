@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { Transaction } from '@/models/transaction';
+import { Subscription, SubscriptionData } from '@/models/subscription';
 
 export type TabType = "dashboard" | "transactions" | "subscriptions";
 
@@ -15,6 +16,12 @@ interface AppState {
   // Transaction-specific UI state
   selectedTransaction: Transaction | null;
   isEditTransactionModalOpen: boolean;
+
+  // Subscription-specific UI state
+  selectedSubscription: Subscription | null;
+  editingSubscriptionData: SubscriptionData | null;
+  isDeleteSubscriptionModalOpen: boolean;
+  subscriptionToDelete: Subscription | null;
 
   setActiveTab: (tab: TabType) => void;
   setProfileMenuOpen: (open: boolean) => void;
@@ -31,6 +38,16 @@ interface AppState {
   openEditTransactionModal: (transaction: Transaction) => void;
   closeEditTransactionModal: () => void;
 
+  // Subscription-specific actions
+  setSelectedSubscription: (subscription: Subscription | null) => void;
+  setEditingSubscriptionData: (data: SubscriptionData | null) => void;
+  setDeleteSubscriptionModalOpen: (open: boolean) => void;
+  setSubscriptionToDelete: (subscription: Subscription | null) => void;
+  openEditSubscriptionModal: (subscription: Subscription) => void;
+  openDeleteSubscriptionModal: (subscription: Subscription) => void;
+  closeSubscriptionModal: () => void;
+  closeDeleteSubscriptionModal: () => void;
+
   reset: () => void;
 }
 
@@ -45,6 +62,12 @@ const initialState = {
   // Transaction-specific UI state
   selectedTransaction: null,
   isEditTransactionModalOpen: false,
+
+  // Subscription-specific UI state
+  selectedSubscription: null,
+  editingSubscriptionData: null,
+  isDeleteSubscriptionModalOpen: false,
+  subscriptionToDelete: null,
 };
 
 export const useAppStore = create<AppState>()(
@@ -94,6 +117,54 @@ export const useAppStore = create<AppState>()(
           selectedTransaction: null,
           isEditTransactionModalOpen: false
         }, false, 'closeEditTransactionModal'),
+
+      // Subscription-specific actions
+      setSelectedSubscription: (subscription: Subscription | null) =>
+        set({ selectedSubscription: subscription }, false, 'setSelectedSubscription'),
+
+      setEditingSubscriptionData: (data: SubscriptionData | null) =>
+        set({ editingSubscriptionData: data }, false, 'setEditingSubscriptionData'),
+
+      setDeleteSubscriptionModalOpen: (open: boolean) =>
+        set({ isDeleteSubscriptionModalOpen: open }, false, 'setDeleteSubscriptionModalOpen'),
+
+      setSubscriptionToDelete: (subscription: Subscription | null) =>
+        set({ subscriptionToDelete: subscription }, false, 'setSubscriptionToDelete'),
+
+      openEditSubscriptionModal: (subscription: Subscription) => {
+        const subscriptionData: SubscriptionData = {
+          id: subscription.id,
+          provider_name: subscription.provider_name,
+          amount: subscription.amount,
+          currency: subscription.currency,
+          frequency: subscription.frequency,
+          payment_date: new Date(subscription.payment_date)
+        };
+        set({
+          selectedSubscription: subscription,
+          editingSubscriptionData: subscriptionData,
+          isSubscriptionModalOpen: true
+        }, false, 'openEditSubscriptionModal');
+      },
+
+      openDeleteSubscriptionModal: (subscription: Subscription) =>
+        set({
+          subscriptionToDelete: subscription,
+          isDeleteSubscriptionModalOpen: true
+        }, false, 'openDeleteSubscriptionModal'),
+
+      closeSubscriptionModal: () =>
+        set({
+          selectedSubscription: null,
+          editingSubscriptionData: null,
+          isSubscriptionModalOpen: false
+        }, false, 'closeSubscriptionModal'),
+
+      closeDeleteSubscriptionModal: () =>
+        set({
+          subscriptionToDelete: null,
+          isDeleteSubscriptionModalOpen: false
+        }, false, 'closeDeleteSubscriptionModal'),
 
       reset: () =>
         set(initialState, false, 'reset'),

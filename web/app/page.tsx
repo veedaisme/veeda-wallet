@@ -164,14 +164,16 @@ export default function Home() {
           )}
         </main>
 
-        {/* Floating Action Button */}
-        <button
-          onClick={() => activeTab === "subscriptions" ? setSubscriptionModalOpen(true) : setTransactionModalOpen(true)}
-          className="fixed bottom-24 right-6 bg-primary text-primary-foreground rounded-full p-4 shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-50"
-          aria-label={activeTab === "subscriptions" ? tSub('add') : tTrans('add')}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
+        {/* Floating Action Button - Only show on transactions tab */}
+        {activeTab === "transactions" && (
+          <button
+            onClick={() => setTransactionModalOpen(true)}
+            className="fixed bottom-24 right-6 bg-primary text-primary-foreground rounded-full p-4 shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-50"
+            aria-label={tTrans('add')}
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+        )}
 
         {/* Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 w-full border-t border-gray-200 p-4 flex justify-around items-center bg-white z-20">

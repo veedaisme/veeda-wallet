@@ -62,3 +62,42 @@ export const DashboardSkeleton: React.FC = () => (
     ))}
   </div>
 );
+
+// Subscription Skeletons
+export const SubscriptionCardSkeleton: React.FC = () => (
+  <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 animate-pulse">
+    <div className="flex justify-between items-start mb-3">
+      <div className="flex-1">
+        <Skeleton className="h-5 w-1/3 mb-2" />
+        <Skeleton className="h-4 w-1/4" />
+      </div>
+      <div className="text-right">
+        <Skeleton className="h-6 w-20 mb-1" />
+        <Skeleton className="h-3 w-16" />
+      </div>
+    </div>
+    <div className="flex justify-between items-center">
+      <Skeleton className="h-3 w-1/4" />
+      <div className="flex space-x-2">
+        <Skeleton className="h-8 w-8 rounded" />
+        <Skeleton className="h-8 w-8 rounded" />
+      </div>
+    </div>
+  </div>
+);
+
+export const SubscriptionListSkeleton: React.FC<{ count?: number }> = ({ count = 3 }) => (
+  <div className="space-y-4">
+    {Array.from({ length: count }).map((_, i) => (
+      <SubscriptionCardSkeleton key={i} />
+    ))}
+  </div>
+);
+
+export const SubscriptionPageSkeleton: React.FC = () => (
+  <div className="p-4 space-y-4">
+    {Array.from({ length: 4 }).map((_, i) => (
+      <SubscriptionCardSkeleton key={i} />
+    ))}
+  </div>
+);

@@ -10,13 +10,11 @@ import { Switch } from '@/components/ui/switch'
 interface SubscriptionsListProps {
   subscriptions: ProjectedSubscription[];
   summary: SubscriptionSummary | null;
-  openAddSubscriptionModal: () => void;
 }
 
 export function SubscriptionScheduleList({
   subscriptions,
   summary,
-  openAddSubscriptionModal,
 }: SubscriptionsListProps) {
   const tSub = useTranslations('subscriptions')
   
@@ -104,12 +102,6 @@ export function SubscriptionScheduleList({
       ) : (
         <div className="text-center py-8">
           <p className="text-gray-500">{tSub('noSubscriptions')}</p>
-          <button
-            onClick={openAddSubscriptionModal}
-            className="mt-4 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
-          >
-            {tSub('addYourFirst')}
-          </button>
         </div>
       )}
     </div>

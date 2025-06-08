@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Subscription, ProjectedSubscription, SubscriptionData } from '@/models/subscription';
@@ -8,12 +8,14 @@ import { SubscriptionCard } from '@/components/subscription-card';
 import { Modal } from '@/components/ui/modal';
 import { SubscriptionForm } from '@/components/subscription-form';
 import { useUser } from '@/hooks/useUser';
+import { useAppStore } from '@/stores/appStore';
 import {
-  fetchConsolidatedSubscriptionData,
-  addSubscription,
-  updateSubscription,
-  deleteSubscription
-} from '@/lib/subscriptionService';
+  useSubscriptions,
+  useAddSubscription,
+  useUpdateSubscription,
+  useDeleteSubscription
+} from '@/hooks/queries/useSubscriptionsQuery';
+import { SubscriptionPageSkeleton } from '@/components/ui/skeletons';
 
 export default function SubscriptionsPage() {
   const tSub = useTranslations('subscriptions');
@@ -21,94 +23,83 @@ export default function SubscriptionsPage() {
   const searchParams = useSearchParams();
   const fromTab = searchParams.get('from');
   const { user } = useUser();
-  
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isAddSubscriptionModalOpen, setIsAddSubscriptionModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [subscriptionToDelete, setSubscriptionToDelete] = useState<Subscription | null>(null);
-  const [editingSubscription, setEditingSubscription] = useState<SubscriptionData | null>(null);
 
-  // Fetch subscriptions
-  useEffect(() => {
-    const loadSubscriptions = async () => {
-      if (!user?.id) {
-        router.push('/auth');
-        return;
-      }
+  // UI state from Zustand store
+  const {
+    isSubscriptionModalOpen,
+    editingSubscriptionData,
+    isDeleteSubscriptionModalOpen,
+    subscriptionToDelete,
+    setSubscriptionModalOpen,
+    setEditingSubscriptionData,
+    openEditSubscriptionModal,
+    openDeleteSubscriptionModal,
+    closeSubscriptionModal,
+    closeDeleteSubscriptionModal,
+  } = useAppStore();
 
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // Use the consolidated API function
-        const { data, error } = await fetchConsolidatedSubscriptionData(user.id);
-        if (error) throw error;
-        if (!data) throw new Error("No data returned from server");
-        
-        // We only need regular subscriptions for this page
-        setSubscriptions(data.subscriptions || []);
-      } catch (e) {
-        console.error('Failed to load subscriptions:', e);
-        if (e instanceof Error) {
-          setError(e.message);
-        } else {
-          setError('An unknown error occurred while loading subscriptions');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadSubscriptions();
+  // React Query hooks
+  const {
+    data: subscriptions = [],
+    isLoading,
+    isError,
+    error,
+  } = useSubscriptions(user?.id);
+
+  const addSubscriptionMutation = useAddSubscription();
+  const updateSubscriptionMutation = useUpdateSubscription();
+  const deleteSubscriptionMutation = useDeleteSubscription();
+
+  // Redirect to auth if no user
+  React.useEffect(() => {
+    if (!user?.id) {
+      router.push('/auth');
+    }
   }, [user, router]);
 
   // Handle saving subscription
   const handleSaveSubscription = async (data: SubscriptionData) => {
     if (!user?.id) return;
-    
+
     try {
-      setLoading(true);
       if (data.id) {
-        await updateSubscription(data, user.id);
+        await updateSubscriptionMutation.mutateAsync({
+          subscriptionData: data,
+          userId: user.id,
+        });
       } else {
-        await addSubscription(data, user.id);
+        await addSubscriptionMutation.mutateAsync({
+          subscriptionData: data,
+          userId: user.id,
+        });
       }
-      
-      // Refresh the list using consolidated data
-      const { data: refreshedData } = await fetchConsolidatedSubscriptionData(user.id);
-      if (refreshedData) {
-        setSubscriptions(refreshedData.subscriptions || []);
-      }
-      
-      setIsAddSubscriptionModalOpen(false);
-      setEditingSubscription(null);
+
+      closeSubscriptionModal();
     } catch (error) {
       console.error('Error saving subscription:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   // Handle deleting subscription
   const handleDeleteSubscription = async () => {
     if (!user?.id || !subscriptionToDelete) return;
-    
+
     try {
-      setLoading(true);
-      await deleteSubscription(subscriptionToDelete.id, user.id);
-      
-      // Update the list
-      setSubscriptions(prev => prev.filter(s => s.id !== subscriptionToDelete.id));
-      setIsDeleteModalOpen(false);
-      setSubscriptionToDelete(null);
+      await deleteSubscriptionMutation.mutateAsync({
+        subscriptionId: subscriptionToDelete.id,
+        userId: user.id,
+      });
+
+      closeDeleteSubscriptionModal();
     } catch (error) {
       console.error('Error deleting subscription:', error);
-    } finally {
-      setLoading(false);
     }
   };
+
+  // Loading state for mutations
+  const isMutating = addSubscriptionMutation.isPending ||
+                    updateSubscriptionMutation.isPending ||
+                    deleteSubscriptionMutation.isPending;
 
   return (
     <div className="min-h-screen bg-white">
@@ -136,19 +127,20 @@ export default function SubscriptionsPage() {
       
       {/* Content */}
       <div className="p-4">
-        {loading && subscriptions.length === 0 ? (
-          <div className="flex justify-center items-center h-24">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : error ? (
+        {isLoading && subscriptions.length === 0 ? (
+          <SubscriptionPageSkeleton />
+        ) : isError ? (
           <div className="text-red-500 p-4 border border-red-200 rounded bg-red-50">
-            {error}
+            {error?.message || 'An error occurred while loading subscriptions'}
           </div>
         ) : subscriptions.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">{tSub('noSubscriptions')}</p>
             <button
-              onClick={() => setIsAddSubscriptionModalOpen(true)}
+              onClick={() => {
+                setEditingSubscriptionData(null);
+                setSubscriptionModalOpen(true);
+              }}
               className="mt-4 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
             >
               {tSub('addYourFirst')}
@@ -179,22 +171,8 @@ export default function SubscriptionsPage() {
                   key={subscription.id}
                   subscription={projectedSubscription}
                   showInIDR={true}
-                  onEdit={() => {
-                    const subscriptionData: SubscriptionData = {
-                      id: subscription.id,
-                      provider_name: subscription.provider_name,
-                      amount: subscription.amount,
-                      currency: subscription.currency,
-                      frequency: subscription.frequency,
-                      payment_date: new Date(subscription.payment_date)
-                    };
-                    setEditingSubscription(subscriptionData);
-                    setIsAddSubscriptionModalOpen(true);
-                  }}
-                  onDelete={() => {
-                    setSubscriptionToDelete(subscription);
-                    setIsDeleteModalOpen(true);
-                  }}
+                  onEdit={() => openEditSubscriptionModal(subscription)}
+                  onDelete={() => openDeleteSubscriptionModal(subscription)}
                 />
               );
             })}
@@ -204,10 +182,10 @@ export default function SubscriptionsPage() {
         {/* Add/Edit Floating Action Button */}
         <button
           onClick={() => {
-            setEditingSubscription(null);
-            setIsAddSubscriptionModalOpen(true);
+            setEditingSubscriptionData(null);
+            setSubscriptionModalOpen(true);
           }}
-          className="fixed bottom-6 right-6 p-4 bg-black text-white rounded-full shadow-lg hover:bg-gray-800"
+          className="fixed bottom-6 right-6 p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           aria-label={tSub('addSubscription')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -218,28 +196,22 @@ export default function SubscriptionsPage() {
       
       {/* Add/Edit Subscription Modal */}
       <Modal
-        isOpen={isAddSubscriptionModalOpen}
-        onClose={() => {
-          setIsAddSubscriptionModalOpen(false);
-          setEditingSubscription(null);
-        }}
-        title={editingSubscription ? tSub('editSubscription') : tSub('addSubscription')}
+        isOpen={isSubscriptionModalOpen}
+        onClose={closeSubscriptionModal}
+        title={editingSubscriptionData ? tSub('editSubscription') : tSub('addSubscription')}
       >
         <SubscriptionForm
-          initialData={editingSubscription || undefined}
+          initialData={editingSubscriptionData || undefined}
           onSubmit={handleSaveSubscription}
-          onCancel={() => {
-            setIsAddSubscriptionModalOpen(false);
-            setEditingSubscription(null);
-          }}
-          loading={loading}
+          onCancel={closeSubscriptionModal}
+          loading={isMutating}
         />
       </Modal>
       
       {/* Delete Confirmation Modal */}
       <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        isOpen={isDeleteSubscriptionModalOpen}
+        onClose={closeDeleteSubscriptionModal}
         title={tSub('confirmDelete')}
       >
         <div className="p-4">
@@ -263,16 +235,15 @@ export default function SubscriptionsPage() {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={handleDeleteSubscription}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  disabled={isMutating}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {tSub('delete')}
+                  {deleteSubscriptionMutation.isPending ? 'Deleting...' : tSub('delete')}
                 </button>
                 <button
-                  onClick={() => {
-                    setIsDeleteModalOpen(false);
-                    setSubscriptionToDelete(null);
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  onClick={closeDeleteSubscriptionModal}
+                  disabled={isMutating}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {tSub('cancel')}
                 </button>
