@@ -114,11 +114,12 @@ export default function SubscriptionsPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="sticky top-0 bg-white p-4 border-b border-gray-200 flex items-center z-10">
-        <button 
+        <button
           onClick={() => {
             // Navigate back to the correct tab if specified
             if (fromTab === 'subscriptions') {
-              router.push('/?tab=subscriptions');
+              // Use replace to avoid adding to history stack and ensure clean URL
+              router.replace('/?tab=subscriptions');
             } else {
               router.back();
             }
