@@ -109,7 +109,6 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
           <SubscriptionScheduleList
             subscriptions={projectedSubscriptions}
             summary={subscriptionSummary}
-            openAddSubscriptionModal={undefined}
           />
         ) : (
           <div className="text-center p-8 bg-gray-50 rounded-lg">
