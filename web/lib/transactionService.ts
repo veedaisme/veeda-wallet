@@ -1,7 +1,6 @@
 import { supabase } from './supabaseClient';
-import { Transaction } from '@/models/transaction'; // Assuming model exists
-import { type TransactionData } from '@/components/transaction-form'; // Corrected import for TransactionData
-import { SortField, SortDirection } from '@/hooks/useTransactions'; // Import sort types
+import { Transaction } from '@/models/transaction';
+import { type TransactionData, type SortField, type SortDirection } from '@/hooks/queries/useTransactionsQuery';
 
 const PAGE_SIZE = 20;
 

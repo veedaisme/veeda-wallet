@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { Transaction } from '@/models/transaction';
 
 export type TabType = "dashboard" | "transactions" | "subscriptions";
 
@@ -10,7 +11,11 @@ interface AppState {
   isSubscriptionModalOpen: boolean;
   loading: boolean;
   error: string | null;
-  
+
+  // Transaction-specific UI state
+  selectedTransaction: Transaction | null;
+  isEditTransactionModalOpen: boolean;
+
   setActiveTab: (tab: TabType) => void;
   setProfileMenuOpen: (open: boolean) => void;
   toggleProfileMenu: () => void;
@@ -19,6 +24,13 @@ interface AppState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+
+  // Transaction-specific actions
+  setSelectedTransaction: (transaction: Transaction | null) => void;
+  setEditTransactionModalOpen: (open: boolean) => void;
+  openEditTransactionModal: (transaction: Transaction) => void;
+  closeEditTransactionModal: () => void;
+
   reset: () => void;
 }
 
@@ -29,6 +41,10 @@ const initialState = {
   isSubscriptionModalOpen: false,
   loading: false,
   error: null,
+
+  // Transaction-specific UI state
+  selectedTransaction: null,
+  isEditTransactionModalOpen: false,
 };
 
 export const useAppStore = create<AppState>()(
@@ -57,10 +73,29 @@ export const useAppStore = create<AppState>()(
       setError: (error: string | null) => 
         set({ error }, false, 'setError'),
       
-      clearError: () => 
+      clearError: () =>
         set({ error: null }, false, 'clearError'),
-      
-      reset: () => 
+
+      // Transaction-specific actions
+      setSelectedTransaction: (transaction: Transaction | null) =>
+        set({ selectedTransaction: transaction }, false, 'setSelectedTransaction'),
+
+      setEditTransactionModalOpen: (open: boolean) =>
+        set({ isEditTransactionModalOpen: open }, false, 'setEditTransactionModalOpen'),
+
+      openEditTransactionModal: (transaction: Transaction) =>
+        set({
+          selectedTransaction: transaction,
+          isEditTransactionModalOpen: true
+        }, false, 'openEditTransactionModal'),
+
+      closeEditTransactionModal: () =>
+        set({
+          selectedTransaction: null,
+          isEditTransactionModalOpen: false
+        }, false, 'closeEditTransactionModal'),
+
+      reset: () =>
         set(initialState, false, 'reset'),
     }),
     { name: 'app-store' }
