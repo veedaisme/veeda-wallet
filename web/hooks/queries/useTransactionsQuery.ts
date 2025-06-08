@@ -137,13 +137,19 @@ export function useAddTransaction() {
       return data;
     },
     onSuccess: (data, variables) => {
+      console.log('Transaction added successfully, invalidating caches...');
+
+      // Invalidate all transaction queries (list, paginated, etc.)
       queryClient.invalidateQueries({
-        queryKey: queryKeys.transactionsList(variables.userId),
+        queryKey: invalidationKeys.allTransactions(),
       });
 
+      // Invalidate dashboard data as new transactions affect summaries
       queryClient.invalidateQueries({
         queryKey: invalidationKeys.allDashboard(),
       });
+
+      console.log('Cache invalidation completed for transaction addition');
     },
     onError: (error) => {
       console.error('Failed to add transaction:', error);
@@ -180,15 +186,19 @@ export function useUpdateTransaction() {
       return data;
     },
     onSuccess: (data, variables) => {
-      // Invalidate all transaction queries for this user
+      console.log('Transaction updated successfully, invalidating caches...');
+
+      // Invalidate all transaction queries (list, paginated, etc.)
       queryClient.invalidateQueries({
-        queryKey: queryKeys.transactionsList(variables.userId),
+        queryKey: invalidationKeys.allTransactions(),
       });
 
       // Invalidate dashboard data as transaction changes affect summaries
       queryClient.invalidateQueries({
         queryKey: invalidationKeys.allDashboard(),
       });
+
+      console.log('Cache invalidation completed for transaction update');
     },
     onError: (error) => {
       console.error('Failed to update transaction:', error);
@@ -213,15 +223,19 @@ export function useDeleteTransaction() {
       return { id: transactionId };
     },
     onSuccess: (data, variables) => {
-      // Invalidate all transaction queries for this user
+      console.log('Transaction deleted successfully, invalidating caches...');
+
+      // Invalidate all transaction queries (list, paginated, etc.)
       queryClient.invalidateQueries({
-        queryKey: queryKeys.transactionsList(variables.userId),
+        queryKey: invalidationKeys.allTransactions(),
       });
 
       // Invalidate dashboard data as transaction deletion affects summaries
       queryClient.invalidateQueries({
         queryKey: invalidationKeys.allDashboard(),
       });
+
+      console.log('Cache invalidation completed for transaction deletion');
     },
     onError: (error) => {
       console.error('Failed to delete transaction:', error);

@@ -63,6 +63,7 @@ export const invalidationKeys = {
   userSpecific: (userId: string) => [
     queryKeys.dashboardSummary(),
     queryKeys.transactionsList(userId),
+    queryKeys.transactionsPaginated(userId),
     queryKeys.subscriptionsList(userId),
   ],
 } as const;
