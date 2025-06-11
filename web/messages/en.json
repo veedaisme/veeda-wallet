@@ -1,5 +1,6 @@
 {
-  "app": { "title": "Sense", "logout": "Logout", "dashboard": "Dashboard" },
+  "app": { "title": "Clair", "logout": "Logout", "dashboard": "Dashboard" },
+  "app": { "title": "Clair", "logout": "Keluar", "dashboard": "Dasbor" },
   "dashboard": { 
     "title": "Dashboard", 
     "today": "Today", 

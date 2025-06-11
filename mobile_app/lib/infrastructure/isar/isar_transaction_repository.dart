@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'package:veeda_wallet/core/transaction_repository.dart';
+import 'package:clair_wallet/core/transaction_repository.dart';
 
 class IsarTransactionRepository implements TransactionRepository {
   final Isar isar;

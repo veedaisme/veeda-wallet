@@ -47,7 +47,7 @@ app.notFound((c) => {
 // Health check endpoint
 app.get('/', (c) => {
   return c.json({
-    name: 'Veeda Wallet Backend API',
+    name: 'Clair Wallet Backend API',
     version: '1.0.0',
     status: 'healthy',
     timestamp: new Date().toISOString(),

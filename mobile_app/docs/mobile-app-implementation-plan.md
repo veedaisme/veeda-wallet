@@ -1,4 +1,4 @@
-# Veeda Wallet Mobile App (Flutter) – Step-by-Step Implementation Plan
+# Clair Wallet Mobile App (Flutter) – Step-by-Step Implementation Plan
 
 ## Phase 1: Project Foundation & Setup ✅ DONE
 

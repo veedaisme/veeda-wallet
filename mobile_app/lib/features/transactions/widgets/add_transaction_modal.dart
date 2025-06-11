@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:veeda_wallet/core/transaction_repository.dart';
-import 'package:veeda_wallet/core/di/transaction_providers.dart';
+import 'package:clair_wallet/core/transaction_repository.dart';
+import 'package:clair_wallet/core/di/transaction_providers.dart';
 
 class AddTransactionModal extends ConsumerStatefulWidget {
   const AddTransactionModal({super.key});

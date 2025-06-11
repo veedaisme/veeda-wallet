@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: "Sense",
+  title: "Clair",
   description: "Track and analyze your spending habits",
 };
 

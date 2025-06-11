@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines a comprehensive plan to modernize the state management system in the Veeda Wallet web application, transitioning from manual refresh keys to a reactive state management architecture.
+This document outlines a comprehensive plan to modernize the state management system in the Clair Wallet web application, transitioning from manual refresh keys to a reactive state management architecture.
 
 ## Current State Analysis
 
@@ -317,6 +317,6 @@ export const useAddTransactionMutation = () => {
 
 ## Conclusion
 
-This modernization plan will transform the Veeda Wallet web application from a manual refresh-based system to a modern, reactive state management architecture. The implementation will be done in phases to minimize risk and ensure a smooth transition.
+This modernization plan will transform the Clair Wallet web application from a manual refresh-based system to a modern, reactive state management architecture. The implementation will be done in phases to minimize risk and ensure a smooth transition.
 
 The new system will provide better performance, improved user experience, and a more maintainable codebase for future development.

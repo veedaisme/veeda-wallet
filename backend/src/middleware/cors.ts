@@ -9,7 +9,7 @@ export function corsMiddleware() {
       const allowedOrigins = [
         'http://localhost:3000',
         'http://localhost:3001',
-        'https://veeda-wallet.vercel.app',
+        'https://clair-wallet.vercel.app',
       ];
       
       if (origin.startsWith('http://localhost:')) {

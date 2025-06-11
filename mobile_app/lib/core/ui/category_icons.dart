@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:veeda_wallet/core/transaction_repository.dart';
+import 'package:clair_wallet/core/transaction_repository.dart';
 
 IconData getLucideIconForCategory(TransactionCategory category) {
   switch (category) {

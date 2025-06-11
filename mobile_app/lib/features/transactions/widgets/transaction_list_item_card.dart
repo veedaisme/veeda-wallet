@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:veeda_wallet/core/transaction_repository.dart';
-import 'package:veeda_wallet/core/ui/category_icons.dart';
-import 'package:veeda_wallet/features/transactions/widgets/edit_transaction_modal.dart';
+import 'package:clair_wallet/core/transaction_repository.dart';
+import 'package:clair_wallet/core/ui/category_icons.dart';
+import 'package:clair_wallet/features/transactions/widgets/edit_transaction_modal.dart';
 
 class TransactionListItemCard extends StatelessWidget {
   final Transaction transaction;

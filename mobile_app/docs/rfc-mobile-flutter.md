@@ -2,7 +2,7 @@
 
 ## Overview
 
-This RFC proposes a detailed plan for implementing a mobile version of the Veeda Wallet app using Flutter. The app will initially use secure local storage (preferably Isar) for all data, but the architecture will be designed for seamless future integration with Supabase for authentication and cloud storage. The goal is to achieve feature parity with the current Next.js web app.
+This RFC proposes a detailed plan for implementing a mobile version of the Clair Wallet app using Flutter. The app will initially use secure local storage (preferably Isar) for all data, but the architecture will be designed for seamless future integration with Supabase for authentication and cloud storage. The goal is to achieve feature parity with the current Next.js web app.
 
 ---
 
