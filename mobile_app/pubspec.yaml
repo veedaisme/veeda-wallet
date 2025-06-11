@@ -1,6 +1,6 @@
-name: veeda_wallet
-description: "Veeda Wallet – A privacy-first, cross-platform personal finance app built with Flutter. Track spending, manage transactions, and stay in control of your data."
-author: "Veeda Team <team@veeda.app>"
+name: clair_wallet
+description: "Clair – A privacy-first, cross-platform personal finance app built with Flutter. Track spending, manage transactions, and stay in control of your data."
+author: "Clair Team <team@clair.app>"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -80,7 +80,7 @@ flutter_icons:
   android: true
   ios: true
   web: true
-  image_path: "assets/icon/icon.png"
+  image_path: "assets/icon/clair_logo.png"
   adaptive_icon_background: "#ffffff"
   adaptive_icon_foreground: "assets/icon/icon-foreground.png"
 

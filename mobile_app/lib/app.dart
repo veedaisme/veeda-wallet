@@ -6,13 +6,13 @@ import 'features/dashboard/dashboard_screen.dart';
 import 'features/transactions/transactions_screen.dart';
 import 'features/profile/profile_screen.dart';
 
-class VeedaApp extends StatelessWidget {
-  const VeedaApp({super.key});
+class ClairApp extends StatelessWidget {
+  const ClairApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Sense',
+      title: 'Clair',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
@@ -93,7 +93,7 @@ class _MainAppShellState extends State<MainAppShell> {
     return Scaffold(
       appBar: AppBar(
         title: Image.asset(
-          'assets/icon/sense_logo.png',
+          'assets/icon/clair_logo.png',
           height: 160,
           fit: BoxFit.contain,
         ),

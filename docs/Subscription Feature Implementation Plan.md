@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the technical steps required to implement the Subscription tracking feature for the Veeda Wallet web application. The feature will add a new tab to the existing application, alongside the current Dashboard and Transactions tabs.
+This document outlines the technical steps required to implement the Subscription tracking feature for the Clair Wallet web application. The feature will add a new tab to the existing application, alongside the current Dashboard and Transactions tabs.
 
 ## Technical Requirements
 
@@ -264,4 +264,4 @@ To ensure optimal performance:
 
 ## Conclusion
 
-This implementation plan provides a structured approach to adding subscription tracking functionality to the Veeda Wallet web application. Following these steps will ensure the feature is implemented according to the design decisions document and meets all the requirements.
+This implementation plan provides a structured approach to adding subscription tracking functionality to the Clair Wallet web application. Following these steps will ensure the feature is implemented according to the design decisions document and meets all the requirements.

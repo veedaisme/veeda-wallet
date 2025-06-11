@@ -1,7 +1,7 @@
-# Multilingual (i18n) Support Implementation for Veeda Wallet Web
+# Multilingual (i18n) Support Implementation for Clair Wallet Web
 
 ## Overview
-This document describes the steps and architectural considerations for adding Bahasa Indonesia support (alongside English) to the Veeda Wallet web app. Users will be able to toggle languages via a button next to the profile icon.
+This document describes the steps and architectural considerations for adding Bahasa Indonesia support (alongside English) to the Clair Wallet web app. Users will be able to toggle languages via a button next to the profile icon.
 
 ## Current State Analysis
 - Only English is supported; all UI text is hardcoded in components.
@@ -96,4 +96,4 @@ Move all pages under `app/[locale]/` to support locale-based routing.
 
 ---
 
-This approach provides scalable, maintainable multilingual support for the Veeda Wallet web app. See this doc for details, code samples, and future recommendations.
+This approach provides scalable, maintainable multilingual support for the Clair Wallet web app. See this doc for details, code samples, and future recommendations.

@@ -1,4 +1,4 @@
-# Veeda Wallet
+# Clair Wallet
 
 A simple spending tracker application with both web and mobile interfaces.
 
@@ -18,7 +18,7 @@ This repository contains the following main components:
 
 ## Overview
 
-Veeda Wallet helps users track their spending. Key features include:
+Clair Wallet helps users track their spending. Key features include:
 
 ### Web Application Features
 
