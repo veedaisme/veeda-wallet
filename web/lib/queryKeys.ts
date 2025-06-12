@@ -37,6 +37,10 @@ export const queryKeys = {
     [...queryKeys.subscriptions, 'summary', userId] as const,
   subscriptionsConsolidated: (userId: string, projectionEndDate?: string) =>
     [...queryKeys.subscriptions, 'consolidated', userId, projectionEndDate] as const,
+  subscriptionsUnpaid: (userId: string) =>
+    [...queryKeys.subscriptions, 'unpaid', userId] as const,
+  subscriptionsPayment: (paymentId: string) =>
+    [...queryKeys.subscriptions, 'payment', paymentId] as const,
   
   // User related queries
   user: ['user'] as const,

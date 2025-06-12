@@ -2,7 +2,9 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { SubscriptionScheduleList } from "@/components/subscriptionScheduleList";
+import { UnpaidSubscriptionScheduleList } from "@/components/unpaidSubscriptionScheduleList";
 import { useConsolidatedSubscriptionData } from '@/hooks/queries/useSubscriptionsQuery';
+import { useUnpaidSubscriptions, usePaymentFeatureFlag } from '@/hooks/queries/useUnpaidSubscriptionsQuery';
 import { DashboardCardSkeleton } from '@/components/ui/skeletons';
 
 interface SubscriptionsViewProps {
@@ -12,6 +14,7 @@ interface SubscriptionsViewProps {
 export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) => {
   const tSub = useTranslations('subscriptions');
   const router = useRouter();
+  const { isEnabled: isPaymentFeatureEnabled } = usePaymentFeatureFlag();
 
   // Note: SubscriptionsView is now read-only.
   // Users should navigate to /subscriptions page to manage subscriptions.
@@ -23,18 +26,35 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
     return endDate.toISOString().split('T')[0]; // YYYY-MM-DD
   }, []);
 
-  // React Query hooks
+  // React Query hooks - use different data source based on payment feature flag
   const {
     data: consolidatedData,
-    isLoading,
-    isError,
-    error,
+    isLoading: isConsolidatedLoading,
+    isError: isConsolidatedError,
+    error: consolidatedError,
   } = useConsolidatedSubscriptionData(userId, projectionEndDate);
 
-  // Extract data from consolidated response
+  const {
+    data: unpaidData,
+    isLoading: isUnpaidLoading,
+    isError: isUnpaidError,
+    error: unpaidError,
+  } = useUnpaidSubscriptions(userId);
+
+  // Choose data source based on feature flag
+  const isLoading = isPaymentFeatureEnabled ? isUnpaidLoading : isConsolidatedLoading;
+  const isError = isPaymentFeatureEnabled ? isUnpaidError : isConsolidatedError;
+  const error = isPaymentFeatureEnabled ? unpaidError : consolidatedError;
+
+  // Extract data from appropriate response
   const subscriptions = consolidatedData?.subscriptions || [];
-  const projectedSubscriptions = consolidatedData?.projectedSubscriptions || [];
-  const subscriptionSummary = consolidatedData?.summary || null;
+  const projectedSubscriptions = isPaymentFeatureEnabled
+    ? (unpaidData?.unpaid_subscriptions || [])
+    : (consolidatedData?.projectedSubscriptions || []);
+  const subscriptionSummary = isPaymentFeatureEnabled
+    ? null // We'll use payment summary instead
+    : (consolidatedData?.summary || null);
+  const paymentSummary = unpaidData?.payment_summary || null;
 
   return (
     <div className="flex flex-col space-y-6">
@@ -106,13 +126,20 @@ export const SubscriptionsView: React.FC<SubscriptionsViewProps> = ({ userId }) 
             ))}
           </div>
         ) : subscriptions.length > 0 ? (
-          <SubscriptionScheduleList
-            subscriptions={projectedSubscriptions}
-            summary={subscriptionSummary}
-          />
+          isPaymentFeatureEnabled ? (
+            <UnpaidSubscriptionScheduleList
+              subscriptions={projectedSubscriptions}
+              summary={paymentSummary}
+            />
+          ) : (
+            <SubscriptionScheduleList
+              subscriptions={projectedSubscriptions}
+              summary={subscriptionSummary}
+            />
+          )
         ) : (
           <div className="text-center p-8 bg-gray-50 rounded-lg">
-            <p>{tSub('noUpcomingPayments')}</p>
+            <p>{isPaymentFeatureEnabled ? tSub('noUnpaidSubscriptions') : tSub('noUpcomingPayments')}</p>
           </div>
         )}
       </div>

@@ -36,6 +36,12 @@ export interface ProjectedSubscription {
   user_id: string;
   created_at?: string;
   updated_at?: string;
+
+  // New payment tracking fields
+  payment_id?: string; // subscription_payments.id
+  payment_status: 'unpaid' | 'paid' | 'failed';
+  transaction_id?: string;
+  paid_at?: string;
 }
 
 export interface ExchangeRate {
@@ -50,6 +56,42 @@ export interface ConsolidatedSubscriptionData {
   subscriptions: Subscription[];
   projected_subscriptions: ProjectedSubscription[];
   subscription_summary: SubscriptionSummary;
+}
+
+export interface UnpaidSubscriptionData {
+  unpaid_subscriptions: ProjectedSubscription[];
+  payment_summary: SubscriptionPaymentSummary;
+}
+
+export interface SubscriptionPaymentSummary {
+  total_unpaid_amount: number;
+  unpaid_count: number;
+  overdue_count: number;
+  next_payment_date?: string;
+  next_payment_amount?: number;
+}
+
+export interface PaySubscriptionRequest {
+  amount?: number;
+  note?: string;
+  category?: string;
+}
+
+export interface PaySubscriptionResponse {
+  transaction: {
+    id: string;
+    amount: number;
+    category: string;
+    note: string;
+    date: string;
+    user_id: string;
+  };
+  payment: {
+    id: string;
+    status: 'paid';
+    paid_at: string;
+    transaction_id: string;
+  };
 }
 
 export const FREQUENCIES = [
