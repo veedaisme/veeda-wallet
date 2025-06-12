@@ -109,6 +109,8 @@
     "noSubscriptionsYet": "No subscriptions yet",
     "upcomingPayments": "Upcoming Payments",
     "noUpcomingPayments": "No upcoming payments",
+    "noUnpaidSubscriptions": "No unpaid subscriptions",
+    "totalUnpaid": "Total Unpaid",
     "manageSubscriptions": "Manage Your Subscriptions",
     "viewAll": "View All"
   },

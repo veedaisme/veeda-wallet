@@ -104,6 +104,8 @@
     "noSubscriptionsYet": "Belum ada langganan",
     "upcomingPayments": "Pembayaran Mendatang",
     "noUpcomingPayments": "Tidak ada pembayaran mendatang",
+    "noUnpaidSubscriptions": "Tidak ada langganan yang belum dibayar",
+    "totalUnpaid": "Total Belum Dibayar",
     "manageSubscriptions": "Kelola Langganan Anda",
     "viewAll": "Lihat Semua"
   },

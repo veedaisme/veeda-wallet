@@ -22,13 +22,19 @@ interface SubscriptionCardProps {
   showInIDR: boolean
   onEdit?: (subscription: ProjectedSubscription) => void
   onDelete?: (subscription: ProjectedSubscription) => void
+  onPay?: (subscription: ProjectedSubscription) => Promise<void>
+  isPaymentLoading?: boolean
+  showPayButton?: boolean
 }
 
-export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ 
-  subscription, 
-  showInIDR, 
+export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
+  subscription,
+  showInIDR,
   onEdit,
-  onDelete
+  onDelete,
+  onPay,
+  isPaymentLoading = false,
+  showPayButton = false
 }: SubscriptionCardProps) => {
   const tSub = useTranslations('subscriptions')
   const [amount, setAmount] = useState<string>('')
@@ -123,9 +129,33 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
             </span>
           )}
         </p>
-        <div className="text-right">
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">{formatDate(subscription.projected_payment_date)}</p>
-          <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">{daysUntilPayment()}</p>
+        <div className="text-right flex flex-col items-end gap-2">
+          <div>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">{formatDate(subscription.projected_payment_date)}</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">{daysUntilPayment()}</p>
+          </div>
+          {/* Pay button for unpaid subscriptions */}
+          {showPayButton && subscription.payment_status === 'unpaid' && onPay && (
+            <button
+              onClick={() => onPay(subscription)}
+              disabled={isPaymentLoading}
+              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              aria-label={`Pay ${subscription.provider_name}`}
+            >
+              {isPaymentLoading ? 'Paying...' : 'Pay'}
+            </button>
+          )}
+          {/* Payment status indicator */}
+          {subscription.payment_status === 'paid' && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+              Paid
+            </span>
+          )}
+          {subscription.payment_status === 'failed' && (
+            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">
+              Failed
+            </span>
+          )}
         </div>
       </div>
     </div>
