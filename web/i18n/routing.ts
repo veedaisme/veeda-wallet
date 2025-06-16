@@ -1,9 +1,27 @@
-import {defineRouting} from 'next-intl/routing';
+import {defineRouting, Pathnames} from 'next-intl/routing';
+
+export const locales = ['en', 'id'] as const;
+
+// Define pathnames for each locale
+export const pathnames = {
+  // Root path
+  '/': '/',
+
+  // Landing page path
+  '/landing': {
+    en: '/landing',
+    id: '/landing' // Using the same path for Indonesian, can be changed later if needed
+  }
+  // Add other pages here as needed, e.g.,
+  // '/dashboard': {
+  //   en: '/dashboard',
+  //   id: '/dasbor'
+  // }
+} satisfies Pathnames<typeof locales>;
+
 
 export const routing = defineRouting({
-  // A list of all locales that are supported
-  locales: ['en', 'id'], // Updated locales
-
-  // Used when no locale matches
-  defaultLocale: 'en' // Replace with your actual default locale
+  locales,
+  defaultLocale: 'en',
+  pathnames // Pass the defined pathnames to the routing configuration
 });
