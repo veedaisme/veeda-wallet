@@ -122,6 +122,8 @@
     "signingIn": "Signing in...",
     "signingUp": "Signing up...",
     "dontHaveAccount": "Don't have an account? Sign up",
-    "alreadyHaveAccount": "Already have an account? Sign in"
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "agreeTo": "I agree to the",
+    "termsAndConditions": "Terms and Conditions"
   }
 }

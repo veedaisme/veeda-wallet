@@ -117,6 +117,8 @@
     "signingIn": "Masuk...",
     "signingUp": "Mendaftar...",
     "dontHaveAccount": "Belum punya akun? Daftar",
-    "alreadyHaveAccount": "Sudah punya akun? Masuk"
+    "alreadyHaveAccount": "Sudah punya akun? Masuk",
+    "agreeTo": "Saya setuju dengan",
+    "termsAndConditions": "Syarat dan Ketentuan"
   }
 }

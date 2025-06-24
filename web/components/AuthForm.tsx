@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox import
+import Link from "next/link"; // Added Link import
 import { useTranslations } from "next-intl";
 
 type Mode = "login" | "signup";
@@ -19,6 +21,7 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // Added state for terms agreement
 
   const router = useRouter();
 
@@ -91,9 +94,29 @@ export default function AuthForm() {
               disabled={loading}
             />
           </div>
+          {mode === "signup" && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="terms"
+                checked={agreedToTerms}
+                onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                disabled={loading}
+              />
+              <Label htmlFor="terms" className="text-sm font-normal">
+                {tAuth('agreeTo')}{' '}
+                <Link href="/terms.html" target="_blank" className="underline hover:text-primary">
+                  {tAuth('termsAndConditions')}
+                </Link>
+              </Label>
+            </div>
+          )}
           {error && <Alert variant="destructive">{error}</Alert>}
           {success && <Alert variant="default">{success}</Alert>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || (mode === "signup" && !agreedToTerms)}
+          >
             {loading ? (mode === "login" ? tAuth('signingIn') : tAuth('signingUp')) : (mode === "login" ? tAuth('signInTitle') : tAuth('signUpTitle'))}
           </Button>
         </form>
