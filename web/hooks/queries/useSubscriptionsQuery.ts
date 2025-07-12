@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys, invalidationKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/queryKeys';
 import {
   fetchConsolidatedSubscriptionData,
   addSubscription,
@@ -12,6 +12,7 @@ import {
   ProjectedSubscription,
   SubscriptionSummary
 } from '@/models/subscription';
+import { createMutationHandlers, mutationConfigs } from '@/lib/mutationHelpers';
 
 // Re-export types for convenience
 export type { Subscription, SubscriptionData, ProjectedSubscription, SubscriptionSummary };
@@ -68,6 +69,7 @@ export function useConsolidatedSubscriptionData(
 // Add subscription mutation
 export function useAddSubscription() {
   const queryClient = useQueryClient();
+  const { onSuccess, onError } = createMutationHandlers(queryClient, mutationConfigs.addSubscription);
 
   return useMutation({
     mutationFn: async ({
@@ -81,30 +83,15 @@ export function useAddSubscription() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
-      console.log('Subscription added successfully, invalidating caches...');
-
-      // Invalidate all subscription queries (list, consolidated, summary, etc.)
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allSubscriptions(),
-      });
-
-      // Invalidate dashboard data as subscriptions affect summaries
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allDashboard(),
-      });
-
-      console.log('Cache invalidation completed for subscription addition');
-    },
-    onError: (error) => {
-      console.error('Failed to add subscription:', error);
-    },
+    onSuccess,
+    onError,
   });
 }
 
 // Update subscription mutation
 export function useUpdateSubscription() {
   const queryClient = useQueryClient();
+  const { onSuccess, onError } = createMutationHandlers(queryClient, mutationConfigs.updateSubscription);
 
   return useMutation({
     mutationFn: async ({
@@ -118,30 +105,15 @@ export function useUpdateSubscription() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
-      console.log('Subscription updated successfully, invalidating caches...');
-
-      // Invalidate all subscription queries (list, consolidated, summary, etc.)
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allSubscriptions(),
-      });
-
-      // Invalidate dashboard data as subscription changes affect summaries
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allDashboard(),
-      });
-
-      console.log('Cache invalidation completed for subscription update');
-    },
-    onError: (error) => {
-      console.error('Failed to update subscription:', error);
-    },
+    onSuccess,
+    onError,
   });
 }
 
 // Delete subscription mutation
 export function useDeleteSubscription() {
   const queryClient = useQueryClient();
+  const { onSuccess, onError } = createMutationHandlers(queryClient, mutationConfigs.deleteSubscription);
 
   return useMutation({
     mutationFn: async ({
@@ -155,23 +127,7 @@ export function useDeleteSubscription() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
-      console.log('Subscription deleted successfully, invalidating caches...');
-
-      // Invalidate all subscription queries (list, consolidated, summary, etc.)
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allSubscriptions(),
-      });
-
-      // Invalidate dashboard data as subscription deletion affects summaries
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allDashboard(),
-      });
-
-      console.log('Cache invalidation completed for subscription deletion');
-    },
-    onError: (error) => {
-      console.error('Failed to delete subscription:', error);
-    },
+    onSuccess,
+    onError,
   });
 }

@@ -13,7 +13,7 @@ export interface DashboardSummaryData {
 
 export const fetchDashboardSummary = async (userId: string): Promise<{ data: DashboardSummaryData | null, error: Error | null }> => {
   console.log('Service: Fetching dashboard summary for user:', userId);
-  const { data, error } = await supabase.rpc('dashboard_summary', { user_id: userId });
+  const { data, error } = await supabase.rpc('dashboard_summary_by_user_id', { user_id: userId });
   if (error) {
     console.error('Error fetching dashboard summary:', error);
     return { data: null, error };
