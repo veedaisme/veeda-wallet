@@ -62,7 +62,7 @@ export class ApiClient {
   }
 
   // Authentication
-  async verifyToken(token: string): Promise<{ user: any; valid: boolean }> {
+  async verifyToken(token: string): Promise<{ user: unknown; valid: boolean }> {
     return this.request('/api/auth/verify', {
       method: 'POST',
       body: JSON.stringify({ token }),

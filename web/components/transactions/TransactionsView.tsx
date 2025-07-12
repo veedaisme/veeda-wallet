@@ -5,7 +5,6 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from 'next-intl';
 import { TransactionsList } from "@/components/transactions-list";
 import { EditTransactionModal } from "@/components/edit-transaction-modal";
-import { Transaction } from "@/models/transaction";
 import { TransactionData } from "@/components/transaction-form";
 import {
   useTransactionsPaginated,

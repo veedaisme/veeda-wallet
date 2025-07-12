@@ -11,7 +11,7 @@ jest.mock('next-intl', () => ({
 }));
 
 jest.mock('@/utils/category-icons', () => ({
-  getCategoryIcon: jest.fn(() => () => <svg data-testid="mock-category-icon" />),
+  getCategoryIcon: jest.fn(() => function MockCategoryIcon() { return <svg data-testid="mock-category-icon" />; }),
 }));
 
 jest.mock('@/utils/currency', () => ({
@@ -123,7 +123,7 @@ describe('TransactionsList', () => {
       <TransactionsList transactions={mockTransactions} onEditTransaction={mockOnEdit} />
     );
 
-    let listItemsWithEdit = screen.getAllByRole('listitem');
+    const listItemsWithEdit = screen.getAllByRole('listitem');
     listItemsWithEdit.forEach(item => {
       const tooltipTextElement = within(item).getByText('editTooltip'); // 'editTooltip' from mock translation
       expect(tooltipTextElement).toBeInTheDocument();

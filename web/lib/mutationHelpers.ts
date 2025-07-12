@@ -14,7 +14,7 @@ export function createMutationHandlers(
   queryClient: QueryClient,
   config: MutationConfig
 ) {
-  const onSuccess = (data: any, variables: any) => {
+  const onSuccess = (_data: unknown, _variables: unknown) => {
     console.log(`Operation successful: ${config.successMessage}`);
     toast.success(config.successMessage);
 
@@ -40,7 +40,7 @@ export function createMutationHandlers(
     console.log('Cache invalidation completed');
   };
 
-  const onError = (error: any) => {
+  const onError = (error: unknown) => {
     console.error(`Operation failed:`, error);
     toast.error(config.errorMessage);
   };

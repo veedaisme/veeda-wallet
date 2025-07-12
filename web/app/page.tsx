@@ -37,13 +37,11 @@ export default function Home() {
     profileMenuOpen,
     isTransactionModalOpen,
     isSubscriptionModalOpen,
-    loading,
     error,
     setActiveTab,
     setProfileMenuOpen,
     setTransactionModalOpen,
     setSubscriptionModalOpen,
-    setLoading,
     setError,
     clearError,
   } = useAppStore();
@@ -95,8 +93,8 @@ export default function Home() {
       });
 
       setTransactionModalOpen(false);
-    } catch (error: any) {
-      setError(error.message || 'Failed to add transaction');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add transaction');
     }
   };
 
@@ -115,8 +113,8 @@ export default function Home() {
       });
 
       setSubscriptionModalOpen(false);
-    } catch (error: any) {
-      setError(error.message || 'Failed to add subscription');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add subscription');
     }
   };
 
@@ -133,7 +131,7 @@ export default function Home() {
             <div className="relative">
               <button
                 className="rounded-full bg-gray-200 p-2"
-                onClick={() => setProfileMenuOpen((open) => !open)}
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                 aria-label="Open profile menu"
               >
                 <User className="h-5 w-5 text-gray-500" />
