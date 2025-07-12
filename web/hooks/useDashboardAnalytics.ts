@@ -24,11 +24,12 @@ export interface DashboardAnalytics {
  * Custom hook that provides dashboard data with memoized calculations
  * Follows modern TanStack Query patterns with derived state management
  * 
+ * @param userId - The authenticated user ID
  * @returns DashboardAnalytics object with data, calculations, and query states
  * 
  * @example
  * ```tsx
- * const { data, calculations, isLoading, isError } = useDashboardAnalytics();
+ * const { data, calculations, isLoading, isError } = useDashboardAnalytics(userId);
  * 
  * if (isLoading) return <Loading />;
  * if (isError) return <Error />;
@@ -42,14 +43,14 @@ export interface DashboardAnalytics {
  * );
  * ```
  */
-export function useDashboardAnalytics(): DashboardAnalytics {
+export function useDashboardAnalytics(userId: string | null): DashboardAnalytics {
   // Get raw data from TanStack Query
   const {
     data: rawData,
     isLoading,
     isError,
     error
-  } = useDashboardSummary();
+  } = useDashboardSummary(userId);
 
   // Memoized data normalization - only recalculates when rawData changes
   const data = useMemo(() => {
