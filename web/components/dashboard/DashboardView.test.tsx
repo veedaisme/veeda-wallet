@@ -95,6 +95,9 @@ describe('DashboardView', () => {
 
     render(<DashboardView userId={userId} />);
 
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
+
     const pulseDivs = screen.getAllByText('', { selector: 'div.animate-pulse' });
     expect(pulseDivs.length).toBe(3);
 
@@ -117,6 +120,9 @@ describe('DashboardView', () => {
 
     render(<DashboardView userId={userId} />);
 
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
+
     expect(screen.getByText('Failed to load dashboard data')).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
   });
@@ -124,6 +130,9 @@ describe('DashboardView', () => {
   it('should display spending cards with correct data when fetching succeeds', () => {
     // Uses default mock from beforeEach
     render(<DashboardView userId={userId} />);
+
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
 
     expect(SpendingCard).toHaveBeenCalledTimes(3);
 
@@ -184,6 +193,9 @@ describe('DashboardView', () => {
 
     render(<DashboardView userId={userId} />);
 
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
+
     expect(SpendingCard).toHaveBeenCalledTimes(3);
 
     expect(SpendingCard).toHaveBeenCalledWith(
@@ -220,6 +232,23 @@ describe('DashboardView', () => {
       }),
       expect.anything()
     );
+  });
+
+  it('should handle null userId correctly', () => {
+    useDashboardAnalytics.mockReturnValue({
+      data: { spent_today: 0, spent_yesterday: 0, spent_this_week: 0, spent_last_week: 0, spent_this_month: 0, spent_last_month: 0 },
+      calculations: { todayChange: 0, weekChange: 0, monthChange: 0 },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    render(<DashboardView userId={null} />);
+
+    // Verify the hook was called with null userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(null);
+
+    expect(SpendingCard).toHaveBeenCalledTimes(3);
   });
 
   describe('ChartModal interactions', () => {
