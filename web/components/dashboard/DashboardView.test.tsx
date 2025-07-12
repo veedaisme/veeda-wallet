@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 
 import { DashboardView } from './DashboardView';
 // Import the mocked hook itself to customize its return value per test
-import { useDashboardSummary as mockUseDashboardSummary } from '@/hooks/queries/useDashboardQuery';
+import { useDashboardAnalytics as mockUseDashboardAnalytics } from '@/hooks/useDashboardAnalytics';
 // Import the mocked SpendingCard component to inspect its calls
 import { SpendingCard as MockSpendingCard } from '@/components/spending-card';
 // Import the default export of the mocked ChartModal
@@ -13,8 +13,8 @@ import MockChartModal from '@/components/dashboard/ChartModal';
 // Mocks for next-intl, SpendingCard, ChartModal from previous step...
 // (Keep existing mocks as they are)
 
-jest.mock('@/hooks/queries/useDashboardQuery', () => ({
-  useDashboardSummary: jest.fn(),
+jest.mock('@/hooks/useDashboardAnalytics', () => ({
+  useDashboardAnalytics: jest.fn(),
 }));
 
 jest.mock('next-intl', () => ({
@@ -24,10 +24,11 @@ jest.mock('next-intl', () => ({
 
 // Mock SpendingCard
 jest.mock('@/components/spending-card', () => ({
-  SpendingCard: jest.fn(({ title, amount, previousLabel, previousAmount, onClick }) => (
+  SpendingCard: jest.fn(({ title, amount, change, previousLabel, previousAmount, onClick }) => (
     <div data-testid={`spending-card-${title?.toLowerCase().replace(/\s+/g, '-')}`}>
       <h3>{title}</h3>
       <p>Amount: {amount}</p>
+      <p>Change: {change}%</p>
       <p>{previousLabel}: {previousAmount}</p>
       {onClick && <button onClick={onClick}>Details</button>}
     </div>
@@ -50,8 +51,8 @@ jest.mock('@/components/dashboard/ChartModal', () => ({
 
 
 describe('DashboardView', () => {
-  // Typecast mockUseDashboardSummary to jest.Mock for TypeScript
-  const useDashboardSummary = mockUseDashboardSummary as jest.Mock;
+  // Typecast mockUseDashboardAnalytics to jest.Mock for TypeScript
+  const useDashboardAnalytics = mockUseDashboardAnalytics as jest.Mock;
   const SpendingCard = MockSpendingCard as jest.Mock;
   const ChartModal = MockChartModal as jest.Mock;
 
@@ -60,30 +61,42 @@ describe('DashboardView', () => {
     spent_this_week: 500000, spent_last_week: 400000,
     spent_this_month: 2000000, spent_last_month: 1500000,
   };
+
+  const mockCalculations = {
+    todayChange: 33.33, // (100000 - 75000) / 75000 * 100
+    weekChange: 25,     // (500000 - 400000) / 400000 * 100  
+    monthChange: 33.33, // (2000000 - 1500000) / 1500000 * 100
+  };
+
   const userId = "test-user-123";
 
   beforeEach(() => {
     // Reset mocks before each test
-    useDashboardSummary.mockReset();
+    useDashboardAnalytics.mockReset();
     SpendingCard.mockClear();
     ChartModal.mockClear();
 
     // Default successful data for most tests, can be overridden in specific tests
-    useDashboardSummary.mockReturnValue({
+    useDashboardAnalytics.mockReturnValue({
       data: mockDashboardData,
+      calculations: mockCalculations,
       isLoading: false, isError: false, error: null,
     });
   });
 
   it('should display loading skeletons when data is loading', () => {
-    useDashboardSummary.mockReturnValue({ // Override default
-      data: null,
+    useDashboardAnalytics.mockReturnValue({ // Override default
+      data: { spent_today: 0, spent_yesterday: 0, spent_this_week: 0, spent_last_week: 0, spent_this_month: 0, spent_last_month: 0 },
+      calculations: { todayChange: 0, weekChange: 0, monthChange: 0 },
       isLoading: true,
       isError: false,
       error: null,
     });
 
     render(<DashboardView userId={userId} />);
+
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
 
     const pulseDivs = screen.getAllByText('', { selector: 'div.animate-pulse' });
     expect(pulseDivs.length).toBe(3);
@@ -97,14 +110,18 @@ describe('DashboardView', () => {
 
   it('should display an error message when data fetching fails', () => {
     const errorMessage = 'Network Error';
-    useDashboardSummary.mockReturnValue({ // Override default
-      data: null,
+    useDashboardAnalytics.mockReturnValue({ // Override default
+      data: { spent_today: 0, spent_yesterday: 0, spent_this_week: 0, spent_last_week: 0, spent_this_month: 0, spent_last_month: 0 },
+      calculations: { todayChange: 0, weekChange: 0, monthChange: 0 },
       isLoading: false,
       isError: true,
       error: { message: errorMessage },
     });
 
     render(<DashboardView userId={userId} />);
+
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
 
     expect(screen.getByText('Failed to load dashboard data')).toBeInTheDocument();
     expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -114,12 +131,16 @@ describe('DashboardView', () => {
     // Uses default mock from beforeEach
     render(<DashboardView userId={userId} />);
 
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
+
     expect(SpendingCard).toHaveBeenCalledTimes(3);
 
     expect(SpendingCard).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'today',
         amount: mockDashboardData.spent_today,
+        change: mockCalculations.todayChange,
         previousLabel: 'yesterday',
         previousAmount: mockDashboardData.spent_yesterday,
       }),
@@ -130,6 +151,7 @@ describe('DashboardView', () => {
       expect.objectContaining({
         title: 'thisWeek',
         amount: mockDashboardData.spent_this_week,
+        change: mockCalculations.weekChange,
         previousLabel: 'lastWeek',
         previousAmount: mockDashboardData.spent_last_week,
         onClick: expect.any(Function),
@@ -141,6 +163,7 @@ describe('DashboardView', () => {
       expect.objectContaining({
         title: 'thisMonth',
         amount: mockDashboardData.spent_this_month,
+        change: mockCalculations.monthChange,
         previousLabel: 'lastMonth',
         previousAmount: mockDashboardData.spent_last_month,
         onClick: expect.any(Function),
@@ -150,20 +173,28 @@ describe('DashboardView', () => {
   });
 
   it('should use fallback data if dashboardData is null', () => {
-    useDashboardSummary.mockReturnValue({ // Override default
-      data: null,
-      isLoading: false,
-      isError: false,
-      error: null,
-    });
-
     const fallbackData = {
         spent_today: 0, spent_yesterday: 0,
         spent_this_week: 0, spent_last_week: 0,
         spent_this_month: 0, spent_last_month: 0,
     };
 
+    const fallbackCalculations = {
+        todayChange: 0, weekChange: 0, monthChange: 0,
+    };
+
+    useDashboardAnalytics.mockReturnValue({ // Override default
+      data: fallbackData,
+      calculations: fallbackCalculations,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
     render(<DashboardView userId={userId} />);
+
+    // Verify the hook was called with the correct userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(userId);
 
     expect(SpendingCard).toHaveBeenCalledTimes(3);
 
@@ -171,6 +202,7 @@ describe('DashboardView', () => {
       expect.objectContaining({
         title: 'today',
         amount: fallbackData.spent_today,
+        change: fallbackCalculations.todayChange,
         previousLabel: 'yesterday',
         previousAmount: fallbackData.spent_yesterday,
       }),
@@ -181,6 +213,7 @@ describe('DashboardView', () => {
       expect.objectContaining({
         title: 'thisWeek',
         amount: fallbackData.spent_this_week,
+        change: fallbackCalculations.weekChange,
         previousLabel: 'lastWeek',
         previousAmount: fallbackData.spent_last_week,
         onClick: expect.any(Function),
@@ -192,12 +225,30 @@ describe('DashboardView', () => {
       expect.objectContaining({
         title: 'thisMonth',
         amount: fallbackData.spent_this_month,
+        change: fallbackCalculations.monthChange,
         previousLabel: 'lastMonth',
         previousAmount: fallbackData.spent_last_month,
         onClick: expect.any(Function),
       }),
       expect.anything()
     );
+  });
+
+  it('should handle null userId correctly', () => {
+    useDashboardAnalytics.mockReturnValue({
+      data: { spent_today: 0, spent_yesterday: 0, spent_this_week: 0, spent_last_week: 0, spent_this_month: 0, spent_last_month: 0 },
+      calculations: { todayChange: 0, weekChange: 0, monthChange: 0 },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    render(<DashboardView userId={null} />);
+
+    // Verify the hook was called with null userId
+    expect(useDashboardAnalytics).toHaveBeenCalledWith(null);
+
+    expect(SpendingCard).toHaveBeenCalledTimes(3);
   });
 
   describe('ChartModal interactions', () => {

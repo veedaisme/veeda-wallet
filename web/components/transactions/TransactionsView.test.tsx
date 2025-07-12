@@ -44,7 +44,7 @@ jest.mock('@/stores/appStore', () => ({
 jest.mock('@/components/transactions-list', () => ({
   TransactionsList: jest.fn(({ transactions, lastTransactionRef, onEditTransaction }) => (
     <div data-testid="mock-transactions-list">
-      {transactions.map((tx: any) => (
+      {transactions.map((tx: { id: string; note: string }) => (
         <div key={tx.id} onClick={() => onEditTransaction && onEditTransaction(tx)} data-testid={`transaction-item-${tx.id}`}>
           {tx.note}
         </div>

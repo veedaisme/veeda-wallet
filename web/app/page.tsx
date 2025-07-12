@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useCallback } from "react";
+import Image from "next/image";
 import { Clock, CreditCard, Plus, User, LogOut } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
@@ -37,13 +38,11 @@ export default function Home() {
     profileMenuOpen,
     isTransactionModalOpen,
     isSubscriptionModalOpen,
-    loading,
     error,
     setActiveTab,
     setProfileMenuOpen,
     setTransactionModalOpen,
     setSubscriptionModalOpen,
-    setLoading,
     setError,
     clearError,
   } = useAppStore();
@@ -95,8 +94,8 @@ export default function Home() {
       });
 
       setTransactionModalOpen(false);
-    } catch (error: any) {
-      setError(error.message || 'Failed to add transaction');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add transaction');
     }
   };
 
@@ -115,8 +114,8 @@ export default function Home() {
       });
 
       setSubscriptionModalOpen(false);
-    } catch (error: any) {
-      setError(error.message || 'Failed to add subscription');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add subscription');
     }
   };
 
@@ -126,14 +125,21 @@ export default function Home() {
         {/* Header */}
         <header className="p-6 flex items-center justify-between relative">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{tApp('title')}</h1>
+            <Image
+              src="/clair_v2_logo.png"
+              alt={tApp('title')}
+              width={180}
+              height={80}
+              className="h-20 w-auto"
+              priority
+            />
           </div>
           <div className="flex flex-row items-center gap-4">
             <LanguagePillToggle />
             <div className="relative">
               <button
                 className="rounded-full bg-gray-200 p-2"
-                onClick={() => setProfileMenuOpen((open) => !open)}
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                 aria-label="Open profile menu"
               >
                 <User className="h-5 w-5 text-gray-500" />

@@ -3,7 +3,7 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Subscription, ProjectedSubscription, SubscriptionData } from '@/models/subscription';
+import { ProjectedSubscription, SubscriptionData } from '@/models/subscription';
 import { SubscriptionCard } from '@/components/subscription-card';
 import { Modal } from '@/components/ui/modal';
 import { SubscriptionForm } from '@/components/subscription-form';
@@ -44,7 +44,7 @@ export default function SubscriptionsPage() {
     isLoading,
     isError,
     error,
-  } = useSubscriptions(user?.id);
+  } = useSubscriptions(user?.id || null);
 
   const addSubscriptionMutation = useAddSubscription();
   const updateSubscriptionMutation = useUpdateSubscription();

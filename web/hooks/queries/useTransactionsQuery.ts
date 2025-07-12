@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { queryKeys, invalidationKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabaseClient';
 import { fetchTransactions, updateTransaction, deleteTransaction } from '@/lib/transactionService';
 import { Transaction } from '@/models/transaction';
+import { createMutationHandlers, mutationConfigs } from '@/lib/mutationHelpers';
 
 export interface TransactionData {
   amount: number;
@@ -104,6 +105,7 @@ export function useTransactionsPaginated(
 
 export function useAddTransaction() {
   const queryClient = useQueryClient();
+  const { onSuccess, onError } = createMutationHandlers(queryClient, mutationConfigs.addTransaction);
 
   return useMutation({
     mutationFn: async ({
@@ -136,30 +138,15 @@ export function useAddTransaction() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
-      console.log('Transaction added successfully, invalidating caches...');
-
-      // Invalidate all transaction queries (list, paginated, etc.)
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allTransactions(),
-      });
-
-      // Invalidate dashboard data as new transactions affect summaries
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allDashboard(),
-      });
-
-      console.log('Cache invalidation completed for transaction addition');
-    },
-    onError: (error) => {
-      console.error('Failed to add transaction:', error);
-    },
+    onSuccess,
+    onError,
   });
 }
 
 // Update transaction mutation
 export function useUpdateTransaction() {
   const queryClient = useQueryClient();
+  const { onSuccess, onError } = createMutationHandlers(queryClient, mutationConfigs.updateTransaction);
 
   return useMutation({
     mutationFn: async ({
@@ -185,30 +172,15 @@ export function useUpdateTransaction() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, variables) => {
-      console.log('Transaction updated successfully, invalidating caches...');
-
-      // Invalidate all transaction queries (list, paginated, etc.)
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allTransactions(),
-      });
-
-      // Invalidate dashboard data as transaction changes affect summaries
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allDashboard(),
-      });
-
-      console.log('Cache invalidation completed for transaction update');
-    },
-    onError: (error) => {
-      console.error('Failed to update transaction:', error);
-    },
+    onSuccess,
+    onError,
   });
 }
 
 // Delete transaction mutation
 export function useDeleteTransaction() {
   const queryClient = useQueryClient();
+  const { onSuccess, onError } = createMutationHandlers(queryClient, mutationConfigs.deleteTransaction);
 
   return useMutation({
     mutationFn: async ({
@@ -222,23 +194,7 @@ export function useDeleteTransaction() {
       if (error) throw error;
       return { id: transactionId };
     },
-    onSuccess: (data, variables) => {
-      console.log('Transaction deleted successfully, invalidating caches...');
-
-      // Invalidate all transaction queries (list, paginated, etc.)
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allTransactions(),
-      });
-
-      // Invalidate dashboard data as transaction deletion affects summaries
-      queryClient.invalidateQueries({
-        queryKey: invalidationKeys.allDashboard(),
-      });
-
-      console.log('Cache invalidation completed for transaction deletion');
-    },
-    onError: (error) => {
-      console.error('Failed to delete transaction:', error);
-    },
+    onSuccess,
+    onError,
   });
 }

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { SpendingCard } from "@/components/spending-card";
 import ChartModal from '@/components/dashboard/ChartModal';
-import { useDashboardSummary } from "@/hooks/queries/useDashboardQuery";
+import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 
 interface DashboardViewProps {
   userId: string | null;
@@ -13,13 +13,14 @@ interface DashboardViewProps {
 export const DashboardView: React.FC<DashboardViewProps> = ({ userId }) => {
   const tDash = useTranslations('dashboard');
 
-  // Use React Query for dashboard data
+  // Use custom hook with memoized calculations
   const {
-    data: dashboardData,
+    data,
+    calculations,
     isLoading,
     error,
     isError
-  } = useDashboardSummary();
+  } = useDashboardAnalytics(userId);
 
   // Chart modal state
   const [chartModal, setChartModal] = useState<{ open: boolean; type: "week" | "month" | null }>({ open: false, type: null });
@@ -53,37 +54,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userId }) => {
     );
   }
 
-  // Ensure we have data with fallback values
-  const data = dashboardData || {
-    spent_today: 0,
-    spent_yesterday: 0,
-    spent_this_week: 0,
-    spent_last_week: 0,
-    spent_this_month: 0,
-    spent_last_month: 0,
-  };
-
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SpendingCard
           title={tDash('today')}
-          amount={Number(data.spent_today)}
+          amount={data.spent_today}
+          change={calculations.todayChange}
           previousLabel={tDash('yesterday')}
-          previousAmount={Number(data.spent_yesterday)}
+          previousAmount={data.spent_yesterday}
         />
         <SpendingCard
           title={tDash('thisWeek')}
-          amount={Number(data.spent_this_week)}
+          amount={data.spent_this_week}
+          change={calculations.weekChange}
           previousLabel={tDash('lastWeek')}
-          previousAmount={Number(data.spent_last_week)}
+          previousAmount={data.spent_last_week}
           onClick={() => setChartModal({ open: true, type: "week" })}
         />
         <SpendingCard
           title={tDash('thisMonth')}
-          amount={Number(data.spent_this_month)}
+          amount={data.spent_this_month}
+          change={calculations.monthChange}
           previousLabel={tDash('lastMonth')}
-          previousAmount={Number(data.spent_last_month)}
+          previousAmount={data.spent_last_month}
           onClick={() => setChartModal({ open: true, type: "month" })}
         />
       </div>

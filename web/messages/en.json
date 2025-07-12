@@ -1,6 +1,5 @@
 {
   "app": { "title": "Clair", "logout": "Logout", "dashboard": "Dashboard" },
-  "app": { "title": "Clair", "logout": "Keluar", "dashboard": "Dasbor" },
   "dashboard": { 
     "title": "Dashboard", 
     "today": "Today", 
@@ -55,6 +54,7 @@
     "health": "Health", 
     "education": "Education", 
     "travel": "Travel", 
+    "subscriptions": "Subscriptions",
     "other": "Other" 
   },
   "language": { 

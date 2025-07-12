@@ -1,5 +1,5 @@
 {
-  "app": { "title": "Sense", "logout": "Keluar", "dashboard": "Dasbor" },
+  "app": { "title": "Clair", "logout": "Keluar", "dashboard": "Dasbor" },
   "dashboard": { 
     "title": "Dasbor", 
     "today": "Hari Ini", 
@@ -53,6 +53,7 @@
     "health": "Kesehatan", 
     "education": "Pendidikan", 
     "travel": "Perjalanan", 
+    "subscriptions": "Langganan",
     "other": "Lainnya" 
   },
   "language": { "en": "English", "id": "Bahasa Indonesia" },
