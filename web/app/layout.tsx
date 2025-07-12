@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { NetworkStatus } from "@/components/NetworkStatus";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <NetworkStatus />
           {children}
           <PWAInstallPrompt />
+          <Toaster />
         </QueryProvider>
       </body>
     </html>
