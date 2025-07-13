@@ -54,6 +54,7 @@
     "health": "Health", 
     "education": "Education", 
     "travel": "Travel", 
+    "subscription": "Subscription",
     "subscriptions": "Subscriptions",
     "other": "Other" 
   },
