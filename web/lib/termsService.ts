@@ -1,4 +1,4 @@
-import { supabaseClient } from './supabaseClient';
+import { supabase } from './supabaseClient';
 
 export interface TermsAcceptance {
   id: string;
@@ -25,7 +25,7 @@ export class TermsService {
     version: string = '1.0',
     userAgent?: string
   ): Promise<TermsAcceptance> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('user_terms_acceptance')
       .insert({
         user_id: userId,
@@ -46,7 +46,7 @@ export class TermsService {
    * Get user's terms acceptance status
    */
   static async getUserTermsStatus(userId: string): Promise<TermsStatus> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('user_terms_acceptance')
       .select('*')
       .eq('user_id', userId)
@@ -73,7 +73,7 @@ export class TermsService {
     userId: string, 
     version: string
   ): Promise<boolean> {
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabase
       .from('user_terms_acceptance')
       .select('id')
       .eq('user_id', userId)
