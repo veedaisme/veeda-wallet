@@ -31,7 +31,7 @@ By accessing or using our Service, you agree to be bound by these Terms. If you 
 
     serviceDescription: {
       title: 'Service Description',
-      content: `Veeda Wallet is a personal finance tracking application that currently provides:
+      content: `Veeda Wallet is a personal finance tracking application that provides:
 • Manual tracking of your expenses and income transactions
 • Management of subscription services and payment schedules
 • Basic spending analytics and historical comparisons
@@ -42,13 +42,7 @@ TECHNICAL INFRASTRUCTURE:
 • Service hosted on Vercel platform with enterprise-grade security
 • Data storage and authentication powered by Supabase
 • All data encrypted with 256-bit encryption standards
-• Service currently available globally via web browser
-
-PLANNED FEATURES (not yet implemented):
-• Advanced budgeting and financial goal-setting tools
-• Educational content and interactive quiz system
-• Automated bank account integration via third-party providers
-• Personalized financial insights and recommendations
+• Service available globally via web browser
 
 IMPORTANT DISCLAIMERS:
 • Veeda Wallet is a financial tracking tool, not a financial advisor
@@ -57,7 +51,7 @@ IMPORTANT DISCLAIMERS:
 • Please verify all calculations and data with your actual bank and financial statements
 • We are not liable for any financial decisions made based on data in our app
 
-The Service is provided "as is" and we reserve the right to modify, suspend, or discontinue the Service at any time.`
+The Service is provided "as is" and we reserve the right to modify, suspend, or discontinue the Service at any time. We may add, change, or remove features without prior notice.`
     },
 
     userAccounts: {
@@ -141,19 +135,11 @@ Continued use of the Service after changes constitutes acceptance of the new Ter
 
     thirdPartyServices: {
       title: 'Third-Party Services',
-      content: `Our Service may integrate with third-party services to provide enhanced functionality:
-
-CURRENT THIRD-PARTY SERVICES:
+      content: `Our Service currently integrates with the following third-party services:
 • Vercel (hosting and deployment platform)
 • Supabase (database and authentication services)
 
-FUTURE INTEGRATIONS (when implemented):
-• Financial data aggregation services (such as Plaid, MX, or similar providers)
-• Banking APIs for automatic transaction import
-• Currency exchange rate providers
-• Payment processing services
-
-When you use features that connect to third-party services, you may be subject to additional terms of service from those providers. We will notify you of any such additional terms before you use the relevant features.
+If we integrate additional third-party services in the future, you may be subject to additional terms of service from those providers. We will notify you of any such additional terms before you use the relevant features.
 
 We are not responsible for the availability, accuracy, or content of third-party services.`
     },
