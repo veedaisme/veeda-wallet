@@ -37,6 +37,7 @@ const CATEGORIES = [
   "Health",
   "Education",
   "Travel",
+  "Subscription",
   "Other",
 ]
 
