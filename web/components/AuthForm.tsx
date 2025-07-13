@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslations } from "next-intl";
-import { TermsService, CURRENT_TERMS_VERSION } from "@/lib/termsService";
+import { TermsService } from "@/lib/termsService";
+import { CURRENT_TERMS_VERSION } from "@/lib/termsContent";
 
 type Mode = "login" | "signup";
 

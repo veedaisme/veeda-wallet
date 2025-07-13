@@ -151,7 +151,7 @@ We are not responsible for the availability, accuracy, or content of third-party
 Email: support@veedawallet.com
 Website: https://veedawallet.com
 
-These Terms and Conditions are effective as of ${TERMS_CONTENT.effectiveDate}.`
+These Terms and Conditions are effective as of 2025-07-13.`
     }
   }
 };
