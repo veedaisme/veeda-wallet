@@ -30,7 +30,7 @@ export function AppLoading({
       {showLogo && (
         <div className="mb-8 animate-fade-in">
           <Image
-            src="/clair_v2_logo.png"
+            src="/clair_v2_transparent.png"
             alt="Clair"
             width={200}
             height={89}

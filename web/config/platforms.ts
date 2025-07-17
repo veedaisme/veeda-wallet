@@ -42,5 +42,5 @@ export const PLATFORM_LOGO_MAP: Record<string, string> = COMMON_PLATFORMS.reduce
   return acc;
 }, {} as Record<string, string>);
 
-export const DEFAULT_PLATFORM_LOGO = '/clair_v2_logo.png';
+export const DEFAULT_PLATFORM_LOGO = '/clair_v2_transparent.png';
 

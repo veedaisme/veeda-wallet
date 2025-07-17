@@ -62,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="16x16" href="/icon-192x192.png" />
         
         {/* Preload critical assets */}
-        <link rel="preload" href="/clair_v2_logo.png" as="image" type="image/png" />
+        <link rel="preload" href="/clair_v2_transparent.png" as="image" type="image/png" />
       </head>
       <body className={`${inter.className} bg-gray-50`}>
         <QueryProvider>

@@ -126,7 +126,7 @@ export default function Home() {
         <header className="p-6 flex items-center justify-between relative">
           <div className="flex items-center gap-2">
             <Image
-              src="/clair_v2_logo.png"
+              src="/clair_v2_transparent.png"
               alt={tApp('title')}
               width={180}
               height={80}
