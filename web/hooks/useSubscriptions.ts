@@ -10,7 +10,6 @@ interface UseSubscriptionsReturn {
 }
 
 export const useSubscriptions = (userId?: string | null): UseSubscriptionsReturn => {
-  console.log('Hook: Initializing subscriptions fetch.');
   const [subscriptions, setSubscriptions] = useState<ProjectedSubscription[]>([]);
   const [summary, setSummary] = useState<SubscriptionSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -23,7 +22,6 @@ export const useSubscriptions = (userId?: string | null): UseSubscriptionsReturn
     }
     setLoading(true);
     setError(null);
-    console.log('Hook: Fetching subscriptions for user:', userId);
     // TODO: Implement actual data fetching logic (e.g., from subscriptionService.ts)
     try {
       // Simulate API call

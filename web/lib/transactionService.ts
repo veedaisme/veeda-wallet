@@ -15,7 +15,6 @@ interface FetchTransactionsParams {
 export const fetchTransactions = async (
   { userId, page, sortField, sortDirection, searchTerm }: FetchTransactionsParams
 ): Promise<{ data: Transaction[], error: Error | null, hasMore: boolean }> => {
-  console.log(`Service: Fetching transactions. User: ${userId}, Page: ${page}, Sort: ${sortField} ${sortDirection}, Search: ${searchTerm}`);
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
@@ -40,7 +39,6 @@ export const fetchTransactions = async (
 };
 
 export const addTransaction = async (userId: string, transactionData: TransactionData): Promise<{ data: Transaction | null, error: Error | null }> => {
-  console.log('Service: Adding transaction for user:', userId);
   const { data, error } = await supabase
     .from('transactions')
     .insert([{ ...transactionData, user_id: userId }])
@@ -54,7 +52,6 @@ export const addTransaction = async (userId: string, transactionData: Transactio
 };
 
 export const updateTransaction = async (id: string, userId: string, transactionData: Partial<TransactionData>): Promise<{ data: Transaction | null, error: Error | null }> => {
-  console.log('Service: Updating transaction:', id, 'for user:', userId);
   const { data, error } = await supabase
     .from('transactions')
     .update(transactionData)
@@ -70,7 +67,6 @@ export const updateTransaction = async (id: string, userId: string, transactionD
 };
 
 export const deleteTransaction = async (id: string, userId: string): Promise<{ error: Error | null }> => {
-  console.log('Service: Deleting transaction:', id, 'for user:', userId);
   const { error } = await supabase
     .from('transactions')
     .delete()

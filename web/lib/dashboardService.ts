@@ -12,7 +12,6 @@ export interface DashboardSummaryData {
 }
 
 export const fetchDashboardSummary = async (userId: string): Promise<{ data: DashboardSummaryData | null, error: Error | null }> => {
-  console.log('Service: Fetching dashboard summary for user:', userId);
   const { data, error } = await supabase.rpc('dashboard_summary_by_user_id', { user_id: userId });
   if (error) {
     console.error('Error fetching dashboard summary:', error);
@@ -34,16 +33,67 @@ export interface ChartDataResponse {
   error: Error | null;
 }
 
-// Placeholder for fetching weekly spending for chart
+// Fetching weekly spending for chart
 export const fetchWeeklySpendingForChart = async (userId: string, dateRange: { start: string, end: string }): Promise<ChartDataResponse> => {
-  console.log('Service: Fetching weekly spending for chart. User:', userId, 'Range:', dateRange);
-  // TODO: Implement actual Supabase call for weekly chart data
-  return { data: [], error: null }; 
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('date, amount')
+    .eq('user_id', userId)
+    .gte('date', dateRange.start)
+    .lte('date', dateRange.end)
+    .order('date', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching weekly spending chart data:', error);
+    return { data: [], error };
+  }
+
+  // Group transactions by date and sum amounts
+  const chartData: ChartDataPoint[] = [];
+  const dailyTotals: { [date: string]: number } = {};
+  
+  data?.forEach(transaction => {
+    const date = transaction.date.split('T')[0]; // Extract date part
+    dailyTotals[date] = (dailyTotals[date] || 0) + transaction.amount;
+  });
+  
+  // Convert to chart data format
+  Object.entries(dailyTotals).forEach(([date, amount]) => {
+    chartData.push({ date, amount });
+  });
+  
+  return { data: chartData, error: null };
 };
 
-// Placeholder for fetching monthly spending for chart
+// Fetching monthly spending for chart
 export const fetchMonthlySpendingForChart = async (userId: string, dateRange: { start: string, end: string }): Promise<ChartDataResponse> => {
-  console.log('Service: Fetching monthly spending for chart. User:', userId, 'Range:', dateRange);
-  // TODO: Implement actual Supabase call for monthly chart data
-  return { data: [], error: null };
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('date, amount')
+    .eq('user_id', userId)
+    .gte('date', dateRange.start)
+    .lte('date', dateRange.end)
+    .order('date', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching monthly spending chart data:', error);
+    return { data: [], error };
+  }
+
+  // Group transactions by month and sum amounts
+  const chartData: ChartDataPoint[] = [];
+  const monthlyTotals: { [month: string]: number } = {};
+  
+  data?.forEach(transaction => {
+    const date = new Date(transaction.date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    monthlyTotals[monthKey] = (monthlyTotals[monthKey] || 0) + transaction.amount;
+  });
+  
+  // Convert to chart data format
+  Object.entries(monthlyTotals).forEach(([month, amount]) => {
+    chartData.push({ date: month, amount });
+  });
+  
+  return { data: chartData, error: null };
 };
