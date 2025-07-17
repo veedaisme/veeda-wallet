@@ -43,7 +43,6 @@ export function QueryProvider({ children }: QueryProviderProps) {
       const CACHE_VERSION = 'v2-with-userid';
       const currentVersion = localStorage.getItem('query-cache-version');
       if (currentVersion !== CACHE_VERSION) {
-        console.log('Query cache version mismatch, clearing dashboard cache');
         queryClient.removeQueries({ queryKey: ['dashboard'] });
         localStorage.setItem('query-cache-version', CACHE_VERSION);
       }

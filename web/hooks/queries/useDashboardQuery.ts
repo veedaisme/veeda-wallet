@@ -88,7 +88,6 @@ export function useRefreshDashboard(userId: string | null) {
       }
     },
     onSuccess: () => {
-      console.log('Dashboard data refreshed successfully');
     },
     onError: (error) => {
       console.error('Failed to refresh dashboard data:', error);
