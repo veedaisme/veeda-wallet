@@ -45,9 +45,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Clair" />
         <meta name="mobile-web-app-capable" content="yes" />
+        
+        {/* Apple Touch Icons */}
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="256x256" href="/icon-256x256.png" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/icon-384x384.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
+        
+        {/* iOS Splash Screens */}
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        
+        {/* Favicon */}
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icon-192x192.png" />
+        
+        {/* Preload critical assets */}
+        <link rel="preload" href="/clair_v2_logo.png" as="image" type="image/png" />
       </head>
       <body className={`${inter.className} bg-gray-50`}>
         <QueryProvider>

@@ -4,10 +4,12 @@
   "description": "Track and analyze your spending habits",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f9fafb",
   "theme_color": "#000000",
   "orientation": "portrait-primary",
   "categories": ["finance", "productivity", "business"],
+  "lang": "en",
+  "scope": "/",
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -32,6 +34,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [

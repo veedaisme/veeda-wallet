@@ -2,6 +2,7 @@
 import { useUser } from "@/hooks/useUser";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { AppLoading } from "@/components/ui/app-loading";
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser();
@@ -20,7 +21,9 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     }
   }, [user, loading, router, pathname]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return <AppLoading message="Authenticating" />;
+  }
 
   return <>{children}</>;
 }
