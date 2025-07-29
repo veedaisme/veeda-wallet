@@ -1,0 +1,34 @@
+# Bun configuration for Telegram Bot
+[install]
+# Use exact versions for reproducible builds
+exact = true
+
+# Registry configuration
+registry = "https://registry.npmjs.org/"
+
+[run]
+# Enable hot reloading in development
+hot = true
+
+# Set environment
+env = "development"
+
+[build]
+# Target Node.js for compatibility
+target = "node"
+
+# Enable source maps for debugging
+sourcemap = "external"
+
+# Minify for production
+minify = false
+
+[test]
+# Use Bun's built-in test runner
+runner = "bun"
+
+# Test file patterns
+include = ["**/*.test.ts", "**/*.spec.ts"]
+
+# Setup file for tests
+setup = ["./src/test/setup.ts"]

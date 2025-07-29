@@ -1,0 +1,79 @@
+# Development Docker Compose Configuration
+version: '3.8'
+
+services:
+  telegram-bot:
+    build:
+      context: .
+      target: development
+    container_name: clair-telegram-bot-dev
+    restart: unless-stopped
+    env_file:
+      - .env.development
+    ports:
+      - "${PORT:-3000}:3000"
+      - "9229:9229" # Debug port
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    networks:
+      - clair-dev-network
+    depends_on:
+      - redis-dev
+    environment:
+      - NODE_ENV=development
+    command: npm run dev:debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  redis-dev:
+    image: redis:7-alpine
+    container_name: clair-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6380:6379" # Different port for dev
+    volumes:
+      - redis-dev-data:/data
+    networks:
+      - clair-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Development database
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: clair-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: clair_dev
+      POSTGRES_USER: clair_dev
+      POSTGRES_PASSWORD: dev_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - clair-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clair_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis-dev-data:
+    driver: local
+  postgres-dev-data:
+    driver: local
+
+networks:
+  clair-dev-network:
+    driver: bridge

@@ -1,0 +1,48 @@
+{
+  "name": "clair-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram AI Assistant for Clair Spending Tracker",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "dev:node": "tsx watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "build:tsc": "tsc",
+    "start": "bun dist/index.js",
+    "start:node": "node dist/index.js",
+    "test": "bun test",
+    "test:jest": "jest",
+    "test:watch": "bun test --watch",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "ai",
+    "finance",
+    "spending-tracker"
+  ],
+  "author": "Clair Team",
+  "license": "MIT",
+  "dependencies": {
+    "ai": "^3.4.32",
+    "@ai-sdk/openai": "^0.0.66",
+    "dotenv": "^16.4.5",
+    "node-telegram-bot-api": "^0.66.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/node-telegram-bot-api": "^0.64.7",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "ts-jest": "^29.1.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}
