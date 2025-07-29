@@ -161,15 +161,15 @@
     - Create deployment scripts and CI/CD integration
     - _Requirements: 1.1, 8.4_
 
-- [-] 11. Build help system and user onboarding
-  - [-] 11.1 Create comprehensive help and command system
+- [x] 11. Build help system and user onboarding
+  - [x] 11.1 Create comprehensive help and command system
     - Implement help command with feature explanations
     - Create command suggestions and auto-completion hints
     - Add example usage patterns and common workflows
     - Build contextual help based on user actions
     - _Requirements: 9.2, 9.4_
 
-  - [ ] 11.2 Implement user onboarding flow
+  - [x] 11.2 Implement user onboarding flow
     - Create welcome message and feature introduction
     - Build guided setup for account linking
     - Add interactive tutorials for key features
