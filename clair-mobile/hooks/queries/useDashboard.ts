@@ -20,6 +20,28 @@ export interface SpendingAnalytics {
   lastMonth: number
   weeklyComparison: number // percentage change
   monthlyComparison: number // percentage change
+  // Enhanced analytics
+  todayComparison: number // today vs yesterday percentage
+  averageDailySpending: number // current month average
+  highestSpendingDay: number
+  lowestSpendingDay: number
+  spendingTrend: 'increasing' | 'decreasing' | 'stable'
+  projectedMonthlySpending: number
+}
+
+export interface TimeSeriesData {
+  date: string
+  amount: number
+}
+
+export interface EnhancedDashboardData extends DashboardData {
+  weeklyData: TimeSeriesData[]
+  monthlyData: TimeSeriesData[]
+  topCategories: CategorySpending[]
+  spendingInsights: {
+    message: string
+    type: 'warning' | 'success' | 'info'
+  }[]
 }
 
 export interface CategorySpending {
@@ -116,6 +138,44 @@ const fetchSpendingAnalytics = async (userId: string): Promise<SpendingAnalytics
   const monthlyComparison = lastMonthTotal === 0 ? 0 : 
     ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100
 
+  const todayComparison = yesterdayTotal === 0 ? 0 :
+    ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
+
+  // Enhanced analytics calculations
+  const daysInMonth = new Date(thisMonthStart.getFullYear(), thisMonthStart.getMonth() + 1, 0).getDate()
+  const daysPassed = new Date().getDate()
+  const averageDailySpending = daysPassed > 0 ? thisMonthTotal / daysPassed : 0
+  const projectedMonthlySpending = averageDailySpending * daysInMonth
+
+  // Fetch daily spending for this month to calculate highs/lows and trends
+  const { data: dailySpending } = await supabase
+    .from('transactions')
+    .select('date, amount')
+    .eq('user_id', userId)
+    .gte('date', thisMonthStart.toISOString())
+    .lte('date', endOfMonth(today).toISOString())
+    .order('date')
+
+  // Group by day and calculate daily totals
+  const dailyTotals = (dailySpending || []).reduce((acc, transaction) => {
+    const day = new Date(transaction.date).toDateString()
+    acc[day] = (acc[day] || 0) + transaction.amount
+    return acc
+  }, {} as Record<string, number>)
+
+  const dailyAmounts = Object.values(dailyTotals)
+  const highestSpendingDay = dailyAmounts.length > 0 ? Math.max(...dailyAmounts) : 0
+  const lowestSpendingDay = dailyAmounts.length > 0 ? Math.min(...dailyAmounts) : 0
+
+  // Simple trend calculation based on recent vs older data
+  const midPoint = Math.floor(dailyAmounts.length / 2)
+  const recentAvg = dailyAmounts.slice(midPoint).reduce((sum, val) => sum + val, 0) / Math.max(1, dailyAmounts.length - midPoint)
+  const olderAvg = dailyAmounts.slice(0, midPoint).reduce((sum, val) => sum + val, 0) / Math.max(1, midPoint)
+  
+  let spendingTrend: 'increasing' | 'decreasing' | 'stable' = 'stable'
+  if (recentAvg > olderAvg * 1.1) spendingTrend = 'increasing'
+  else if (recentAvg < olderAvg * 0.9) spendingTrend = 'decreasing'
+
   return {
     today: todayTotal,
     yesterday: yesterdayTotal,
@@ -125,6 +185,12 @@ const fetchSpendingAnalytics = async (userId: string): Promise<SpendingAnalytics
     lastMonth: lastMonthTotal,
     weeklyComparison,
     monthlyComparison,
+    todayComparison,
+    averageDailySpending,
+    highestSpendingDay,
+    lowestSpendingDay,
+    spendingTrend,
+    projectedMonthlySpending,
   }
 }
 
@@ -161,6 +227,87 @@ const fetchCategoryBreakdown = async (userId: string): Promise<CategorySpending[
     .sort((a, b) => b.amount - a.amount)
 }
 
+// Fetch time series data
+const fetchWeeklyData = async (userId: string): Promise<TimeSeriesData[]> => {
+  const thisWeekStart = startOfWeek(new Date())
+  const { data } = await supabase
+    .from('transactions')
+    .select('date, amount')
+    .eq('user_id', userId)
+    .gte('date', thisWeekStart.toISOString())
+    .order('date')
+
+  // Group by day
+  const dailyTotals = (data || []).reduce((acc, transaction) => {
+    const day = new Date(transaction.date).toISOString().split('T')[0]
+    acc[day] = (acc[day] || 0) + transaction.amount
+    return acc
+  }, {} as Record<string, number>)
+
+  return Object.entries(dailyTotals).map(([date, amount]) => ({ date, amount }))
+}
+
+const fetchMonthlyData = async (userId: string): Promise<TimeSeriesData[]> => {
+  const thisMonthStart = startOfMonth(new Date())
+  const { data } = await supabase
+    .from('transactions')
+    .select('date, amount')
+    .eq('user_id', userId)
+    .gte('date', thisMonthStart.toISOString())
+    .order('date')
+
+  // Group by week
+  const weeklyTotals = (data || []).reduce((acc, transaction) => {
+    const week = `Week ${Math.ceil(new Date(transaction.date).getDate() / 7)}`
+    acc[week] = (acc[week] || 0) + transaction.amount
+    return acc
+  }, {} as Record<string, number>)
+
+  return Object.entries(weeklyTotals).map(([date, amount]) => ({ date, amount }))
+}
+
+// Generate spending insights
+const generateSpendingInsights = (analytics: SpendingAnalytics, categoryBreakdown: CategorySpending[]) => {
+  const insights: { message: string; type: 'warning' | 'success' | 'info' }[] = []
+
+  // Trend insights
+  if (analytics.spendingTrend === 'increasing') {
+    insights.push({
+      message: `Your spending trend is increasing. You're on track to spend ${(analytics.projectedMonthlySpending / 1000000).toFixed(1)}M this month.`,
+      type: 'warning'
+    })
+  } else if (analytics.spendingTrend === 'decreasing') {
+    insights.push({
+      message: 'Great job! Your spending trend is decreasing compared to earlier this month.',
+      type: 'success'
+    })
+  }
+
+  // Daily comparison
+  if (analytics.todayComparison > 50) {
+    insights.push({
+      message: `Today's spending is ${analytics.todayComparison.toFixed(0)}% higher than yesterday.`,
+      type: 'warning'
+    })
+  } else if (analytics.todayComparison < -20) {
+    insights.push({
+      message: `You've reduced spending by ${Math.abs(analytics.todayComparison).toFixed(0)}% compared to yesterday!`,
+      type: 'success'
+    })
+  }
+
+  // Category insights
+  const topCategory = categoryBreakdown[0]
+  if (topCategory && topCategory.percentage > 40) {
+    insights.push({
+      message: `${topCategory.category} represents ${topCategory.percentage.toFixed(0)}% of your spending this month.`,
+      type: 'info'
+    })
+  }
+
+  return insights
+}
+
 // Fetch complete dashboard data
 const fetchDashboardData = async (userId: string): Promise<DashboardData> => {
   const [analytics, categoryBreakdown] = await Promise.all([
@@ -180,6 +327,37 @@ const fetchDashboardData = async (userId: string): Promise<DashboardData> => {
     analytics,
     categoryBreakdown,
     recentTransactions: recentTransactions || [],
+  }
+}
+
+// Fetch enhanced dashboard data
+const fetchEnhancedDashboardData = async (userId: string): Promise<EnhancedDashboardData> => {
+  const [analytics, categoryBreakdown, weeklyData, monthlyData] = await Promise.all([
+    fetchSpendingAnalytics(userId),
+    fetchCategoryBreakdown(userId),
+    fetchWeeklyData(userId),
+    fetchMonthlyData(userId),
+  ])
+
+  // Fetch recent transactions (last 5)
+  const { data: recentTransactions } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .limit(5)
+
+  const spendingInsights = generateSpendingInsights(analytics, categoryBreakdown)
+  const topCategories = categoryBreakdown.slice(0, 3)
+
+  return {
+    analytics,
+    categoryBreakdown,
+    recentTransactions: recentTransactions || [],
+    weeklyData,
+    monthlyData,
+    topCategories,
+    spendingInsights,
   }
 }
 
@@ -207,6 +385,16 @@ export const useDashboardData = (userId: string | null) => {
   return useQuery({
     queryKey: dashboardKeys.spending(userId!),
     queryFn: () => fetchDashboardData(userId!),
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+  })
+}
+
+export const useEnhancedDashboardData = (userId: string | null) => {
+  return useQuery({
+    queryKey: [...dashboardKeys.spending(userId!), 'enhanced'],
+    queryFn: () => fetchEnhancedDashboardData(userId!),
     enabled: !!userId,
     staleTime: 1000 * 60 * 2, // 2 minutes
     refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes

@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/useAuthV2'
 import { useHaptics } from '@/hooks/useHaptics'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
@@ -38,10 +38,11 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export default function RegisterScreen() {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
-  const { signUp, loading } = useAuth()
+  const { signUp, isLoading: authLoading } = useAuth()
   const { onError, onSuccess } = useHaptics()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isSigningUp, setIsSigningUp] = useState(false)
 
   const {
     control,
@@ -57,31 +58,42 @@ export default function RegisterScreen() {
   })
 
   const onSubmit = async (data: RegisterFormData) => {
-    const { error } = await signUp({
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.confirmPassword,
-    })
-    
-    if (error) {
+    setIsSigningUp(true)
+    try {
+      const result = await signUp({
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      })
+      
+      if (result.success) {
+        onSuccess()
+        Alert.alert(
+          'Registration Successful',
+          'Please check your email for verification instructions.',
+          [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/(auth)/login'),
+            },
+          ]
+        )
+      } else {
+        onError()
+        Alert.alert(
+          'Registration Failed', 
+          result.error?.message || 'Unable to create account. Please try again.'
+        )
+      }
+    } catch (error) {
       onError()
-      Alert.alert('Registration Failed', error)
-    } else {
-      onSuccess()
-      Alert.alert(
-        'Registration Successful',
-        'Please check your email for verification instructions.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.replace('/(auth)/login'),
-          },
-        ]
-      )
+      Alert.alert('Registration Failed', 'An unexpected error occurred')
+    } finally {
+      setIsSigningUp(false)
     }
   }
 
-  const isLoading = loading || isSubmitting
+  const isLoading = authLoading || isSubmitting || isSigningUp
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

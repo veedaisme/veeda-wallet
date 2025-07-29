@@ -17,35 +17,47 @@ export const useAuth = () => {
   } = useAuthStore()
 
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     const getInitialSession = async () => {
+      if (!mounted) return
+      
       setLoading(true)
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        setSession(session)
+        if (mounted) {
+          console.log('Initial session:', session ? 'Found' : 'None')
+          setSession(session)
+        }
       } catch (error) {
         console.error('Error getting initial session:', error)
       } finally {
-        setLoading(false)
-        setInitialized(true)
+        if (mounted) {
+          setLoading(false)
+          setInitialized(true)
+        }
       }
     }
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event)
-        setSession(session)
-        setLoading(false)
+        if (mounted) {
+          console.log('Auth state changed:', event, session ? 'Session exists' : 'No session')
+          setSession(session)
+          setLoading(false)
+        }
       }
     )
 
     getInitialSession()
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
-  }, [setSession, setLoading, setInitialized])
+  }, [])
 
   const signIn = async (credentials: LoginCredentials) => {
     setLoading(true)
@@ -113,7 +125,7 @@ export const useAuth = () => {
     session,
     loading,
     initialized,
-    isAuthenticated: !!user,
+    isAuthenticated: !!session?.user,
     signIn,
     signUp,
     signOut,

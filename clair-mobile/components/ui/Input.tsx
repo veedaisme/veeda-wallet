@@ -14,6 +14,7 @@ import { useColorScheme } from '@/hooks/useColorScheme'
 interface InputProps extends TextInputProps {
   label?: string
   error?: string
+  success?: boolean
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
   variant?: 'default' | 'filled'
@@ -23,6 +24,7 @@ interface InputProps extends TextInputProps {
 export const Input: React.FC<InputProps> = ({
   label,
   error,
+  success = false,
   leftIcon,
   rightIcon,
   variant = 'default',
@@ -67,9 +69,12 @@ export const Input: React.FC<InputProps> = ({
       baseStyle.backgroundColor = colors.background
     }
 
-    // Focus and error states
+    // Focus and validation states
     if (error) {
       baseStyle.borderColor = colors.error
+      baseStyle.borderWidth = 2
+    } else if (success && !isFocused) {
+      baseStyle.borderColor = colors.success
     } else if (isFocused) {
       baseStyle.borderColor = colors.inputBorderFocus
     } else {

@@ -1,11 +1,11 @@
 import { Redirect, Stack } from 'expo-router'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/useAuthV2'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 export default function AuthLayout() {
-  const { isAuthenticated, loading, initialized } = useAuth()
+  const { isAuthenticated, isLoading, isInitialized } = useAuth()
 
-  if (!initialized || loading) {
+  if (!isInitialized || isLoading) {
     return <LoadingSpinner message="Loading..." overlay />
   }
 

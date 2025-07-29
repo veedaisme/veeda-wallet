@@ -32,6 +32,7 @@ export const Colors = {
     // Card and surface colors
     card: '#ffffff',
     cardBorder: '#e5e7eb',
+    border: '#e5e7eb',
     
     // Tab colors
     tint: primaryColor,
@@ -90,6 +91,7 @@ export const Colors = {
     // Card and surface colors
     card: '#1f2937',
     cardBorder: '#374151',
+    border: '#374151',
     
     // Tab colors
     tint: primaryLight,

@@ -4,7 +4,9 @@ import type {
   Subscription, 
   SubscriptionCreateData, 
   SubscriptionUpdateData,
-  ConsolidatedSubscriptionData 
+  ConsolidatedSubscriptionData,
+  ProjectedSubscription,
+  SubscriptionSummary
 } from '@/types/subscription'
 
 // Query keys
@@ -41,37 +43,127 @@ const fetchSubscription = async (id: string): Promise<Subscription> => {
   return data
 }
 
-// Fetch consolidated subscription data (from web app's consolidated view)
-const fetchConsolidatedSubscriptions = async (
-  userId: string
-): Promise<ConsolidatedSubscriptionData> => {
-  // This would typically call a Supabase function that returns consolidated data
-  // For now, we'll fetch basic subscriptions and calculate summaries client-side
-  const subscriptions = await fetchSubscriptions(userId)
+// Helper function to calculate next payment date based on frequency
+const calculateNextPaymentDate = (baseDate: string, frequency: string, monthsAhead: number): string => {
+  const date = new Date(baseDate)
   
-  // Calculate summary data
+  switch (frequency) {
+    case 'monthly':
+      date.setMonth(date.getMonth() + monthsAhead)
+      break
+    case 'quarterly':
+      date.setMonth(date.getMonth() + (monthsAhead * 3))
+      break
+    case 'annually':
+      date.setFullYear(date.getFullYear() + monthsAhead)
+      break
+  }
+  
+  return date.toISOString().split('T')[0]
+}
+
+// Generate projected subscriptions for 12 months
+const generateProjectedSubscriptions = (subscriptions: Subscription[]): ProjectedSubscription[] => {
+  const projectedSubs: ProjectedSubscription[] = []
+  const currentDate = new Date()
+  const endDate = new Date()
+  endDate.setMonth(endDate.getMonth() + 12)
+  
+  subscriptions.forEach(sub => {
+    let projectionDate = new Date(sub.payment_date)
+    let projectionCount = 0
+    
+    // Generate projections until we reach 12 months ahead
+    while (projectionDate <= endDate && projectionCount < 50) { // Safety limit
+      if (projectionDate >= currentDate) {
+        projectedSubs.push({
+          id: `${sub.id}-${projectionCount}`,
+          provider_name: sub.provider_name,
+          original_amount: sub.amount,
+          original_currency: sub.currency,
+          amount_in_idr: sub.currency === 'IDR' ? sub.amount : sub.amount * 15000, // Rough conversion
+          frequency: sub.frequency,
+          original_payment_date: sub.payment_date,
+          projected_payment_date: projectionDate.toISOString().split('T')[0],
+          user_id: sub.user_id,
+          created_at: sub.created_at,
+          updated_at: sub.updated_at,
+        })
+      }
+      
+      // Calculate next payment date
+      switch (sub.frequency) {
+        case 'monthly':
+          projectionDate.setMonth(projectionDate.getMonth() + 1)
+          break
+        case 'quarterly':
+          projectionDate.setMonth(projectionDate.getMonth() + 3)
+          break
+        case 'annually':
+          projectionDate.setFullYear(projectionDate.getFullYear() + 1)
+          break
+      }
+      
+      projectionCount++
+    }
+  })
+  
+  return projectedSubs.sort((a, b) => 
+    new Date(a.projected_payment_date).getTime() - new Date(b.projected_payment_date).getTime()
+  )
+}
+
+// Fetch consolidated subscription data (matching web app's structure)
+const fetchConsolidatedSubscriptions = async (
+  userId: string,
+  projectionEndDate?: string
+): Promise<ConsolidatedSubscriptionData> => {
+  const subscriptions = await fetchSubscriptions(userId)
+  const projectedSubscriptions = generateProjectedSubscriptions(subscriptions)
+  
+  // Calculate enhanced summary data
   const totalMonthlyRecurring = subscriptions.reduce((sum, sub) => {
-    if (sub.frequency === 'monthly') return sum + sub.amount
-    if (sub.frequency === 'quarterly') return sum + (sub.amount / 3)
-    if (sub.frequency === 'annually') return sum + (sub.amount / 12)
-    return sum
+    let monthlyAmount = 0
+    const amount = sub.currency === 'IDR' ? sub.amount : sub.amount * 15000 // Rough conversion
+    
+    switch (sub.frequency) {
+      case 'monthly':
+        monthlyAmount = amount
+        break
+      case 'quarterly':
+        monthlyAmount = amount / 3
+        break
+      case 'annually':
+        monthlyAmount = amount / 12
+        break
+    }
+    
+    return sum + monthlyAmount
   }, 0)
 
-  const upcomingThisMonth = subscriptions.filter(sub => {
-    const paymentDate = new Date(sub.payment_date)
-    const currentDate = new Date()
-    return paymentDate.getMonth() === currentDate.getMonth() &&
-           paymentDate.getFullYear() === currentDate.getFullYear()
-  }).length
+  // Calculate upcoming this month
+  const currentDate = new Date()
+  const currentMonth = currentDate.getMonth()
+  const currentYear = currentDate.getFullYear()
+  
+  const upcomingThisMonth = projectedSubscriptions
+    .filter(sub => {
+      const paymentDate = new Date(sub.projected_payment_date)
+      return paymentDate.getMonth() === currentMonth && 
+             paymentDate.getFullYear() === currentYear
+    })
+    .reduce((sum, sub) => sum + sub.amount_in_idr, 0)
+
+  const subscriptionSummary: SubscriptionSummary = {
+    upcoming_this_month: upcomingThisMonth,
+    total_monthly_recurring: totalMonthlyRecurring,
+    subscription_count: subscriptions.length,
+  }
 
   return {
     subscriptions,
-    projected_subscriptions: [], // Would be calculated by backend
-    subscription_summary: {
-      upcoming_this_month: upcomingThisMonth,
-      total_monthly_recurring: totalMonthlyRecurring,
-      subscription_count: subscriptions.length,
-    },
+    projected_subscriptions: projectedSubscriptions,
+    subscription_summary: subscriptionSummary,
   }
 }
 
@@ -137,10 +229,10 @@ export const useSubscription = (id: string) => {
   })
 }
 
-export const useConsolidatedSubscriptions = (userId: string | null) => {
+export const useConsolidatedSubscriptions = (userId: string | null, projectionEndDate?: string) => {
   return useQuery({
     queryKey: subscriptionKeys.consolidated(userId!),
-    queryFn: () => fetchConsolidatedSubscriptions(userId!),
+    queryFn: () => fetchConsolidatedSubscriptions(userId!, projectionEndDate),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   })

@@ -30,6 +30,8 @@ export interface TransactionFilters {
   minAmount?: number
   maxAmount?: number
   search?: string
+  sortField?: 'date' | 'amount' | 'category'
+  sortDirection?: 'asc' | 'desc'
 }
 
 export interface TransactionListParams {

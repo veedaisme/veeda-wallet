@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/useAuthV2'
 import { useHaptics } from '@/hooks/useHaptics'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
@@ -34,9 +34,10 @@ type LoginFormData = z.infer<typeof loginSchema>
 export default function LoginScreen() {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
-  const { signIn, loading } = useAuth()
+  const { signIn, isLoading: authLoading } = useAuth()
   const { onError, onSuccess } = useHaptics()
   const [showPassword, setShowPassword] = useState(false)
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   const {
     control,
@@ -51,18 +52,29 @@ export default function LoginScreen() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
-    const { error } = await signIn(data)
-    
-    if (error) {
+    setIsSigningIn(true)
+    try {
+      const result = await signIn(data)
+      
+      if (result.success) {
+        onSuccess()
+        // Navigation will be handled automatically by auth state change
+      } else {
+        onError()
+        Alert.alert(
+          'Login Failed', 
+          result.error?.message || 'Unable to sign in. Please try again.'
+        )
+      }
+    } catch (error) {
       onError()
-      Alert.alert('Login Failed', error)
-    } else {
-      onSuccess()
-      router.replace('/(tabs)/dashboard')
+      Alert.alert('Login Failed', 'An unexpected error occurred')
+    } finally {
+      setIsSigningIn(false)
     }
   }
 
-  const isLoading = loading || isSubmitting
+  const isLoading = authLoading || isSubmitting || isSigningIn
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
