@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { FloatingActionButton } from '@/components/ui/FloatingActionButton'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { Header } from '@/components/ui/Header'
 import { SortControls } from '@/components/transactions/SortControls'
-import { TransactionBottomSheet } from '@/components/transactions/TransactionBottomSheet'
+import { TransactionBottomSheet, type TransactionBottomSheetMethods } from '@/components/transactions/TransactionBottomSheet'
 import { useAuth } from '@/hooks/useAuthV2'
 import { useTransactions } from '@/hooks/queries/useTransactions'
 import { useAppStore } from '@/stores/appStore'
@@ -35,9 +35,7 @@ export default function TransactionsScreen() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [sortField, setSortField] = useState<'date' | 'amount'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-  const [bottomSheetVisible, setBottomSheetVisible] = useState(false)
-  const [bottomSheetMode, setBottomSheetMode] = useState<'add' | 'edit'>('add')
-  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null)
+  const transactionBottomSheetRef = useRef<TransactionBottomSheetMethods>(null)
   const { setEditingTransactionId: setStoreEditingTransactionId, setTransactionModalOpen } = useAppStore()
 
   // Debounce search query
@@ -64,20 +62,11 @@ export default function TransactionsScreen() {
   })
 
   const handleAddTransaction = () => {
-    setBottomSheetMode('add')
-    setEditingTransactionId(null)
-    setBottomSheetVisible(true)
+    transactionBottomSheetRef.current?.openAddTransaction()
   }
 
   const handleEditTransaction = (transaction: Transaction) => {
-    setBottomSheetMode('edit')
-    setEditingTransactionId(transaction.id)
-    setBottomSheetVisible(true)
-  }
-
-  const handleCloseBottomSheet = () => {
-    setBottomSheetVisible(false)
-    setEditingTransactionId(null)
+    transactionBottomSheetRef.current?.openEditTransaction(transaction.id)
   }
 
   const handleSort = (field: 'date' | 'amount') => {
@@ -218,10 +207,7 @@ export default function TransactionsScreen() {
       />
 
       <TransactionBottomSheet
-        isVisible={bottomSheetVisible}
-        onClose={handleCloseBottomSheet}
-        mode={bottomSheetMode}
-        editTransactionId={editingTransactionId}
+        ref={transactionBottomSheetRef}
       />
     </SafeAreaView>
   )

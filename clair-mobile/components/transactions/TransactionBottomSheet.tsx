@@ -1,19 +1,20 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, forwardRef, useImperativeHandle, useState } from 'react'
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native'
+import { BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Ionicons } from '@expo/vector-icons'
 
 import { BottomSheet } from '@/components/ui/BottomSheet'
+import { useBottomSheet } from '@/hooks/useBottomSheet'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { DatePickerInput } from '@/components/ui/DatePickerInput'
@@ -27,7 +28,6 @@ import {
 import { useHaptics } from '@/hooks/useHaptics'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
-import type { Transaction } from '@/types/transaction'
 
 const transactionSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -38,23 +38,36 @@ const transactionSchema = z.object({
 
 type TransactionFormData = z.infer<typeof transactionSchema>
 
-interface TransactionBottomSheetProps {
-  isVisible: boolean
-  onClose: () => void
-  editTransactionId?: string | null
-  mode: 'add' | 'edit'
+export interface TransactionBottomSheetMethods {
+  openAddTransaction: () => void
+  openEditTransaction: (transactionId: string) => void
+  close: () => void
 }
 
-export const TransactionBottomSheet: React.FC<TransactionBottomSheetProps> = ({
-  isVisible,
-  onClose,
-  editTransactionId,
-  mode,
-}) => {
+interface TransactionBottomSheetProps {
+  // No props needed - controlled via ref
+}
+
+export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, TransactionBottomSheetProps>((props, ref) => {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
   const { user } = useAuth()
   const { onSuccess, onError } = useHaptics()
+
+  // Bottom sheet state
+  const {
+    bottomSheetRef,
+    isOpen,
+    open,
+    close,
+    onOpen,
+    onClose: handleClose,
+  } = useBottomSheet()
+
+  // Form state
+  const [mode, setMode] = React.useState<'add' | 'edit'>('add')
+  const [editTransactionId, setEditTransactionId] = React.useState<string | null>(null)
+  const [contentHeight, setContentHeight] = useState(0)
 
   // Mutations
   const createTransactionMutation = useCreateTransaction()
@@ -83,19 +96,40 @@ export const TransactionBottomSheet: React.FC<TransactionBottomSheetProps> = ({
     },
   })
 
-  // Reset form when modal opens/closes
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    openAddTransaction: () => {
+      setMode('add')
+      setEditTransactionId(null)
+      reset({
+        amount: '',
+        category: '',
+        note: '',
+        date: new Date().toISOString().split('T')[0],
+      })
+      open()
+    },
+    openEditTransaction: (transactionId: string) => {
+      setMode('edit')
+      setEditTransactionId(transactionId)
+      open()
+    },
+    close: () => {
+      close()
+    },
+  }), [open, close, reset])
+
+  // Reset form when sheet opens for add mode
   useEffect(() => {
-    if (isVisible) {
-      if (mode === 'add') {
-        reset({
-          amount: '',
-          category: '',
-          note: '',
-          date: new Date().toISOString().split('T')[0],
-        })
-      }
+    if (isOpen && mode === 'add') {
+      reset({
+        amount: '',
+        category: '',
+        note: '',
+        date: new Date().toISOString().split('T')[0],
+      })
     }
-  }, [isVisible, mode, reset])
+  }, [isOpen, mode, reset])
 
   // Populate form for edit mode
   useEffect(() => {
@@ -142,28 +176,42 @@ export const TransactionBottomSheet: React.FC<TransactionBottomSheetProps> = ({
         Alert.alert('Success', 'Transaction updated successfully!')
       }
       
-      onClose()
+      close()
     } catch (error) {
       onError()
       Alert.alert('Error', `Failed to ${mode} transaction. Please try again.`)
     }
   }
 
+  const handleCloseSheet = () => {
+    // Reset form state when closing
+    setEditTransactionId(null)
+    handleClose()
+  }
+
   const isLoading = isSubmitting || 
     createTransactionMutation.isPending || 
     updateTransactionMutation.isPending
 
+  // Measure content height for manual calculation
+  const handleContentLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout
+    setContentHeight(height)
+  }
+
   return (
     <BottomSheet
-      isVisible={isVisible}
-      onClose={onClose}
-      height="85%"
+      ref={bottomSheetRef}
+      enableDynamicSizing={true}
       enableBackdropDismiss={true}
       enableSwipeToDismiss={true}
+      onOpen={onOpen}
+      onClose={handleCloseSheet}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
+        onLayout={handleContentLayout}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -172,8 +220,9 @@ export const TransactionBottomSheet: React.FC<TransactionBottomSheetProps> = ({
           </Text>
         </View>
 
-        <ScrollView
+        <BottomSheetScrollView
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -253,14 +302,14 @@ export const TransactionBottomSheet: React.FC<TransactionBottomSheetProps> = ({
               )}
             />
           </View>
-        </ScrollView>
+        </BottomSheetScrollView>
 
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
           <Button
             title="Cancel"
             variant="outline"
-            onPress={onClose}
+            onPress={close}
             style={styles.cancelButton}
           />
           <Button
@@ -273,11 +322,13 @@ export const TransactionBottomSheet: React.FC<TransactionBottomSheetProps> = ({
       </KeyboardAvoidingView>
     </BottomSheet>
   )
-}
+})
+
+TransactionBottomSheet.displayName = 'TransactionBottomSheet'
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    minHeight: 400, // Ensure minimum height for all content
   },
   header: {
     flexDirection: 'row',
@@ -291,9 +342,14 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    maxHeight: 'auto', // Limit scroll view height
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   form: {
     gap: 0, // Remove gap since Input component has its own margin
+    paddingBottom: 20, // Extra spacing before buttons
   },
   currencySymbol: {
     fontSize: 16,
@@ -304,8 +360,10 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 20,
     paddingTop: 20,
+    paddingBottom: 10, // Extra bottom padding
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
+    backgroundColor: 'transparent', // Ensure buttons are visible
   },
   cancelButton: {
     flex: 1,
