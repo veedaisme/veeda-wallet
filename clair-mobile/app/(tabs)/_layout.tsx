@@ -1,7 +1,7 @@
 import { Tabs, Redirect } from 'expo-router'
 import React from 'react'
 import { Platform } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { CreditCard, User, Clock } from 'lucide-react-native'
 
 import { HapticTab } from '@/components/HapticTab'
 import TabBarBackground from '@/components/ui/TabBarBackground'
@@ -42,20 +42,17 @@ export default function TabLayout() {
         tabBarBackground: TabBarBackground,
       }}>
       <Tabs.Screen
+        name="index"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
         name="dashboard"
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, size = 24 }) => (
-            <Ionicons name="analytics" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="transactions"
-        options={{
-          title: 'Transactions',
-          tabBarIcon: ({ color, size = 24 }) => (
-            <Ionicons name="receipt" size={size} color={color} />
+            <CreditCard size={size} color={color} />
           ),
         }}
       />
@@ -64,7 +61,16 @@ export default function TabLayout() {
         options={{
           title: 'Subscriptions',
           tabBarIcon: ({ color, size = 24 }) => (
-            <Ionicons name="repeat" size={size} color={color} />
+            <User size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="transactions"
+        options={{
+          title: 'Transactions',
+          tabBarIcon: ({ color, size = 24 }) => (
+            <Clock size={size} color={color} />
           ),
         }}
       />
