@@ -17,6 +17,7 @@ import { FloatingActionButton } from '@/components/ui/FloatingActionButton'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { Header } from '@/components/ui/Header'
 import { SortControls } from '@/components/transactions/SortControls'
+import { TransactionBottomSheet } from '@/components/transactions/TransactionBottomSheet'
 import { useAuth } from '@/hooks/useAuthV2'
 import { useTransactions } from '@/hooks/queries/useTransactions'
 import { useAppStore } from '@/stores/appStore'
@@ -34,7 +35,10 @@ export default function TransactionsScreen() {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [sortField, setSortField] = useState<'date' | 'amount'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-  const { setEditingTransactionId, setTransactionModalOpen } = useAppStore()
+  const [bottomSheetVisible, setBottomSheetVisible] = useState(false)
+  const [bottomSheetMode, setBottomSheetMode] = useState<'add' | 'edit'>('add')
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null)
+  const { setEditingTransactionId: setStoreEditingTransactionId, setTransactionModalOpen } = useAppStore()
 
   // Debounce search query
   useEffect(() => {
@@ -60,12 +64,20 @@ export default function TransactionsScreen() {
   })
 
   const handleAddTransaction = () => {
-    router.push('/modals/add-transaction')
+    setBottomSheetMode('add')
+    setEditingTransactionId(null)
+    setBottomSheetVisible(true)
   }
 
   const handleEditTransaction = (transaction: Transaction) => {
+    setBottomSheetMode('edit')
     setEditingTransactionId(transaction.id)
-    router.push('/modals/edit-transaction')
+    setBottomSheetVisible(true)
+  }
+
+  const handleCloseBottomSheet = () => {
+    setBottomSheetVisible(false)
+    setEditingTransactionId(null)
   }
 
   const handleSort = (field: 'date' | 'amount') => {
@@ -203,6 +215,13 @@ export default function TransactionsScreen() {
         onPress={handleAddTransaction}
         icon={<Ionicons name="add" size={24} color="#ffffff" />}
         position="bottom-right"
+      />
+
+      <TransactionBottomSheet
+        isVisible={bottomSheetVisible}
+        onClose={handleCloseBottomSheet}
+        mode={bottomSheetMode}
+        editTransactionId={editingTransactionId}
       />
     </SafeAreaView>
   )

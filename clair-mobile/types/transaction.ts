@@ -64,6 +64,7 @@ export const TRANSACTION_CATEGORIES = [
   'Travel',
   'Personal Care',
   'Gifts',
+  'Subscription',
   'Other',
 ] as const
 

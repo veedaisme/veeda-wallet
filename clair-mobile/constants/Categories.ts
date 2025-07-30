@@ -18,6 +18,7 @@ export const CATEGORY_ICONS: Record<TransactionCategory, string> = {
   Travel: '✈️',
   'Personal Care': '💅',
   Gifts: '🎁',
+  Subscription: '🔄',
   Other: '📦',
 }
 
@@ -33,6 +34,7 @@ export const CATEGORY_CONFIGS: CategoryConfig[] = [
   { name: 'Travel', icon: '✈️', color: '#f97316' },
   { name: 'Personal Care', icon: '💅', color: '#84cc16' },
   { name: 'Gifts', icon: '🎁', color: '#d946ef' },
+  { name: 'Subscription', icon: '🔄', color: '#6366f1' },
   { name: 'Other', icon: '📦', color: '#6b7280' },
 ]
 
