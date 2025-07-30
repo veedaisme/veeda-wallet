@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -6,16 +6,16 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  TextInput,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 
 import { Card } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
 import { FloatingActionButton } from '@/components/ui/FloatingActionButton'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { TransactionFiltersComponent } from '@/components/transactions/TransactionFilters'
+import { Header } from '@/components/ui/Header'
 import { SortControls } from '@/components/transactions/SortControls'
 import { useAuth } from '@/hooks/useAuthV2'
 import { useTransactions } from '@/hooks/queries/useTransactions'
@@ -24,23 +24,29 @@ import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getCategoryIcon, getCategoryColor } from '@/constants/Categories'
-import type { Transaction, TransactionFilters } from '@/types/transaction'
+import type { Transaction } from '@/types/transaction'
 
 export default function TransactionsScreen() {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
   const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState<TransactionFilters>({})
-  const [sortField, setSortField] = useState<'date' | 'amount' | 'category'>('date')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+  const [sortField, setSortField] = useState<'date' | 'amount'>('date')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const { setEditingTransactionId, setTransactionModalOpen } = useAppStore()
 
-  // Combine search and filters
-  const combinedFilters = {
-    ...filters,
-    ...(searchQuery ? { search: searchQuery } : {}),
-  }
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Search filters
+  const searchFilters = debouncedSearchQuery ? { search: debouncedSearchQuery } : {}
 
   const { 
     data: transactions = [], 
@@ -50,7 +56,7 @@ export default function TransactionsScreen() {
   } = useTransactions(user?.id || null, {
     sortField,
     sortDirection,
-    filters: Object.keys(combinedFilters).length > 0 ? combinedFilters : undefined,
+    filters: Object.keys(searchFilters).length > 0 ? searchFilters : undefined,
   })
 
   const handleAddTransaction = () => {
@@ -62,16 +68,7 @@ export default function TransactionsScreen() {
     router.push('/modals/edit-transaction')
   }
 
-  const handleFiltersChange = (newFilters: TransactionFilters) => {
-    setFilters(newFilters)
-  }
-
-  const handleClearFilters = () => {
-    setFilters({})
-    setSearchQuery('')
-  }
-
-  const handleSort = (field: 'date' | 'amount' | 'category') => {
+  const handleSort = (field: 'date' | 'amount') => {
     if (field === sortField) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
@@ -96,14 +93,12 @@ export default function TransactionsScreen() {
             </Text>
           </View>
           <View style={styles.transactionInfo}>
-            <Text style={[styles.transactionCategory, { color: colors.text }]}>
+            <Text style={[styles.transactionTitle, { color: colors.text }]}>
+              {transaction.note || transaction.category}
+            </Text>
+            <Text style={[styles.transactionSubtitle, { color: colors.textSecondary }]}>
               {transaction.category}
             </Text>
-            {transaction.note && (
-              <Text style={[styles.transactionNote, { color: colors.textSecondary }]}>
-                {transaction.note}
-              </Text>
-            )}
             <Text style={[styles.transactionDate, { color: colors.textMuted }]}>
               {formatDate(transaction.date)}
             </Text>
@@ -158,35 +153,24 @@ export default function TransactionsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          Transactions
-        </Text>
-        <TouchableOpacity 
-          onPress={handleAddTransaction}
-          style={styles.addButton}
-        >
-          <Ionicons name="add" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
+      <Header />
 
       <View style={styles.searchAndSortContainer}>
-        <Input
-          placeholder="Search transactions..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          leftIcon={
-            <Ionicons name="search" size={20} color={colors.icon} />
-          }
-          rightIcon={
-            searchQuery ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={20} color={colors.icon} />
-              </TouchableOpacity>
-            ) : undefined
-          }
-          style={styles.searchInput}
-        />
+        <View style={[styles.searchInputContainer, { borderColor: colors.border, backgroundColor: colors.background }]}>
+          <Ionicons name="search" size={20} color={colors.icon} style={styles.searchIcon} />
+          <TextInput
+            placeholder="Search transactions..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={[styles.searchInput, { color: colors.text }]}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color={colors.icon} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
         <SortControls
           sortField={sortField}
           sortDirection={sortDirection}
@@ -194,18 +178,12 @@ export default function TransactionsScreen() {
         />
       </View>
 
-      <View style={styles.filtersContainer}>
-        <TransactionFiltersComponent
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onClearFilters={handleClearFilters}
-        />
-      </View>
 
       <FlatList
         data={transactions}
         renderItem={renderTransactionItem}
         keyExtractor={(item) => item.id}
+        style={styles.flatList}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -217,6 +195,7 @@ export default function TransactionsScreen() {
           />
         }
         ListEmptyComponent={searchQuery ? renderSearchResults() : renderEmptyState()}
+        ListFooterComponent={() => <View style={styles.listFooter} />}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
 
@@ -233,21 +212,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    padding: 8,
-  },
   searchAndSortContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -255,15 +219,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 8,
   },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
   searchInput: {
     flex: 1,
+    fontSize: 16,
+    paddingVertical: 0,
   },
-  filtersContainer: {
-    paddingHorizontal: 24,
+  clearButton: {
+    marginLeft: 8,
+  },
+  flatList: {
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: 24,
-    paddingBottom: 100, // Account for FAB and tab bar
+  },
+  listFooter: {
+    height: 200, // Space for FAB (56px) + margin (24px) + tab bar (80px) + safe area (40px)
   },
   transactionCard: {
     marginVertical: 4,
@@ -293,12 +276,12 @@ const styles = StyleSheet.create({
   transactionInfo: {
     flex: 1,
   },
-  transactionCategory: {
+  transactionTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
   },
-  transactionNote: {
+  transactionSubtitle: {
     fontSize: 14,
     marginBottom: 2,
   },

@@ -5,23 +5,20 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  TouchableOpacity,
-  Image,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { User, LogOut } from 'lucide-react-native'
 import { useTranslation } from 'react-i18next'
 
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { SpendingCard } from '@/components/dashboard/SpendingCard'
 import { ChartModal } from '@/components/dashboard/ChartModal'
-import { LanguagePillToggle } from '@/components/ui/LanguagePillToggle'
+import { Header } from '@/components/ui/Header'
 import { useAuth } from '@/hooks/useAuthV2'
 import { useDashboardData } from '@/hooks/queries/useDashboard'
 
 export default function DashboardScreen() {
   const { t } = useTranslation()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const { data: dashboardData, isLoading, refetch, isRefetching } = useDashboardData(user?.id || null)
   
   const [chartModal, setChartModal] = useState<{
@@ -31,32 +28,12 @@ export default function DashboardScreen() {
     open: false,
     type: null,
   })
-  
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-
-  const handleLogout = async () => {
-    await signOut()
-    setProfileMenuOpen(false)
-  }
 
   // Show loading state
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Image
-            source={require('@/assets/images/clair_v2_transparent.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => setProfileMenuOpen(!profileMenuOpen)}
-          >
-            <User size={20} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
+        <Header />
         
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.loadingGrid}>
@@ -77,20 +54,7 @@ export default function DashboardScreen() {
   if (!dashboardData || !dashboardData.analytics) {
     return (
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Image
-            source={require('@/assets/images/clair_v2_transparent.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => setProfileMenuOpen(!profileMenuOpen)}
-          >
-            <User size={20} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
+        <Header />
         
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{t('dashboard.failedToLoad')}</Text>
@@ -112,36 +76,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require('@/assets/images/clair_v2_transparent.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <View style={styles.headerRight}>
-          <LanguagePillToggle size="sm" />
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => setProfileMenuOpen(!profileMenuOpen)}
-          >
-            <User size={20} color="#6B7280" />
-          </TouchableOpacity>
-          
-          {/* Profile Menu */}
-          {profileMenuOpen && (
-            <View style={styles.profileMenu}>
-              <TouchableOpacity
-                style={styles.profileMenuItem}
-                onPress={handleLogout}
-              >
-                <LogOut size={16} color="#6B7280" />
-                <Text style={styles.profileMenuText}>{t('app.logout')}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </View>
+      <Header />
       
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -201,58 +136,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    paddingBottom: 16,
-    backgroundColor: 'white',
-  },
-  logo: {
-    height: 88,
-    width: 88,
-  },
-  headerRight: {
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  profileButton: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 20,
-    padding: 8,
-  },
-  profileMenu: {
-    position: 'absolute',
-    top: 40,
-    right: 0,
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    minWidth: 120,
-    zIndex: 1000,
-  },
-  profileMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    gap: 8,
-  },
-  profileMenuText: {
-    color: '#374151',
-    fontSize: 14,
   },
   scrollContent: {
     padding: 24,

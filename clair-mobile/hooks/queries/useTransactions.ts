@@ -56,7 +56,10 @@ const fetchTransactions = async (
   }
 
   if (filters.search) {
-    query = query.or(`note.ilike.%${filters.search}%,category.ilike.%${filters.search}%`)
+    const searchTerm = filters.search.trim()
+    if (searchTerm) {
+      query = query.or(`note.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`)
+    }
   }
 
   // Apply sorting

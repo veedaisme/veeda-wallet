@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Card } from '@/components/ui/Card'
 import { FloatingActionButton } from '@/components/ui/FloatingActionButton'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { Header } from '@/components/ui/Header'
 import { useAuth } from '@/hooks/useAuthV2'
 import { useConsolidatedSubscriptions } from '@/hooks/queries/useSubscriptions'
 import { useAppStore } from '@/stores/appStore'
@@ -279,28 +280,25 @@ export default function SubscriptionsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          Subscriptions
-        </Text>
-        <View style={styles.headerActions}>
-          <View style={styles.currencyToggle}>
-            <Text style={[styles.toggleLabel, { color: colors.textSecondary }]}>
-              {showInIDR ? 'IDR' : 'Original'}
-            </Text>
-            <Switch
-              value={showInIDR}
-              onValueChange={setShowInIDR}
-              trackColor={{ false: colors.border, true: colors.primary + '40' }}
-              thumbColor={showInIDR ? colors.primary : colors.textMuted}
-            />
-          </View>
-          <TouchableOpacity 
-            onPress={handleAddSubscription}
-            style={styles.addButton}
-          >
-            <Ionicons name="add" size={24} color={colors.primary} />
-          </TouchableOpacity>
+      <Header 
+        title="Subscriptions"
+        showAddButton={true}
+        onAddPress={handleAddSubscription}
+        addIcon={<Ionicons name="add" size={24} color={colors.primary} />}
+      />
+      
+      {/* Currency toggle section */}
+      <View style={styles.currencyToggleContainer}>
+        <View style={styles.currencyToggle}>
+          <Text style={[styles.toggleLabel, { color: colors.textSecondary }]}>
+            {showInIDR ? 'IDR' : 'Original'}
+          </Text>
+          <Switch
+            value={showInIDR}
+            onValueChange={setShowInIDR}
+            trackColor={{ false: colors.border, true: colors.primary + '40' }}
+            thumbColor={showInIDR ? colors.primary : colors.textMuted}
+          />
         </View>
       </View>
 
@@ -347,18 +345,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  currencyToggleContainer: {
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    paddingVertical: 8,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
   },
   currencyToggle: {
     flexDirection: 'row',
@@ -368,13 +359,6 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  addButton: {
-    padding: 8,
   },
   listContent: {
     paddingHorizontal: 24,
