@@ -52,7 +52,14 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
   const { user } = useAuth()
-  const { onSuccess, onError } = useHaptics()
+  const { 
+    onSuccess, 
+    onError, 
+    onNavigation, 
+    onButtonPress, 
+    onFormSubmit,
+    triggerLight 
+  } = useHaptics()
 
   // Bottom sheet state
   const {
@@ -99,6 +106,7 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
     openAddTransaction: () => {
+      onNavigation()
       setMode('add')
       setEditTransactionId(null)
       reset({
@@ -110,14 +118,16 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
       open()
     },
     openEditTransaction: (transactionId: string) => {
+      onNavigation()
       setMode('edit')
       setEditTransactionId(transactionId)
       open()
     },
     close: () => {
+      triggerLight()
       close()
     },
-  }), [open, close, reset])
+  }), [open, close, reset, onNavigation, triggerLight])
 
   // Reset form when sheet opens for add mode
   useEffect(() => {
@@ -147,6 +157,8 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
       return
     }
 
+    onFormSubmit()
+    
     try {
       if (mode === 'add') {
         await createTransactionMutation.mutateAsync({
@@ -184,6 +196,7 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
   }
 
   const handleCloseSheet = () => {
+    triggerLight()
     // Reset form state when closing
     setEditTransactionId(null)
     handleClose()
@@ -309,12 +322,18 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
           <Button
             title="Cancel"
             variant="outline"
-            onPress={close}
+            onPress={() => {
+              onButtonPress()
+              close()
+            }}
             style={styles.cancelButton}
           />
           <Button
             title={mode === 'add' ? 'Save' : 'Update'}
-            onPress={handleSubmit(onSubmit)}
+            onPress={() => {
+              onButtonPress()
+              handleSubmit(onSubmit)()
+            }}
             loading={isLoading}
             style={styles.submitButton}
           />

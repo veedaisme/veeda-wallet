@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
+import { useHaptics } from '@/hooks/useHaptics'
 import { format } from 'date-fns'
 
 interface DatePickerInputProps {
@@ -25,6 +26,7 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
 }) => {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
+  const { onButtonPress, onSelection } = useHaptics()
   const [showPicker, setShowPicker] = useState(false)
 
   // Convert string date to Date object
@@ -34,10 +36,16 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
     setShowPicker(Platform.OS === 'ios') // Keep picker open on iOS
 
     if (selectedDate) {
+      onSelection()
       // Convert to YYYY-MM-DD format
       const formattedDate = selectedDate.toISOString().split('T')[0]
       onChange(formattedDate)
     }
+  }
+
+  const handleOpenPicker = () => {
+    onButtonPress()
+    setShowPicker(true)
   }
 
   const formatDisplayDate = (dateString: string) => {
@@ -92,7 +100,7 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
       
       <TouchableOpacity
         style={getContainerStyle()}
-        onPress={() => setShowPicker(true)}
+        onPress={handleOpenPicker}
         activeOpacity={0.7}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>

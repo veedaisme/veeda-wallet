@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
+import { useHaptics } from '@/hooks/useHaptics'
 import { getCategoryIcon, getCategoryColor } from '@/constants/Categories'
 import { TRANSACTION_CATEGORIES } from '@/types/transaction'
 
@@ -28,12 +29,24 @@ export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
 }) => {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
+  const { onButtonPress, onSelection, triggerLight } = useHaptics()
   const [isOpen, setIsOpen] = useState(false)
 
   const selectedCategory = TRANSACTION_CATEGORIES.find(cat => cat === value)
 
   const handleSelect = (category: string) => {
+    onSelection()
     onSelect(category)
+    setIsOpen(false)
+  }
+
+  const handleOpenModal = () => {
+    onButtonPress()
+    setIsOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    triggerLight()
     setIsOpen(false)
   }
 
@@ -52,7 +65,7 @@ export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
               borderColor: error ? colors.error : (isOpen ? colors.primary : colors.border),
             },
           ]}
-          onPress={() => setIsOpen(true)}
+          onPress={handleOpenModal}
         >
           <View style={styles.selectedContent}>
             <Ionicons 
@@ -97,13 +110,13 @@ export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
         visible={isOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => setIsOpen(false)}
+        onRequestClose={handleCloseModal}
       >
         <View style={styles.modalOverlay}>
           <TouchableOpacity
             style={styles.modalBackdrop}
             activeOpacity={1}
-            onPress={() => setIsOpen(false)}
+            onPress={handleCloseModal}
           />
           
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
@@ -112,7 +125,7 @@ export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
                 Select Category
               </Text>
               <TouchableOpacity
-                onPress={() => setIsOpen(false)}
+                onPress={handleCloseModal}
                 style={styles.closeButton}
               >
                 <Ionicons name="close" size={24} color={colors.icon} />
