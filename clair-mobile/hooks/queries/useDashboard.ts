@@ -131,14 +131,20 @@ const fetchSpendingAnalytics = async (userId: string): Promise<SpendingAnalytics
   const thisMonthTotal = thisMonthData.data?.reduce((sum, t) => sum + t.amount, 0) || 0
   const lastMonthTotal = lastMonthData.data?.reduce((sum, t) => sum + t.amount, 0) || 0
 
-  // Calculate percentage changes
-  const weeklyComparison = lastWeekTotal === 0 ? 0 : 
+  // Calculate percentage changes with proper zero handling
+  const weeklyComparison = 
+    lastWeekTotal === 0 && thisWeekTotal > 0 ? 100 :
+    lastWeekTotal === 0 ? 0 : 
     ((thisWeekTotal - lastWeekTotal) / lastWeekTotal) * 100
   
-  const monthlyComparison = lastMonthTotal === 0 ? 0 : 
+  const monthlyComparison = 
+    lastMonthTotal === 0 && thisMonthTotal > 0 ? 100 :
+    lastMonthTotal === 0 ? 0 : 
     ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100
 
-  const todayComparison = yesterdayTotal === 0 ? 0 :
+  const todayComparison = 
+    yesterdayTotal === 0 && todayTotal > 0 ? 100 :
+    yesterdayTotal === 0 ? 0 :
     ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100
 
   // Enhanced analytics calculations

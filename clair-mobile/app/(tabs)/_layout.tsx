@@ -2,6 +2,7 @@ import { Tabs, Redirect } from 'expo-router'
 import React from 'react'
 import { Platform } from 'react-native'
 import { CreditCard, User, Clock } from 'lucide-react-native'
+import { useTranslation } from 'react-i18next'
 
 import { HapticTab } from '@/components/HapticTab'
 import TabBarBackground from '@/components/ui/TabBarBackground'
@@ -11,12 +12,13 @@ import { useAuth } from '@/hooks/useAuthV2'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 export default function TabLayout() {
+  const { t } = useTranslation()
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
   const { isAuthenticated, isLoading, isInitialized } = useAuth()
 
   if (!isInitialized || isLoading) {
-    return <LoadingSpinner message="Loading..." overlay />
+    return <LoadingSpinner message={t('common.loading')} overlay />
   }
 
   // If user is not authenticated, redirect to auth
@@ -50,7 +52,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Dashboard',
+          title: t('tabs.dashboard'),
           tabBarIcon: ({ color, size = 24 }) => (
             <CreditCard size={size} color={color} />
           ),
@@ -59,7 +61,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="subscriptions"
         options={{
-          title: 'Subscriptions',
+          title: t('tabs.subscriptions'),
           tabBarIcon: ({ color, size = 24 }) => (
             <User size={size} color={color} />
           ),
@@ -68,7 +70,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="transactions"
         options={{
-          title: 'Transactions',
+          title: t('tabs.transactions'),
           tabBarIcon: ({ color, size = 24 }) => (
             <Clock size={size} color={color} />
           ),

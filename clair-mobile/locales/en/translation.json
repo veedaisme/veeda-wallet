@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "Clair",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "yesterday": "Yesterday",
+    "lastWeek": "Last Week",
+    "lastMonth": "Last Month",
+    "failedToLoad": "Failed to load dashboard data",
+    "unexpectedError": "An unexpected error occurred",
+    "loading": "Loading..."
+  },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "subscriptions": "Subscriptions",
+    "transactions": "Transactions"
+  },
+  "errors": {
+    "general": "Something went wrong",
+    "network": "Network error",
+    "timeout": "Request timed out"
+  },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close"
+  }
+}

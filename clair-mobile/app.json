@@ -8,7 +8,7 @@
     "scheme": "clairwallet",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "primaryColor": "#2b825b",
+    "primaryColor": "#DE5C2B",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.clairwallet.mobile"
@@ -16,7 +16,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#2b825b"
+        "backgroundColor": "#DE5C2B"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.clairwallet.mobile"
@@ -34,7 +34,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#2b825b"
+          "backgroundColor": "#DE5C2B"
         }
       ]
     ],

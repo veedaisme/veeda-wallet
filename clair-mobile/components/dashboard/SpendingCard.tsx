@@ -34,7 +34,7 @@ export function SpendingCard({ title, amount, change, previousLabel, previousAmo
     >
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
-        <ChevronRight size={20} color="#9CA3AF" />
+        {onClick && <ChevronRight size={20} color="#9CA3AF" />}
       </View>
 
       <View style={styles.amountContainer}>

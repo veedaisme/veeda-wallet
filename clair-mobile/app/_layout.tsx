@@ -4,16 +4,19 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font'
 import { Stack, Redirect } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { I18nextProvider } from 'react-i18next'
 import 'react-native-reanimated'
 
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { useAuth } from '@/hooks/useAuthV2'
 import { queryClient, persister } from '@/lib/queryClient'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { initI18n } from '@/src/i18n'
+import i18n from '@/src/i18n'
 
 function RootLayoutNav() {
   // ALWAYS call all hooks at the top level - never conditionally
@@ -86,19 +89,31 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   })
+  const [i18nInitialized, setI18nInitialized] = useState(false)
 
-  if (!loaded) {
+  useEffect(() => {
+    initI18n().then(() => {
+      setI18nInitialized(true)
+    }).catch((error) => {
+      console.error('Failed to initialize i18n:', error)
+      setI18nInitialized(true) // Still proceed to avoid infinite loading
+    })
+  }, [])
+
+  if (!loaded || !i18nInitialized) {
     return null
   }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{ persister }}
-      >
-        <RootLayoutNav />
-      </PersistQueryClientProvider>
+      <I18nextProvider i18n={i18n}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister }}
+        >
+          <RootLayoutNav />
+        </PersistQueryClientProvider>
+      </I18nextProvider>
     </GestureHandlerRootView>
   )
 }

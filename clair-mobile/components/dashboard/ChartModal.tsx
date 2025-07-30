@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LineChart, BarChart } from 'react-native-chart-kit'
+import { format, startOfWeek, addDays, startOfMonth, endOfMonth, subMonths, isSameMonth } from 'date-fns'
+import { supabase } from '@/lib/supabase'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { formatCurrency } from '@/lib/utils'
@@ -20,13 +22,21 @@ interface ChartModalProps {
   visible: boolean
   onClose: () => void
   title: string
-  type: 'today' | 'week' | 'month'
-  data: any
+  type: 'week' | 'month'
+  data: {
+    current: number
+    previous: number
+    change: number
+  }
+  userId: string | null
 }
 
-export function ChartModal({ visible, onClose, title, type, data }: ChartModalProps) {
+export function ChartModal({ visible, onClose, title, type, data, userId }: ChartModalProps) {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [chartData, setChartData] = useState<Array<Record<string, unknown>>>([])
 
   const chartConfig = {
     backgroundColor: colors.background,
@@ -49,41 +59,179 @@ export function ChartModal({ visible, onClose, title, type, data }: ChartModalPr
     },
   }
 
-  const renderChart = () => {
-    switch (type) {
-      case 'today':
-        return renderHourlyChart()
-      case 'week':
-        return renderWeeklyChart()
-      case 'month':
-        return renderMonthlyChart()
-      default:
-        return null
+  useEffect(() => {
+    if (!visible || !type || !userId) return
+    setLoading(true)
+    setError(null)
+
+    const fetchData = async () => {
+      try {
+        const now = new Date()
+        if (type === 'week') {
+          const startCurrent = startOfWeek(now, { weekStartsOn: 1 })
+          const endCurrent = addDays(startCurrent, 6)
+          const startPrev = addDays(startCurrent, -7)
+          const endPrev = addDays(startPrev, 6)
+
+          const { data: transactions, error } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .gte('date', startPrev.toISOString())
+            .lte('date', endCurrent.toISOString())
+
+          if (error) {
+            setError('Failed to fetch transactions')
+            setLoading(false)
+            return
+          }
+
+          const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          const currentWeek: Record<string, number> = {}
+          const previousWeek: Record<string, number> = {}
+          days.forEach(day => {
+            currentWeek[day] = 0
+            previousWeek[day] = 0
+          })
+
+          transactions?.forEach(tx => {
+            const d = new Date(tx.date)
+            if (d >= startCurrent && d <= endCurrent) {
+              const label = format(d, 'EEE')
+              if (label in currentWeek) currentWeek[label] += tx.amount
+            } else if (d >= startPrev && d <= endPrev) {
+              const label = format(d, 'EEE')
+              if (label in previousWeek) previousWeek[label] += tx.amount
+            }
+          })
+
+          setChartData(
+            days.map(day => ({
+              name: day,
+              current: currentWeek[day] || 0,
+              previous: previousWeek[day] || 0,
+            }))
+          )
+        } else if (type === 'month') {
+          const startCurrent = startOfMonth(now)
+          const endCurrent = endOfMonth(now)
+          const prevMonth = subMonths(now, 1)
+          const startPrev = startOfMonth(prevMonth)
+          const endPrev = endOfMonth(prevMonth)
+
+          const { data: transactions, error } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .gte('date', startPrev.toISOString())
+            .lte('date', endCurrent.toISOString())
+
+          if (error) {
+            setError('Failed to fetch transactions')
+            setLoading(false)
+            return
+          }
+
+          // Simple week grouping
+          const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4']
+          const currentMonth: Record<string, number> = {}
+          const previousMonth: Record<string, number> = {}
+          weeks.forEach(week => {
+            currentMonth[week] = 0
+            previousMonth[week] = 0
+          })
+
+          transactions?.forEach(tx => {
+            const d = new Date(tx.date)
+            const weekNum = Math.ceil(d.getDate() / 7)
+            const weekKey = `Week ${Math.min(weekNum, 4)}`
+            
+            if (isSameMonth(d, startCurrent)) {
+              currentMonth[weekKey] += tx.amount
+            } else if (isSameMonth(d, startPrev)) {
+              previousMonth[weekKey] += tx.amount
+            }
+          })
+
+          setChartData(
+            weeks.map(week => ({
+              name: week,
+              current: currentMonth[week] || 0,
+              previous: previousMonth[week] || 0,
+            }))
+          )
+        }
+        setLoading(false)
+      } catch (err) {
+        setError('Failed to load chart data')
+        setLoading(false)
+      }
     }
+
+    fetchData()
+  }, [visible, type, userId])
+
+  const renderChart = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading chart data...
+          </Text>
+        </View>
+      )
+    }
+
+    if (error) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: colors.error }]}>
+            {error}
+          </Text>
+        </View>
+      )
+    }
+
+    if (chartData.length === 0) {
+      return (
+        <View style={styles.noDataContainer}>
+          <Text style={[styles.noDataText, { color: colors.textMuted }]}>
+            No data available
+          </Text>
+        </View>
+      )
+    }
+
+    if (type === 'week') {
+      return renderWeeklyChart()
+    } else if (type === 'month') {
+      return renderMonthlyChart()
+    }
+    return null
   }
 
-  const renderHourlyChart = () => {
-    // Mock hourly data for today vs yesterday
-    const hourlyData = {
-      labels: ['6AM', '9AM', '12PM', '3PM', '6PM', '9PM'],
+
+  const renderWeeklyChart = () => {
+    const weeklyData = {
+      labels: chartData.map(item => item.name as string),
       datasets: [
         {
-          data: [0, 50000, 120000, 80000, 200000, 150000],
+          data: chartData.map(item => (item.current as number) || 0),
           color: (opacity = 1) => colors.primary,
-          strokeWidth: 2,
+          strokeWidth: 3,
         },
         {
-          data: [0, 30000, 100000, 60000, 180000, 120000],
+          data: chartData.map(item => (item.previous as number) || 0),
           color: (opacity = 1) => colors.textMuted,
           strokeWidth: 2,
         },
       ],
-      legend: ['Today', 'Yesterday'],
+      legend: ['This Week', 'Last Week'],
     }
 
     return (
       <LineChart
-        data={hourlyData}
+        data={weeklyData}
         width={screenWidth - 48}
         height={220}
         chartConfig={chartConfig}
@@ -93,42 +241,17 @@ export function ChartModal({ visible, onClose, title, type, data }: ChartModalPr
     )
   }
 
-  const renderWeeklyChart = () => {
-    // Mock daily data for this week vs last week
-    const weeklyData = {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      datasets: [
-        {
-          data: [150000, 200000, 180000, 220000, 300000, 250000, 180000],
-        },
-      ],
-    }
-
-    return (
-      <BarChart
-        data={weeklyData}
-        width={screenWidth - 48}
-        height={220}
-        yAxisLabel=""
-        yAxisSuffix=""
-        chartConfig={chartConfig}
-        style={styles.chart}
-      />
-    )
-  }
-
   const renderMonthlyChart = () => {
-    // Mock weekly data for this month vs last month
     const monthlyData = {
-      labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+      labels: chartData.map(item => item.name as string),
       datasets: [
         {
-          data: [1200000, 1500000, 1800000, 1600000],
+          data: chartData.map(item => (item.current as number) || 0),
           color: (opacity = 1) => colors.primary,
           strokeWidth: 3,
         },
         {
-          data: [1000000, 1300000, 1400000, 1200000],
+          data: chartData.map(item => (item.previous as number) || 0),
           color: (opacity = 1) => colors.textMuted,
           strokeWidth: 3,
         },
@@ -225,6 +348,30 @@ export function ChartModal({ visible, onClose, title, type, data }: ChartModalPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+  },
+  errorContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+  },
+  noDataContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataText: {
+    fontSize: 16,
   },
   header: {
     flexDirection: 'row',

@@ -1,10 +1,11 @@
 /**
  * Clair Wallet color scheme optimized for financial management app
+ * Updated to match web app tangerine theme
  */
 
-const primaryColor = '#2b825b';
-const primaryLight = '#4a9572';
-const primaryDark = '#1e5a3f';
+const primaryColor = '#DE5C2B';
+const primaryLight = '#F5A373';
+const primaryDark = '#B94A20';
 
 export const Colors = {
   light: {

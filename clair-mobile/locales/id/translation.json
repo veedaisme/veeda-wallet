@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "Clair",
+    "logout": "Keluar"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "today": "Hari Ini",
+    "thisWeek": "Minggu Ini",
+    "thisMonth": "Bulan Ini",
+    "yesterday": "Kemarin",
+    "lastWeek": "Minggu Lalu",
+    "lastMonth": "Bulan Lalu",
+    "failedToLoad": "Gagal memuat data dashboard",
+    "unexpectedError": "Terjadi kesalahan yang tidak terduga",
+    "loading": "Memuat..."
+  },
+  "tabs": {
+    "dashboard": "Dashboard",
+    "subscriptions": "Berlangganan",
+    "transactions": "Transaksi"
+  },
+  "errors": {
+    "general": "Terjadi kesalahan",
+    "network": "Kesalahan jaringan",
+    "timeout": "Permintaan habis waktu"
+  },
+  "common": {
+    "loading": "Memuat...",
+    "retry": "Coba Lagi",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "add": "Tambah",
+    "close": "Tutup"
+  }
+}

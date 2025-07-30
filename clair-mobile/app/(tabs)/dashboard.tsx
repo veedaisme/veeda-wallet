@@ -10,14 +10,17 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { User, LogOut } from 'lucide-react-native'
+import { useTranslation } from 'react-i18next'
 
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { SpendingCard } from '@/components/dashboard/SpendingCard'
 import { ChartModal } from '@/components/dashboard/ChartModal'
+import { LanguagePillToggle } from '@/components/ui/LanguagePillToggle'
 import { useAuth } from '@/hooks/useAuthV2'
 import { useDashboardData } from '@/hooks/queries/useDashboard'
 
 export default function DashboardScreen() {
+  const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const { data: dashboardData, isLoading, refetch, isRefetching } = useDashboardData(user?.id || null)
   
@@ -90,8 +93,8 @@ export default function DashboardScreen() {
         </View>
         
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load dashboard data</Text>
-          <Text style={styles.errorSubtext}>An unexpected error occurred</Text>
+          <Text style={styles.errorText}>{t('dashboard.failedToLoad')}</Text>
+          <Text style={styles.errorSubtext}>{t('dashboard.unexpectedError')}</Text>
         </View>
       </SafeAreaView>
     )
@@ -117,6 +120,7 @@ export default function DashboardScreen() {
           resizeMode="contain"
         />
         <View style={styles.headerRight}>
+          <LanguagePillToggle size="sm" />
           <TouchableOpacity
             style={styles.profileButton}
             onPress={() => setProfileMenuOpen(!profileMenuOpen)}
@@ -132,7 +136,7 @@ export default function DashboardScreen() {
                 onPress={handleLogout}
               >
                 <LogOut size={16} color="#6B7280" />
-                <Text style={styles.profileMenuText}>Logout</Text>
+                <Text style={styles.profileMenuText}>{t('app.logout')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -151,25 +155,25 @@ export default function DashboardScreen() {
       >
         <View style={styles.spendingGrid}>
           <SpendingCard
-            title="Today"
+            title={t('dashboard.today')}
             amount={analytics.today || 0}
             change={todayChange}
-            previousLabel="Yesterday"
+            previousLabel={t('dashboard.yesterday')}
             previousAmount={analytics.yesterday || 0}
           />
           <SpendingCard
-            title="This Week"
+            title={t('dashboard.thisWeek')}
             amount={analytics.thisWeek || 0}
             change={weekChange}
-            previousLabel="Last Week"
+            previousLabel={t('dashboard.lastWeek')}
             previousAmount={analytics.lastWeek || 0}
             onClick={() => setChartModal({ open: true, type: "week" })}
           />
           <SpendingCard
-            title="This Month"
+            title={t('dashboard.thisMonth')}
             amount={analytics.thisMonth || 0}
             change={monthChange}
-            previousLabel="Last Month"
+            previousLabel={t('dashboard.lastMonth')}
             previousAmount={analytics.lastMonth || 0}
             onClick={() => setChartModal({ open: true, type: "month" })}
           />
@@ -180,13 +184,14 @@ export default function DashboardScreen() {
       <ChartModal
         visible={chartModal.open}
         onClose={() => setChartModal({ open: false, type: null })}
-        title={chartModal.type === 'week' ? 'This Week' : 'This Month'}
+        title={chartModal.type === 'week' ? t('dashboard.thisWeek') : t('dashboard.thisMonth')}
         type={chartModal.type!}
-        data={chartModal.type ? {
+        data={{
           current: chartModal.type === 'week' ? analytics.thisWeek || 0 : analytics.thisMonth || 0,
           previous: chartModal.type === 'week' ? analytics.lastWeek || 0 : analytics.lastMonth || 0,
           change: chartModal.type === 'week' ? weekChange || 0 : monthChange || 0
-        } : undefined}
+        }}
+        userId={user?.id || null}
       />
     </SafeAreaView>
   )
@@ -211,6 +216,9 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   profileButton: {
     backgroundColor: '#F3F4F6',
