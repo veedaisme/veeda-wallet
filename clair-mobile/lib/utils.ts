@@ -1,7 +1,7 @@
 import { format, formatDistanceToNow, parseISO } from 'date-fns'
 
 /**
- * Format currency amount in IDR
+ * Format currency amount in IDR (matching web implementation)
  */
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('id-ID', {
@@ -10,6 +10,29 @@ export const formatCurrency = (amount: number): string => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount)
+}
+
+/**
+ * Format a number as Indonesian Rupiah (IDR) with compact option
+ * @param amount - The amount to format
+ * @param options - Formatting options  
+ * @returns Formatted IDR string
+ */
+export const formatIDR = (amount: number | string, options: { compact?: boolean } = {}): string => {
+  // Convert string to number if needed
+  const numAmount = typeof amount === "string" ? Number.parseFloat(amount) : amount
+
+  // Format with IDR locale and currency
+  const formatter = new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    notation: options.compact ? "compact" : "standard",
+    compactDisplay: "short",
+  })
+
+  return formatter.format(numAmount)
 }
 
 /**

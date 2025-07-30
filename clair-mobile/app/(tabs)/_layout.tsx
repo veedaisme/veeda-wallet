@@ -7,15 +7,15 @@ import { HapticTab } from '@/components/HapticTab'
 import TabBarBackground from '@/components/ui/TabBarBackground'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/hooks/useAuthV2'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 export default function TabLayout() {
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
-  const { isAuthenticated, loading, initialized } = useAuth()
+  const { isAuthenticated, isLoading, isInitialized } = useAuth()
 
-  if (!initialized || loading) {
+  if (!isInitialized || isLoading) {
     return <LoadingSpinner message="Loading..." overlay />
   }
 

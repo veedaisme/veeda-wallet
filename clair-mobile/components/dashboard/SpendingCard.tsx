@@ -5,116 +5,85 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
-import { Card } from '@/components/ui/Card'
-import { Colors } from '@/constants/Colors'
-import { useColorScheme } from '@/hooks/useColorScheme'
-import { formatCurrency } from '@/lib/utils'
+import { ChevronRight, ArrowDown, ArrowUp } from 'lucide-react-native'
+import { formatIDR } from '@/lib/utils'
 
 interface SpendingCardProps {
   title: string
   amount: number
-  previousAmount?: number
-  percentageChange?: number
-  onPress?: () => void
-  style?: any
+  change?: number
+  previousLabel: string
+  previousAmount: number
+  onClick?: () => void
 }
 
-export function SpendingCard({
-  title,
-  amount,
-  previousAmount,
-  percentageChange,
-  onPress,
-  style,
-}: SpendingCardProps) {
-  const colorScheme = useColorScheme()
-  const colors = Colors[colorScheme ?? 'light']
-
-  const isClickable = !!onPress
-  const hasComparison = typeof percentageChange === 'number' && !isNaN(percentageChange)
-  const isIncrease = percentageChange && percentageChange > 0
-  const changeColor = isIncrease ? colors.error : colors.success
+export function SpendingCard({ title, amount, change, previousLabel, previousAmount, onClick }: SpendingCardProps) {
+  // Color is red if current amount > previous amount, green otherwise
+  const isOverspent = amount > previousAmount
+  const absChange = typeof change === "number" ? Math.abs(change) : 0
 
   return (
     <TouchableOpacity
-      style={[styles.container, style]}
-      onPress={onPress}
-      disabled={!isClickable}
-      activeOpacity={isClickable ? 0.7 : 1}
+      style={[
+        styles.container,
+        onClick ? styles.clickable : undefined
+      ]}
+      onPress={onClick}
+      disabled={!onClick}
+      activeOpacity={onClick ? 0.7 : 1}
     >
-      <Card style={[
-        styles.card,
-        isClickable ? { borderWidth: 1, borderColor: colors.border } : undefined
-      ]}>
-        <View style={styles.content}>
-          {/* Header with title and chevron */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { color: colors.textSecondary }]}>
-              {title}
-            </Text>
-            {isClickable && (
-              <Ionicons 
-                name="chevron-forward" 
-                size={16} 
-                color={colors.textMuted} 
-              />
+      <View style={styles.header}>
+        <Text style={styles.title}>{title}</Text>
+        <ChevronRight size={20} color="#9CA3AF" />
+      </View>
+
+      <View style={styles.amountContainer}>
+        <Text style={styles.amount}>{formatIDR(amount)}</Text>
+        {typeof change === "number" && (
+          <View style={styles.changeContainer}>
+            {isOverspent ? (
+              <ArrowUp size={16} color="#EF4444" />
+            ) : (
+              <ArrowDown size={16} color="#10B981" />
             )}
+            <Text style={[
+              styles.changeText,
+              { color: isOverspent ? "#EF4444" : "#10B981" }
+            ]}>
+              {absChange % 1 === 0 ? absChange : absChange.toFixed(2).replace(/\.?0+$/, "")}%
+            </Text>
           </View>
+        )}
+      </View>
 
-          {/* Main amount */}
-          <Text style={[styles.amount, { color: colors.text }]}>
-            {formatCurrency(amount)}
-          </Text>
-
-          {/* Comparison data */}
-          {hasComparison && previousAmount !== undefined && (
-            <View style={styles.comparison}>
-              <View style={styles.changeIndicator}>
-                <Ionicons
-                  name={isIncrease ? 'trending-up' : 'trending-down'}
-                  size={14}
-                  color={changeColor}
-                />
-                <Text style={[styles.changeText, { color: changeColor }]}>
-                  {isIncrease ? '+' : ''}{percentageChange!.toFixed(1)}%
-                </Text>
-              </View>
-              
-              <Text style={[styles.previousLabel, { color: colors.textMuted }]}>
-                vs {getPreviousLabel(title)}: {formatCurrency(previousAmount)}
-              </Text>
-            </View>
-          )}
-        </View>
-      </Card>
+      <Text style={styles.previousText}>
+        {previousLabel} {formatIDR(previousAmount)}
+      </Text>
     </TouchableOpacity>
   )
 }
 
-function getPreviousLabel(title: string): string {
-  switch (title.toLowerCase()) {
-    case 'today':
-      return 'Yesterday'
-    case 'this week':
-      return 'Last week'
-    case 'this month':
-      return 'Last month'
-    default:
-      return 'Previous'
-  }
-}
 
 const styles = StyleSheet.create({
   container: {
-    width: '48%',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  card: {
-    minHeight: 100,
-  },
-  content: {
-    justifyContent: 'space-between',
-    height: '100%',
+  clickable: {
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
@@ -123,29 +92,36 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontSize: 12,
+    color: '#6B7280',
     fontWeight: '500',
+    fontSize: 16,
   },
-  amount: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  comparison: {
-    marginTop: 8,
-  },
-  changeIndicator: {
+  amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
+    gap: 8,
+    marginBottom: 4,
+  },
+  amount: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  changeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 4,
   },
   changeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: '500',
   },
-  previousLabel: {
-    fontSize: 10,
-    lineHeight: 14,
+  previousText: {
+    color: '#6B7280',
+    fontSize: 14,
   },
 })
