@@ -17,6 +17,7 @@ import { queryClient, persister } from '@/lib/queryClient'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { initI18n } from '@/src/i18n'
 import i18n from '@/src/i18n'
+import { AuthDataMigration } from '@/lib/storage/AuthDataMigration'
 
 function RootLayoutNav() {
   // ALWAYS call all hooks at the top level - never conditionally
@@ -92,12 +93,22 @@ export default function RootLayout() {
   const [i18nInitialized, setI18nInitialized] = useState(false)
 
   useEffect(() => {
-    initI18n().then(() => {
-      setI18nInitialized(true)
-    }).catch((error) => {
-      console.error('Failed to initialize i18n:', error)
-      setI18nInitialized(true) // Still proceed to avoid infinite loading
-    })
+    // Perform auth data migration on app startup
+    const initializeApp = async () => {
+      try {
+        // Migrate auth data from AsyncStorage to SecureStore if needed
+        await AuthDataMigration.migrateAuthData()
+        
+        // Initialize i18n
+        await initI18n()
+        setI18nInitialized(true)
+      } catch (error) {
+        console.error('Failed to initialize app:', error)
+        setI18nInitialized(true) // Still proceed to avoid infinite loading
+      }
+    }
+
+    initializeApp()
   }, [])
 
   if (!loaded || !i18nInitialized) {

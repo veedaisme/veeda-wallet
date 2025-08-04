@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { View, Text, TouchableOpacity, Platform } from 'react-native'
-import DateTimePicker from '@react-native-community/datetimepicker'
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker'
 import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
@@ -27,53 +27,54 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
   const { onButtonPress, onSelection } = useHaptics()
-  const [showPicker, setShowPicker] = useState(false)
+  const [isPickerActive, setIsPickerActive] = useState(false)
 
   // Convert string date to Date object
   const dateValue = value ? new Date(value + 'T00:00:00') : new Date()
   
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowPicker(Platform.OS === 'ios') // Keep picker open on iOS
-
     if (selectedDate) {
       onSelection()
-      // Convert to YYYY-MM-DD format
-      const formattedDate = selectedDate.toISOString().split('T')[0]
+      // Convert to YYYY-MM-DD format using local date methods to avoid timezone issues
+      const year = selectedDate.getFullYear()
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(selectedDate.getDate()).padStart(2, '0')
+      const formattedDate = `${year}-${month}-${day}`
       onChange(formattedDate)
+      
+      // Auto-close picker on iOS after selection
+      if (Platform.OS === 'ios') {
+        setIsPickerActive(false)
+      }
     }
   }
 
-  const handleOpenPicker = () => {
+  const handleAndroidDatePicker = () => {
     onButtonPress()
-    setShowPicker(true)
+    
+    DateTimePickerAndroid.open({
+      value: dateValue,
+      onChange: handleDateChange,
+      mode: 'date',
+      is24Hour: true,
+      maximumDate: new Date(), // Don't allow future dates
+    })
+  }
+
+  const handleIOSPickerActivate = () => {
+    if (!isPickerActive) {
+      onButtonPress()
+      setIsPickerActive(true)
+    }
   }
 
   const formatDisplayDate = (dateString: string) => {
     if (!dateString) return placeholder
     try {
       const date = new Date(dateString + 'T00:00:00')
-      return format(date, 'MMM dd, yyyy')
+      return format(date, 'dd MMM yyyy')
     } catch {
       return placeholder
-    }
-  }
-
-  const getContainerStyle = () => {
-    return {
-      borderRadius: 8,
-      borderWidth: error ? 2 : 1,
-      borderColor: error 
-        ? colors.error 
-        : success && value 
-          ? colors.success 
-          : colors.inputBorder,
-      backgroundColor: colors.background,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-      minHeight: 48,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'space-between' as const,
     }
   }
 
@@ -98,12 +99,54 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
     <View style={{ marginBottom: 16 }}>
       {label && <Text style={getLabelStyle()}>{label}</Text>}
       
-      <TouchableOpacity
-        style={getContainerStyle()}
-        onPress={handleOpenPicker}
-        activeOpacity={0.7}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+      {/* iOS Date Picker - Direct component integration */}
+      {Platform.OS === 'ios' ? (
+        <TouchableOpacity
+          onPress={handleIOSPickerActivate}
+          activeOpacity={1}
+          disabled={isPickerActive}
+          style={{
+            backgroundColor: colors.background,
+            borderRadius: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 12,
+            borderWidth: 1,
+            borderColor: isPickerActive ? colors.primary : colors.border,
+            minHeight: 48,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: isPickerActive ? 1 : 0.7,
+          }}
+        >
+          <DateTimePicker
+            testID="dateTimePicker"
+            value={dateValue}
+            mode="date"
+            display="compact"
+            onChange={handleDateChange}
+            maximumDate={new Date()}
+            accentColor={colors.primary}
+            themeVariant={colorScheme || 'light'}
+            disabled={!isPickerActive}
+          />
+        </TouchableOpacity>
+      ) : (
+        /* Android Date Display - Show selected date and trigger native picker */
+        <TouchableOpacity
+          onPress={handleAndroidDatePicker}
+          activeOpacity={0.7}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingVertical: 12,
+            paddingHorizontal: 12,
+            backgroundColor: colors.background,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: colors.border,
+            minHeight: 48,
+          }}
+        >
           <View style={{ marginRight: 8 }}>
             <Ionicons 
               name="calendar-outline" 
@@ -115,31 +158,19 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
             fontSize: 16,
             color: value ? colors.text : colors.inputPlaceholder,
             flex: 1,
+            fontWeight: value ? '500' : '400',
           }}>
             {formatDisplayDate(value)}
           </Text>
-        </View>
-        
-        <Ionicons 
-          name="chevron-down-outline" 
-          size={16} 
-          color={colors.textSecondary} 
-        />
-      </TouchableOpacity>
+          <Ionicons 
+            name="chevron-down" 
+            size={20} 
+            color={colors.icon} 
+          />
+        </TouchableOpacity>
+      )}
       
       {error && <Text style={getErrorStyle()}>{error}</Text>}
-
-      {showPicker && (
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={dateValue}
-          mode="date"
-          is24Hour={true}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleDateChange}
-          maximumDate={new Date()} // Don't allow future dates
-        />
-      )}
     </View>
   )
 }

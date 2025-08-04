@@ -74,7 +74,6 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
   // Form state
   const [mode, setMode] = React.useState<'add' | 'edit'>('add')
   const [editTransactionId, setEditTransactionId] = React.useState<string | null>(null)
-  const [contentHeight, setContentHeight] = useState(0)
 
   // Mutations
   const createTransactionMutation = useCreateTransaction()
@@ -206,11 +205,7 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
     createTransactionMutation.isPending || 
     updateTransactionMutation.isPending
 
-  // Measure content height for manual calculation
-  const handleContentLayout = (event: any) => {
-    const { height } = event.nativeEvent.layout
-    setContentHeight(height)
-  }
+
 
   return (
     <BottomSheet
@@ -224,7 +219,6 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
-        onLayout={handleContentLayout}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -314,30 +308,30 @@ export const TransactionBottomSheet = forwardRef<TransactionBottomSheetMethods, 
                 />
               )}
             />
+
+            {/* Action Buttons - Moved inside scroll view */}
+            <View style={styles.buttonContainer}>
+              <Button
+                title="Cancel"
+                variant="outline"
+                onPress={() => {
+                  onButtonPress()
+                  close()
+                }}
+                style={styles.cancelButton}
+              />
+              <Button
+                title={mode === 'add' ? 'Save' : 'Update'}
+                onPress={() => {
+                  onButtonPress()
+                  handleSubmit(onSubmit)()
+                }}
+                loading={isLoading}
+                style={styles.submitButton}
+              />
+            </View>
           </View>
         </BottomSheetScrollView>
-
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <Button
-            title="Cancel"
-            variant="outline"
-            onPress={() => {
-              onButtonPress()
-              close()
-            }}
-            style={styles.cancelButton}
-          />
-          <Button
-            title={mode === 'add' ? 'Save' : 'Update'}
-            onPress={() => {
-              onButtonPress()
-              handleSubmit(onSubmit)()
-            }}
-            loading={isLoading}
-            style={styles.submitButton}
-          />
-        </View>
       </KeyboardAvoidingView>
     </BottomSheet>
   )
@@ -347,7 +341,7 @@ TransactionBottomSheet.displayName = 'TransactionBottomSheet'
 
 const styles = StyleSheet.create({
   container: {
-    minHeight: 400, // Ensure minimum height for all content
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -361,14 +355,13 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    maxHeight: 'auto', // Limit scroll view height
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 50,
   },
   form: {
     gap: 0, // Remove gap since Input component has its own margin
-    paddingBottom: 20, // Extra spacing before buttons
   },
   currencySymbol: {
     fontSize: 16,
@@ -377,12 +370,11 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 20,
+    marginTop: 24,
     paddingTop: 20,
-    paddingBottom: 10, // Extra bottom padding
+    paddingBottom: 8, // Reduced bottom padding since it's in scroll view
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
-    backgroundColor: 'transparent', // Ensure buttons are visible
   },
   cancelButton: {
     flex: 1,

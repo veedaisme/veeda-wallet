@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import { AuthStorageService } from '@/lib/authStorage'
+import { SecureAuthStorageService as AuthStorageService } from '@/lib/storage/SecureAuthStorageService'
 import { useAuthStateMachine } from '@/stores/authStateMachine'
 import { AuthError, AuthUser, SecureAuthData, AuthResult, LoginCredentials, RegisterCredentials } from '@/types/auth'
 

@@ -1,33 +1,37 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as SecureStore from 'expo-secure-store'
 import { SecureAuthData, AuthError } from '@/types/auth'
 
-const AUTH_STORAGE_KEY = '@clair_auth_data'
+const AUTH_STORAGE_KEY = 'clair_auth_tokens'
 const TOKEN_BUFFER_TIME = 5 * 60 * 1000 // 5 minutes buffer before expiration
 
-export class AuthStorageService {
+export class SecureAuthStorageService {
   /**
-   * Store auth data securely
+   * Store auth data securely in device keychain/keystore
    */
   static async storeAuthData(data: SecureAuthData): Promise<void> {
     try {
       const serializedData = JSON.stringify(data)
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, serializedData)
+      await SecureStore.setItemAsync(AUTH_STORAGE_KEY, serializedData, {
+        requireAuthentication: false,
+        authenticationPrompt: 'Please authenticate to access your wallet',
+        keychainService: 'com.clair.wallet.secure',
+      })
     } catch (error) {
       console.error('Failed to store auth data:', error)
       throw {
-        message: 'Failed to store authentication data',
+        message: 'Failed to store authentication data securely',
         type: 'unknown' as const,
-        code: 'STORAGE_WRITE_ERROR'
-      }
+        code: 'SECURE_STORAGE_WRITE_ERROR'
+      } as AuthError
     }
   }
 
   /**
-   * Retrieve stored auth data
+   * Retrieve stored auth data from secure storage
    */
   static async getAuthData(): Promise<SecureAuthData | null> {
     try {
-      const serializedData = await AsyncStorage.getItem(AUTH_STORAGE_KEY)
+      const serializedData = await SecureStore.getItemAsync(AUTH_STORAGE_KEY)
       if (!serializedData) {
         return null
       }
@@ -85,11 +89,11 @@ export class AuthStorageService {
   }
 
   /**
-   * Clear all stored auth data
+   * Clear all stored auth data from secure storage
    */
   static async clearAuthData(): Promise<void> {
     try {
-      await AsyncStorage.removeItem(AUTH_STORAGE_KEY)
+      await SecureStore.deleteItemAsync(AUTH_STORAGE_KEY)
     } catch (error) {
       console.error('Failed to clear auth data:', error)
       // Don't throw here, just log the error
@@ -120,7 +124,7 @@ export class AuthStorageService {
         message: 'Failed to update authentication tokens',
         type: 'unknown' as const,
         code: 'TOKEN_UPDATE_ERROR'
-      }
+      } as AuthError
     }
   }
 
@@ -141,5 +145,16 @@ export class AuthStorageService {
       return null
     }
   }
-}
 
+  /**
+   * Check if SecureStore is available on this device
+   */
+  static async isAvailable(): Promise<boolean> {
+    try {
+      return await SecureStore.isAvailableAsync()
+    } catch (error) {
+      console.error('Failed to check SecureStore availability:', error)
+      return false
+    }
+  }
+}
