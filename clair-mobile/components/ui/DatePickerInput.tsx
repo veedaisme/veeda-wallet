@@ -27,7 +27,7 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
   const colorScheme = useColorScheme()
   const colors = Colors[colorScheme ?? 'light']
   const { onButtonPress, onSelection } = useHaptics()
-  const [isPickerActive, setIsPickerActive] = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
 
   // Convert string date to Date object
   const dateValue = value ? new Date(value + 'T00:00:00') : new Date()
@@ -42,9 +42,9 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
       const formattedDate = `${year}-${month}-${day}`
       onChange(formattedDate)
       
-      // Auto-close picker on iOS after selection
+      // Auto-close picker after selection
       if (Platform.OS === 'ios') {
-        setIsPickerActive(false)
+        setShowPicker(false)
       }
     }
   }
@@ -61,12 +61,11 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
     })
   }
 
-  const handleIOSPickerActivate = () => {
-    if (!isPickerActive) {
-      onButtonPress()
-      setIsPickerActive(true)
-    }
+  const handleIOSPickerShow = () => {
+    onButtonPress()
+    setShowPicker(true)
   }
+
 
   const formatDisplayDate = (dateString: string) => {
     if (!dateString) return placeholder
@@ -99,37 +98,75 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
     <View style={{ marginBottom: 16 }}>
       {label && <Text style={getLabelStyle()}>{label}</Text>}
       
-      {/* iOS Date Picker - Direct component integration */}
+      {/* iOS Date Picker - Show/Hide with single-touch activation */}
       {Platform.OS === 'ios' ? (
-        <TouchableOpacity
-          onPress={handleIOSPickerActivate}
-          activeOpacity={1}
-          disabled={isPickerActive}
-          style={{
-            backgroundColor: colors.background,
-            borderRadius: 8,
-            paddingHorizontal: 12,
-            paddingVertical: 12,
-            borderWidth: 1,
-            borderColor: isPickerActive ? colors.primary : colors.border,
-            minHeight: 48,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: isPickerActive ? 1 : 0.7,
-          }}
-        >
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={dateValue}
-            mode="date"
-            display="compact"
-            onChange={handleDateChange}
-            maximumDate={new Date()}
-            accentColor={colors.primary}
-            themeVariant={colorScheme || 'light'}
-            disabled={!isPickerActive}
-          />
-        </TouchableOpacity>
+        <View>
+          {!showPicker ? (
+            /* Date Display - Tap to show picker */
+            <TouchableOpacity
+              onPress={handleIOSPickerShow}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 12,
+                paddingHorizontal: 12,
+                backgroundColor: colors.background,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: colors.border,
+                minHeight: 48,
+              }}
+            >
+              <View style={{ marginRight: 8 }}>
+                <Ionicons 
+                  name="calendar-outline" 
+                  size={20} 
+                  color={colors.icon} 
+                />
+              </View>
+              <Text style={{
+                fontSize: 16,
+                color: value ? colors.text : colors.inputPlaceholder,
+                flex: 1,
+                fontWeight: value ? '500' : '400',
+              }}>
+                {formatDisplayDate(value)}
+              </Text>
+              <Ionicons 
+                name="chevron-down" 
+                size={20} 
+                color={colors.icon} 
+              />
+            </TouchableOpacity>
+          ) : (
+            /* Interactive Date Picker - Auto-closes after selection */
+            <View
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 12,
+                borderWidth: 1,
+                borderColor: colors.primary,
+                minHeight: 48,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={dateValue}
+                mode="date"
+                display="compact"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                accentColor={colors.primary}
+                themeVariant={colorScheme || 'light'}
+              />
+            </View>
+          )}
+        </View>
       ) : (
         /* Android Date Display - Show selected date and trigger native picker */
         <TouchableOpacity
